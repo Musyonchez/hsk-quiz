@@ -10,11 +10,17 @@ database (via the API).
 
 - `website/src/lib/extract/extract-combined.ts` and `.../extract-chapters.ts` — pure
   functions: read source files, return plain JS objects (`{ chinese, pinyin, ... }[]`). No
-  database code in here, so they're independently testable against fixture files, and they're
-  reusable from Server Components too if a page ever needs on-demand parsing.
+  database code in here, so they're independently testable against fixture files.
 - `website/prisma/seed.ts` — calls those extraction functions and writes the results via the
   Prisma client into `Level` / `Chapter` / `Word` / `GrammarPattern` rows. This is the only
   place that talks to the database during seeding.
+
+**Not importable from the Next.js app itself.** `extract-combined.ts` resolves the PDF/markdown
+paths relative to its own source file location (`import.meta.url`) so it can find `raw/` from
+wherever it's invoked. That only works when run directly by `tsx` (i.e. `prisma/seed.ts`) —
+if a Server Component ever imported it, Next's bundler would relocate the compiled file into
+`.next/`, and the relative path to `raw/` would resolve to nothing. Keep the seed step and the
+app strictly separated: pages only ever read from the database, never from `lib/extract/`.
 
 ## `extract-combined.ts`
 
