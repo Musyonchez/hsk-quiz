@@ -1,0 +1,102 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model Level {
+  id       Int       @id @default(autoincrement())
+  number   Int       @unique // 1 | 2
+  name     String // "HSK 1" | "HSK 2"
+  chapters Chapter[]
+  words    Word[]
+}
+
+model Chapter {
+  id              Int              @id @default(autoincrement())
+  levelId         Int
+  level           Level            @relation(fields: [levelId], references: [id])
+  number          Int
+  title           String
+  words           Word[]
+  grammarPatterns GrammarPattern[]
+
+  @@unique([levelId, number])
+}
+
+model Word {
+  id        Int      @id @default(autoincrement())
+  levelId   Int
+  level     Level    @relation(fields: [levelId], references: [id])
+  chapterId Int? // null for combined-only words
+  chapter   Chapter? @relation(fields: [chapterId], references: [id])
+  chinese   String
+  pinyin    String
+  wordType  String? // "n." | "v." | ... (chapter source) — nullable for combined rows
+  meaning   String?
+  category  String? // PDF word-class, e.g. "Personal Pron." (combined source only)
+  source    String // "chapter" | "combined"
+
+  @@unique([chapterId, chinese])
+}
+
+model GrammarPattern {
+  id              Int     @id @default(autoincrement())
+  chapterId       Int
+  chapter         Chapter @relation(fields: [chapterId], references: [id])
+  label           String
+  pinyinSkeleton  String
+  note            String?
+}
+
+model User {
+  id           Int          @id @default(autoincrement())
+  username     String       @unique
+  passwordHash String
+  displayName  String
+  createdAt    DateTime     @default(now())
+  sessions     Session[]
+  attempts     Attempt[]
+  sentRequests Friendship[] @relation("FriendshipSender")
+  recvRequests Friendship[] @relation("FriendshipReceiver")
+}
+
+model Session {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  user      User     @relation(fields: [userId], references: [id])
+  tokenHash String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+}
+
+model Friendship {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  user      User     @relation("FriendshipSender", fields: [userId], references: [id])
+  friendId  Int
+  friend    User     @relation("FriendshipReceiver", fields: [friendId], references: [id])
+  status    String // "pending" | "accepted" | "ignored"
+  createdAt DateTime @default(now())
+
+  @@unique([userId, friendId])
+}
+
+model Attempt {
+  id              Int      @id @default(autoincrement())
+  userId          Int
+  user            User     @relation(fields: [userId], references: [id])
+  quizKey         String // "hsk1-chapter5" | "hsk1-combined" | ...
+  score           Int
+  total           Int
+  durationSeconds Int
+  createdAt       DateTime @default(now())
+
+  @@index([userId, quizKey])
+}

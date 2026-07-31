@@ -12,14 +12,18 @@
   truth instead of hardcoding colors per-component.
 - **lucide-react** for icons (pause, play, prev/next chevrons, trophy for leaderboard, users
   for friends, etc.) — a single consistent icon set rather than mixing emoji/ad-hoc SVGs.
-- **Database, via an ORM (Prisma)**:
+- **Database, via an ORM (Prisma 7)**:
   - **Dev/testing**: SQLite — a single file (`website/dev.db`), zero external
     dependencies, fast to reset (`rm dev.db && npm run db:migrate && npm run db:seed`).
-  - **Prod**: an external Postgres instance. Because Prisma's schema is
-    written against its own modeling language (not raw SQL), switching the `provider` in
-    `schema.prisma` from `sqlite` to `postgresql` and pointing `DATABASE_URL` at the prod
-    instance is the entire migration — no query rewrites, since Prisma's query builder targets
-    both identically. This is *the* reason to pick an ORM here over raw `better-sqlite3` calls.
+  - **Prod**: an external Postgres instance.
+  - Correction from an earlier draft of this doc, discovered while actually wiring this up:
+    **Prisma 7 requires an explicit driver adapter** (`PrismaClient({ adapter })`) — there's no
+    more implicit "just point `DATABASE_URL` at it" connection. So the dev→prod swap is two
+    things, not one: the `provider` in `schema.prisma` (`sqlite` → `postgresql`) *and* the
+    adapter passed into `PrismaClient` in `src/lib/db.ts` (`@prisma/adapter-better-sqlite3` →
+    `@prisma/adapter-pg`). Still no query rewrites — Prisma's query builder targets both
+    identically — but "swap a connection string" undersold it; budget for changing that one
+    file's adapter import too when standing up prod.
   - Prisma Migrate handles schema versioning for both environments from the same migration
     history.
 

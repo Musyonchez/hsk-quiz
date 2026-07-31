@@ -25,9 +25,10 @@ HSK 3 is out of scope for now — `characters/words/hsk3/` is still empty ([[one
 This is a real client/server app with its own database, not a pile of static JSON files:
 
 - **Dev/testing**: SQLite, file-based, zero setup.
-- **Prod**: an external managed database (Postgres). Swapping is a connection-string change,
-  not a rewrite — see [05-architecture.md](05-architecture.md) for how the ORM keeps both
-  targets working off one schema.
+- **Prod**: an external managed database (Postgres). Swapping is a small, contained change
+  (the `schema.prisma` provider plus one driver-adapter import — see
+  [05-architecture.md](05-architecture.md)), not a query rewrite — the ORM keeps both targets
+  working off one schema either way.
 
 This also means quiz attempts and best scores can be genuinely persisted server-side (not just
 `localStorage`), so "your progress" survives clearing browser storage or switching devices —
