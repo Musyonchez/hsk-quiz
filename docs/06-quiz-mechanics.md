@@ -55,10 +55,13 @@ toggle, `SCORE 0/N`, `TIMER 10:00` (configurable, default matches reference).
   `POST /api/attempts` on finish, per [05-architecture.md](05-architecture.md) — a real
   server-side record tied to your logged-in account, not `localStorage`.
 - **`AVG SCORE`** — reproduced for real now that there's a `User` table: average of all users'
-  best scores for this `quizKey`, from `GET /api/leaderboard?scope=global`.
-- **`AVG FRIEND SCORE`** — same query with `scope=friends`, restricted to accepted
-  `Friendship` rows. A link from here into the full leaderboard page —
-  see [09-pages.md](09-pages.md).
+  best scores for this `quizKey`. Computed client-side by averaging the array returned from
+  `GET /api/leaderboard?quizKey=&scope=global` — that endpoint returns every ranked row
+  unpaginated (the user base here is small and provisioned, never public-scale, so there's no
+  need for a separate aggregate endpoint or server-side `AVG()` query).
+- **`AVG FRIEND SCORE`** — same client-side average, over `GET
+  /api/leaderboard?quizKey=&scope=friends` instead. A link from here into the full leaderboard
+  page — see [09-pages.md](09-pages.md).
 
 ## Grammar-pattern items (optional, from Rule 2 of extraction)
 

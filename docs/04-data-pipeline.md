@@ -37,6 +37,13 @@ Walks `characters/words/hsk{1,2}/chapter*/vocabulary.md`, applies the rules in
 matching `grammer.md` when present (HSK 2) to pull the selective grammar-pattern items
 described in Rule 2 there.
 
+`title` comes from the file's first line — every sample chapter opens with a level-1 heading
+of the form `# Lesson N — 你叫什么名字 (Nǐ jiào shénme míngzi) What's Your Name`. Take that
+whole line (minus the leading `# `) as the title verbatim; don't try to split it into
+Chinese/pinyin/English sub-fields, since the format isn't perfectly regular between HSK 1 and
+HSK 2 chapters and the raw heading text is exactly what the level hub and learn page need to
+display anyway (see [09-pages.md](09-pages.md) §2).
+
 Markdown parsing: a markdown table extractor keyed on heading text (`## 词汇 Vocabulary — New
 Words`, `## 课文 Text — Dialogues`, `## 注释 Grammar Notes`) — split the file into sections by
 `##`/`###` heading boundaries first, then run a table parser only inside the target section(s).

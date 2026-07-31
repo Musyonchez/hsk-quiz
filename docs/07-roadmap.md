@@ -32,7 +32,7 @@ Phased so each phase produces something runnable/checkable before moving on.
 
 ## Phase 4 — Answer-key table view (Home, Level hub, Learn pages)
 
-- Home, `#/hsk{N}` level hub, and the chapter/combined Learn pages from
+- Home, `/hsk/[level]` level hub, and the chapter/combined Learn pages from
   [09-pages.md](09-pages.md), styled per [08-ui-ux.md](08-ui-ux.md).
 - No typing/scoring logic yet — confirms the data renders correctly, the design system holds
   up across real content, and navigation between levels/chapters works end to end.

@@ -13,7 +13,7 @@
 - **lucide-react** for icons (pause, play, prev/next chevrons, trophy for leaderboard, users
   for friends, etc.) — a single consistent icon set rather than mixing emoji/ad-hoc SVGs.
 - **Database, via an ORM (Prisma)**:
-  - **Dev/testing**: SQLite — a single file (`website/server/dev.db`), zero external
+  - **Dev/testing**: SQLite — a single file (`website/dev.db`), zero external
     dependencies, fast to reset (`rm dev.db && npm run db:migrate && npm run db:seed`).
   - **Prod**: an external Postgres instance. Because Prisma's schema is
     written against its own modeling language (not raw SQL), switching the `provider` in
@@ -46,7 +46,7 @@ GrammarPattern { id, chapterId, label, pinyinSkeleton, note }
 
 User         { id, username, passwordHash, displayName, createdAt }
 Session      { id, userId, tokenHash, expiresAt, createdAt }
-Friendship   { id, userId, friendId, status ("pending" | "accepted"), createdAt }
+Friendship   { id, userId, friendId, status ("pending" | "accepted" | "ignored"), createdAt }
 Attempt      { id, userId, quizKey ("hsk1-chapter5" | "hsk1-combined" | ...),
                score, total, durationSeconds, createdAt }
 ```
@@ -57,10 +57,14 @@ is addressable without joining through Level/Chapter every time.
 `Friendship` is stored as one directional row per request (`userId` sent the request to
 `friendId`); "are these two friends" is `status = "accepted"` in either direction — query
 helper, not a second table, to avoid an accept flow writing two rows that can drift apart.
+"Ignore" on the [Friends page](09-pages.md) sets `status = "ignored"` rather than deleting the
+row — this both stops it showing as pending again and blocks the same sender from spamming a
+new request to the same person (a repeat `POST /api/friends/requests` for a row already in
+`ignored` is a no-op, not a new pending row).
 
 ## Accounts and auth
 
-- **Provisioning, not self-signup**: a small admin script (`server/scripts/create-user.ts`)
+- **Provisioning, not self-signup**: a small admin script (`scripts/create-user.ts`)
   creates a `User` row with a hashed password (e.g. via `argon2` or `bcrypt`) — there is no
   public "sign up" endpoint or page. This matches the "specific user use" requirement: the set
   of people who can log in is whatever the site owner has explicitly created.
@@ -107,10 +111,12 @@ website/
         levels/[n]/combined/route.ts
         attempts/route.ts
         attempts/best/route.ts
+        attempts/recent/route.ts
         leaderboard/route.ts
         friends/route.ts
         friends/requests/route.ts
         friends/requests/[id]/accept/route.ts
+        friends/requests/[id]/ignore/route.ts
     components/               # AppHeader, VocabTable, QuizLinkCard, ScoreTimerBar,
                                # PillButton, PercentBadge, LeaderboardTable,
                                # FriendRequestRow, UserBadge — see 08-ui-ux.md
@@ -137,11 +143,13 @@ website/
 | `GET /api/levels/:n/chapters/:c/words` | — | word list for that chapter's learn table + quiz |
 | `GET /api/levels/:n/combined` | — | full-level word list |
 | `POST /api/attempts` | session | records a finished quiz attempt `{ quizKey, score, total, durationSeconds }` |
-| `GET /api/attempts/best?quizKey=` | session | current user's best score, for the results page |
+| `GET /api/attempts/best?quizKey=` | session | current user's best score for one quiz, for the results page |
+| `GET /api/attempts/recent` | session | current user's single most recent attempt (any quiz), for the home page |
 | `GET /api/leaderboard?quizKey=&scope=global\|friends` | session | ranked `[{ displayName, score, total, createdAt }]` |
 | `GET /api/friends` | session | accepted friends + pending incoming/outgoing requests |
 | `POST /api/friends/requests` | session | send a friend request `{ username }` |
 | `POST /api/friends/requests/:id/accept` | session | accept a pending request |
+| `POST /api/friends/requests/:id/ignore` | session | mark a pending request `ignored` |
 
 ## Local dev flow
 

@@ -10,7 +10,14 @@ to `/login` if there's no valid session (checked server-side in a layout/page, n
 only).
 
 Routes below are real Next.js App Router paths (`app/**/page.tsx`), not hash routes — see the
-file tree in [05-architecture.md](05-architecture.md).
+file tree in [05-architecture.md](05-architecture.md). References to `GET /api/...` below
+describe the *data contract* (what shape of data the page needs), not necessarily a literal
+client-side fetch — per [05-architecture.md](05-architecture.md#one-app-not-frontend--separate-backend),
+plain reads for a Server Component (level hub, learn pages, home) go straight through
+`lib/db.ts`, while the same query logic backs the `GET` route so client-side interactions
+(e.g. re-fetching a leaderboard tab without a full page reload) have something to call. `POST`
+routes are always real network calls, since they originate from Client Component form/button
+handlers.
 
 ## 0. Login — `/login`
 
@@ -24,7 +31,7 @@ file tree in [05-architecture.md](05-architecture.md).
 - Short intro line (what this site is).
 - Two large cards: **HSK 1** and **HSK 2**, each showing chapter count and, once a player has
   played anything, their most recent activity (e.g. "Last played: Chapter 5 — 82%") pulled
-  from `GET /api/attempts/best` — a light personal touch, not a full dashboard.
+  from `GET /api/attempts/recent` — a light personal touch, not a full dashboard.
 - No settings — this page's only job is picking a level (login is enforced by the layout, not
   by this page itself).
 
@@ -75,8 +82,10 @@ file tree in [05-architecture.md](05-architecture.md).
 - **Your friends** list (accepted `Friendship` rows) — each a `<UserBadge>` with a link into
   "compare" (just the friends-scope leaderboard filtered to that one person, reusing
   `<LeaderboardTable>`).
-- **Pending requests** — incoming (`Accept` / `Ignore` via `<FriendRequestRow>`) and outgoing
-  (shown as "waiting," no cancel action needed at launch).
+- **Pending requests** — incoming (`Accept` / `Ignore` via `<FriendRequestRow>`, hitting
+  `POST /api/friends/requests/:id/accept` or `.../ignore` — see
+  [05-architecture.md](05-architecture.md)) and outgoing (shown as "waiting," no cancel action
+  needed at launch).
 - **Add a friend** — a single username text field + `Send request` button, hitting
   `POST /api/friends/requests`. No user search/directory — you have to know the exact
   username, consistent with accounts being provisioned rather than publicly discoverable.
