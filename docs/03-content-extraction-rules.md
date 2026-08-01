@@ -34,6 +34,12 @@ word).
 Everything from `## 注释 Grammar Notes` onward (注释, 拼音/语音, 汉字, 练习, 运用, etc.) is
 **not** included wholesale. Only pull items that meet an "HSK-exam-relevant" bar:
 
+**Status: this selection is manual/future work, not automated.** Per
+[07-roadmap.md](07-roadmap.md)'s Phase 2 notes, the 30 chapters' grammar-notes sections aren't
+structurally consistent enough for a script to judge "exam-relevant" reliably — this rule
+describes the *criteria* a human (or a future, smarter pass) should apply, not something
+`extract-chapters.ts` currently does.
+
 **Include:**
 - A grammar note's *key word/particle itself* if it's a standalone vocab item not already in
   the 词汇 table — e.g. tone-sandhi rules for 不 (bù) or 一 (yī) don't add a new word (不/一

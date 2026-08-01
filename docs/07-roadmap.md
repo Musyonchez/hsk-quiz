@@ -11,16 +11,29 @@ Phased so each phase produces something runnable/checkable before moving on.
   Numerals, Nouns, Verbs) with `prisma studio` or a throwaway script.
 - No UI yet — just prove the data pipeline produces correct, complete word lists in the DB.
 
-## Phase 2 — Chapter data extraction
+## Phase 2 — Chapter data extraction ✅
 
-- Write `lib/extract/extract-chapters.ts` per
-  [03-content-extraction-rules.md](03-content-extraction-rules.md), starting with HSK 1 (no
-  `grammer.md` to juggle) then HSK 2.
-- Spot-check a few chapters' output against their source `vocabulary.md` by hand, particularly
-  the dedup rule (Rule 3) and the empty-pinyin guard (Rule 4).
-- Decide, with real chapter data in hand, whether any chapters actually produce a qualifying
-  Rule 2 grammar-pattern item — if none do in practice, drop that feature rather than keep
-  speculative code for it.
+- `lib/extract/extract-chapters.ts` walks all 30 chapters (HSK 1 + HSK 2), extracts the title
+  (first line verbatim), the 词汇 table, and any Proper Nouns table per Rule 1 of
+  [03-content-extraction-rules.md](03-content-extraction-rules.md). Verified against real files:
+  335 chapter words total, deduped (Rule 3), zero missing-pinyin rows (Rule 4 never triggered
+  in practice — the pinyin guide's claim that 词汇 tables are pinyin-complete held up).
+- Real-data edge cases the parser had to handle, found by grepping all 30 files before writing
+  it rather than assuming the two sample chapters generalized: the `#` column sometimes reads
+  `*3` (a supplementary-word marker) rather than a plain number — ignored, since words are read
+  positionally, not by that column; "Proper Nouns" tables appear under three different labels
+  (`**Proper nouns:**`, `**Proper Nouns**`, and one inline `**专有名词 Proper Noun:** ...`
+  variant with no following table) — the first two are parsed, the third (1 of 30 chapters,
+  HSK 2 chapter 13's 杨笑笑) is a documented, deliberate gap rather than a one-off special case.
+- **Decision on Rule 2 (grammar patterns): deferred, not automated.** With all 30 chapters'
+  `## 注释 Grammar Notes` sections in hand, the headings aren't consistent enough to script
+  "is this exam-relevant" reliably — numbered vs. unnumbered points, Chinese-first vs.
+  English-first labels, and only HSK 2 chapters having a separate `grammer.md` at all. Judging
+  exam relevance is exactly the kind of call that needs a human reading the grammar note, not a
+  markdown-structure heuristic. `GrammarPattern` stays in the schema for future manual curation
+  (or a later pass with a different approach), but `extract-chapters.ts` returns no
+  `GrammarPattern` rows for now, and the per-chapter quiz's "Patterns" row group from
+  [06-quiz-mechanics.md](06-quiz-mechanics.md) simply doesn't render until some exist.
 
 ## Phase 3 — Auth + accounts
 

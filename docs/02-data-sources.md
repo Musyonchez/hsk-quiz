@@ -25,7 +25,7 @@ These are hand-written markdown, not machine-generated, so parsing is section-ba
 than whole-file. See [03-content-extraction-rules.md](03-content-extraction-rules.md) for the
 precise rule on which part of the file is in-scope.
 
-Known structural facts (verified against `hsk1/chapter3` and `hsk2/chapter5`):
+Known structural facts (verified against all 30 chapter files, not just the original two samples):
 - Every chapter file has a `## 课文 Text — Dialogues` heading, followed by one or more
   `### Scene N` blocks, each with a `Chinese | Pinyin | English` table and (in HSK 2 files)
   a `**New Words — Scene N**` sub-table.
@@ -43,7 +43,19 @@ Known structural facts (verified against `hsk1/chapter3` and `hsk2/chapter5`):
   are mid-backfill per
   [characters/words/docs/vocabulary-pinyin-guide.md](../../characters/words/docs/vocabulary-pinyin-guide.md).
   The 词汇 Vocabulary table itself is called out there as **already complete**, so it's safe to
-  rely on for pinyin without a fallback.
+  rely on for pinyin without a fallback — confirmed in practice: seeding all 30 chapters
+  triggered the missing-pinyin guard (Rule 4 of
+  [03-content-extraction-rules.md](03-content-extraction-rules.md)) zero times.
+- Proper Nouns tables appear under three different labels across the 30 files:
+  `**Proper nouns:**` (hsk1/ch3), `**Proper Nouns**` (hsk2/ch1), and one inline
+  `**专有名词 Proper Noun:** 杨笑笑 ... — name of a person` (hsk2/ch13) that puts the entry on
+  the same line as the label instead of in a following table. The first two are parsed; the
+  third is a known, accepted gap (one proper noun missing from one chapter, out of 335 chapter
+  words total) rather than a special case built into the parser for a single occurrence.
+- The `#` column in 词汇 tables sometimes reads `*3` instead of `3` — a supplementary-word
+  marker (a chapter-level footnote calls these "useful but not core exam vocabulary"). Words
+  are read from the table positionally, not by that column, so this doesn't need special
+  handling; it's noted here only because it's easy to mistake for a parsing artifact.
 
 ## 3. Appendices (reference, not primary source)
 
