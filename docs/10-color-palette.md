@@ -54,8 +54,8 @@ them is wrong.
 |---|---|---|
 | `--success` | `#5c8a54` | Jade — correctly-answered quiz rows, success toasts |
 | `--success-surface` | `rgba(92, 138, 84, 0.16)` | Background tint for a correct row (paired with `--success` as a left-border, not a full fill — see [08-ui-ux.md](08-ui-ux.md)'s accessibility baseline) |
-| `--current` | `#c99a3a` | Muted gold — current-row highlight during a quiz, replacing the reference screenshots' literal bright yellow so it fits the ink/paper/seal palette instead of clashing with it |
-| `--current-surface` | `rgba(201, 154, 58, 0.16)` | Background tint for the current row |
+| `--current-row` | `#c99a3a` | Muted gold — current-row highlight during a quiz, replacing the reference screenshots' literal bright yellow so it fits the ink/paper/seal palette instead of clashing with it. Named `current-row`, not `current` — Tailwind already reserves `current` for `currentColor` |
+| `--current-row-surface` | `rgba(201, 154, 58, 0.16)` | Background tint for the current row |
 | `--danger` | `#b3453a` | Form/validation errors only (e.g. login failure, taken username) — deliberately a different hex from `--accent` even though both read as "red," so an error never gets mistaken for a call-to-action button |
 
 ## Usage rules
@@ -66,7 +66,7 @@ them is wrong.
   [08-ui-ux.md](08-ui-ux.md): only `<PillButton variant="primary">` and `<PercentBadge>` are
   allowed to use `--accent`. `variant="secondary"` is an outline pill using `--border-strong` +
   `--foreground`, never a second color.
-- **Color is never the only signal.** Current-row (`--current`) and correct-row (`--success`)
+- **Color is never the only signal.** Current-row (`--current-row`) and correct-row (`--success`)
   states pair their background tint with a left-border in the same hue, per the accessibility
   baseline in [08-ui-ux.md](08-ui-ux.md) — a colorblind user can still tell rows apart by border
   presence/position, not hue alone.
@@ -95,8 +95,8 @@ pattern already used for spacing/typography — no `tailwind.config.js`, CSS var
 
   --success: #5c8a54;
   --success-surface: rgba(92, 138, 84, 0.16);
-  --current: #c99a3a;
-  --current-surface: rgba(201, 154, 58, 0.16);
+  --current-row: #c99a3a;
+  --current-row-surface: rgba(201, 154, 58, 0.16);
   --danger: #b3453a;
 }
 ```

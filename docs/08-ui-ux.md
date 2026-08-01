@@ -21,7 +21,7 @@ spec, not against whatever a first draft happened to look like.
   columns, dark rows with a slightly lighter stripe for the header, black cells for the "not
   yet visible" character/definition columns during a quiz) is the dominant visual element on
   learn and quiz pages — don't compress it into a sidebar or hide it behind tabs.
-- **Highlight states**: `--current` (gold) background = current row (mid-quiz), `--success`
+- **Highlight states**: `--current-row` (gold) background = current row (mid-quiz), `--success`
   (jade) = correctly answered row — see [10-color-palette.md](10-color-palette.md); the
   character cell always stays visible, only the pinyin cell is blanked/revealed.
 - **Typography**: a plain system sans-serif for English/pinyin UI text; Chinese characters need

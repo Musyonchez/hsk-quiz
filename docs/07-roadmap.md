@@ -61,12 +61,25 @@ Phased so each phase produces something runnable/checkable before moving on.
   Playwright against the dev server (logged-out landing, logged-in landing, register →
   dashboard, level hub, chapter learn page, combined learn page's masonry grouping).
 
-## Phase 5 — Quiz engine
+## Phase 5 — Quiz engine ✅
 
 - Timer, score counter, input matching (per [06-quiz-mechanics.md](06-quiz-mechanics.md)),
   prev/next navigation, give-up.
-- Build against one chapter first, verify the interaction loop feels right before wiring it up
-  to every quiz.
+- `src/quiz/pinyin-match.ts` (framework-free) and `<QuizRunner>` wired to both
+  `/hsk/[level]/chapter/[chapter]/quiz` and `/hsk/[level]/combined/quiz`. No results
+  persistence yet (`POST /api/attempts`, best-score, PLAY NEXT/ANOTHER) — that's Phase 6;
+  finishing a quiz here just shows a local score/percentage and a Replay button.
+- Found and fixed a real data edge case while testing against Chapter 1: one word (没关系) is
+  stored with an internal space (`"méi guānxi"`), which the original trim-only normalizer
+  didn't strip — `normalizePinyin` now strips all whitespace, not just the ends, so `meiguanxi`
+  matches regardless of the source data's spacing.
+- Also renamed the `--current` color token to `--current-row` before it was ever used in a
+  utility class — Tailwind already reserves the bare word `current` for `currentColor`, and
+  `bg-current-row` (as first used in this phase, for the quiz's current-row highlight) would
+  have silently collided with it. See [10-color-palette.md](10-color-palette.md).
+- Verified end-to-end via Playwright: full correct playthrough (100%, replay resets cleanly),
+  pause/resume, prev/next, give-up (partial score reported correctly), and the combined-quiz
+  route.
 
 ## Phase 6 — Results, leaderboard, friends
 
