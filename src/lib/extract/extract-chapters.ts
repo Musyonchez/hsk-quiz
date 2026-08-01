@@ -59,6 +59,14 @@ function sliceSection(lines: string[], heading: string): string[] {
   return lines.slice(startIdx + 1, endIdx === -1 ? lines.length : endIdx);
 }
 
+// A source Type column is sometimes a bare "—" placeholder rather than left
+// empty (e.g. 为什么 in hsk2/chapter1) — treated the same as no type at all,
+// consistent with how Proper Noun rows (which have no Type column) store it.
+function normalizeWordType(value: string): string | null {
+  if (!value || value === "—" || value === "-") return null;
+  return value;
+}
+
 function parseVocabTableRows(tableRows: string[][]): ChapterWordRow[] {
   // Columns are [#, Character, Pinyin, Type, Meaning]. The "#" column is
   // ignored entirely (including its "*n" supplementary-word marker) — words
@@ -68,7 +76,7 @@ function parseVocabTableRows(tableRows: string[][]): ChapterWordRow[] {
     .map((cells) => ({
       chinese: cells[1],
       pinyin: cells[2],
-      wordType: cells[3] || null,
+      wordType: normalizeWordType(cells[3]),
       meaning: cells[4] || null,
     }));
 }
