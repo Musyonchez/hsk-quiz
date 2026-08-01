@@ -26,10 +26,19 @@ export async function AppHeader() {
           </nav>
         )}
       </div>
-      {user && (
+      {user ? (
         <div className="flex items-center gap-4">
           <UserBadge displayName={user.displayName} />
           <LogoutButton />
+        </div>
+      ) : (
+        <div className="flex items-center gap-4 text-sm">
+          <Link href="/login" className="text-muted-foreground hover:text-foreground">
+            Log in
+          </Link>
+          <Link href="/register" className="text-muted-foreground hover:text-foreground">
+            Register
+          </Link>
         </div>
       )}
     </header>
