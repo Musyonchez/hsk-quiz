@@ -48,12 +48,18 @@ Phased so each phase produces something runnable/checkable before moving on.
   `/api/auth/me`, logout invalidating the session. Both pages styled against
   [10-color-palette.md](10-color-palette.md) from the start.
 
-## Phase 4 — Answer-key table view (Home, Level hub, Learn pages)
+## Phase 4 — Answer-key table view (Landing, Dashboard, Level hub, Learn pages) ✅
 
-- Home, `/hsk/[level]` level hub, and the chapter/combined Learn pages from
-  [09-pages.md](09-pages.md), styled per [08-ui-ux.md](08-ui-ux.md).
+- Public landing (`/`), session-protected Dashboard (`/dashboard`), `/hsk/[level]` level hub,
+  and the chapter/combined Learn pages from [09-pages.md](09-pages.md), styled per
+  [08-ui-ux.md](08-ui-ux.md).
+- `/` ended up split into a public landing page and `/dashboard` mid-build — a first-time
+  visitor should see the site exists (and get Log in/Register CTAs) without being redirected
+  straight to `/login`, which is what a session-gated `/` would have done.
 - No typing/scoring logic yet — confirms the data renders correctly, the design system holds
-  up across real content, and navigation between levels/chapters works end to end.
+  up across real content, and navigation between levels/chapters works end to end. Verified via
+  Playwright against the dev server (logged-out landing, logged-in landing, register →
+  dashboard, level hub, chapter learn page, combined learn page's masonry grouping).
 
 ## Phase 5 — Quiz engine
 
