@@ -19,7 +19,19 @@ Phased so each phase produces something runnable/checkable before moving on.
   was paired with (饭馆 relabeled to 饭店 — the pinyin "fàndiàn" was already correct, just
   attached to the wrong character; 日→号; 没→没有). Fixed via a small, documented corrections
   step applied after extraction rather than editing the seeded DB by hand, so it survives a
-  reseed. HSK2 hasn't been checked the same way yet.
+  reseed.
+- **HSK2 checked the same way** (its own textbook's appendix, pages 128-135): confirmed HSK2's
+  combined list is independently sourced and cumulative (~300 words = all of HSK1 + HSK2's own
+  new words), so HSK1's bugs had to be separately corrected in HSK2's copy too (饭馆→饭店,
+  没→没有 both repeat; 日→号 does **not** — 日 is a genuine separate HSK2 word). Also found
+  HSK2-specific issues: 男人/女人 replaced with the official 男/女, 玩 replaced with 玩儿, and
+  10 words added (说, 一点儿 carried over from HSK1's gaps; 比, 宾馆, 公司, 面条, 铅笔, 虽然,
+  往, 一下 genuinely missing from HSK2's own source PDF).
+- Also confirmed via the same per-lesson transcription approach that all 15 HSK1 chapters'
+  vocabulary matches the textbook exactly, except that the official lesson lists include a
+  proper noun in 4 chapters that the curated markdown never captured (王方/谢朋 ch.10, 北京
+  ch.11, 大卫 ch.13, 张 ch.14) — deliberately not added; see
+  [03-content-extraction-rules.md](03-content-extraction-rules.md)'s proper-noun exclusion rule.
 
 ## Phase 2 — Chapter data extraction ✅
 
