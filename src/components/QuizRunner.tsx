@@ -116,65 +116,67 @@ function QuizRunnerInner({
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="sticky top-18.25 z-5 flex flex-wrap items-center justify-between gap-4 rounded-xl border border-border bg-surface px-5 py-4 shadow-lg shadow-background/50">
-        <span className="text-sm font-semibold tabular-nums">
-          SCORE {score}/{total}
-        </span>
-        <span className="text-sm font-semibold tabular-nums">{formatDuration(secondsLeft)}</span>
-        <div className="flex items-center gap-2">
-          <ToolbarButton onClick={() => goTo(currentIndex - 1)} disabled={!started} label="Prev">
-            <ChevronLeft size={16} />
-            Prev
-          </ToolbarButton>
-          <ToolbarButton onClick={() => goTo(currentIndex + 1)} disabled={!started} label="Next">
-            Next
-            <ChevronRight size={16} />
-          </ToolbarButton>
-          <ToolbarButton onClick={() => setPaused((p) => !p)} disabled={!started} label="Pause">
-            {paused ? <Play size={16} /> : <Pause size={16} />}
-            {paused ? "Resume" : "Pause"}
-          </ToolbarButton>
-          <ToolbarButton
-            onClick={() => setFinished("gaveup")}
-            disabled={!started}
-            label="Give up"
-            variant="danger"
-          >
-            <Flag size={16} />
-            Give up
-          </ToolbarButton>
-        </div>
-      </div>
-
-      {!started ? (
-        <div className="flex flex-col items-center gap-4 rounded-xl border border-border bg-surface p-10 text-center">
-          <p className="text-muted-foreground">
-            {total} words · {formatDuration(QUIZ_DURATION_SECONDS)} on the clock
-          </p>
-          <button type="button" onClick={() => setStarted(true)} className={pillClasses("primary")}>
-            Start quiz
-          </button>
-        </div>
-      ) : paused ? (
-        <div className="rounded-xl border border-border bg-surface p-10 text-center text-muted-foreground">
-          Paused
-        </div>
-      ) : (
-        currentWord && (
-          <div className="rounded-xl border border-border bg-surface p-8">
-            <p className="text-4xl font-bold">{currentWord.chinese}:</p>
-            <input
-              ref={inputRef}
-              type="text"
-              value={input}
-              onChange={(e) => handleInputChange(e.target.value)}
-              autoFocus
-              placeholder="type the pinyin"
-              className="mt-4 w-full rounded border border-border bg-transparent px-3 py-2 outline-none focus:border-border-strong"
-            />
+      <div className="sticky top-18.25 z-5 flex flex-col gap-4 bg-background pb-4">
+        <div className="flex flex-wrap items-center justify-between gap-4 rounded-xl border border-border bg-surface px-5 py-4">
+          <span className="text-sm font-semibold tabular-nums">
+            SCORE {score}/{total}
+          </span>
+          <span className="text-sm font-semibold tabular-nums">{formatDuration(secondsLeft)}</span>
+          <div className="flex items-center gap-2">
+            <ToolbarButton onClick={() => goTo(currentIndex - 1)} disabled={!started} label="Prev">
+              <ChevronLeft size={16} />
+              Prev
+            </ToolbarButton>
+            <ToolbarButton onClick={() => goTo(currentIndex + 1)} disabled={!started} label="Next">
+              Next
+              <ChevronRight size={16} />
+            </ToolbarButton>
+            <ToolbarButton onClick={() => setPaused((p) => !p)} disabled={!started} label="Pause">
+              {paused ? <Play size={16} /> : <Pause size={16} />}
+              {paused ? "Resume" : "Pause"}
+            </ToolbarButton>
+            <ToolbarButton
+              onClick={() => setFinished("gaveup")}
+              disabled={!started}
+              label="Give up"
+              variant="danger"
+            >
+              <Flag size={16} />
+              Give up
+            </ToolbarButton>
           </div>
-        )
-      )}
+        </div>
+
+        {!started ? (
+          <div className="flex flex-col items-center gap-4 rounded-xl border border-border bg-surface p-10 text-center shadow-lg shadow-background/50">
+            <p className="text-muted-foreground">
+              {total} words · {formatDuration(QUIZ_DURATION_SECONDS)} on the clock
+            </p>
+            <button type="button" onClick={() => setStarted(true)} className={pillClasses("primary")}>
+              Start quiz
+            </button>
+          </div>
+        ) : paused ? (
+          <div className="rounded-xl border border-border bg-surface p-10 text-center text-muted-foreground shadow-lg shadow-background/50">
+            Paused
+          </div>
+        ) : (
+          currentWord && (
+            <div className="rounded-xl border border-border bg-surface p-8 shadow-lg shadow-background/50">
+              <p className="text-4xl font-bold">{currentWord.chinese}:</p>
+              <input
+                ref={inputRef}
+                type="text"
+                value={input}
+                onChange={(e) => handleInputChange(e.target.value)}
+                autoFocus
+                placeholder="type the pinyin"
+                className="mt-4 w-full rounded border border-border bg-transparent px-3 py-2 outline-none focus:border-border-strong"
+              />
+            </div>
+          )
+        )}
+      </div>
 
       <table className="w-full overflow-hidden rounded-lg border border-border text-sm">
         <thead className="bg-surface-raised text-left text-xs uppercase tracking-wide text-muted-foreground">
