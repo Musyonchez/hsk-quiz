@@ -3,6 +3,7 @@ import { Keyboard, Layers, Timer } from "lucide-react";
 import { getSessionUser } from "@/lib/auth";
 import { getLevelsOverview, getCombinedWordCount } from "@/lib/queries";
 import { pillClasses } from "@/components/pill-classes";
+import { VocabTableGroup } from "@/components/VocabTable";
 
 const FEATURES = [
   {
@@ -26,9 +27,9 @@ const FEATURES = [
 ] as const;
 
 const PREVIEW_ROWS = [
-  { chinese: "你好", pinyin: "nǐ hǎo", meaning: "hello" },
-  { chinese: "谢谢", pinyin: "xièxiè", meaning: "thank you" },
-  { chinese: "老师", pinyin: "lǎoshī", meaning: "teacher" },
+  { id: 1, chinese: "你好", pinyin: "nǐ hǎo", meaning: "hello" },
+  { id: 2, chinese: "谢谢", pinyin: "xièxiè", meaning: "thank you" },
+  { id: 3, chinese: "老师", pinyin: "lǎoshī", meaning: "teacher" },
 ] as const;
 
 export default async function LandingPage() {
@@ -97,24 +98,9 @@ export default async function LandingPage() {
         <h2 className="text-sm font-medium uppercase tracking-wide text-muted-foreground">
           What you&rsquo;ll see
         </h2>
-        <table className="w-full max-w-md overflow-hidden rounded-lg border border-border text-sm">
-          <thead className="bg-surface-raised text-left text-xs uppercase tracking-wide text-muted-foreground">
-            <tr>
-              <th className="px-3 py-2">Chinese</th>
-              <th className="px-3 py-2">Pinyin</th>
-              <th className="px-3 py-2">English</th>
-            </tr>
-          </thead>
-          <tbody>
-            {PREVIEW_ROWS.map((row) => (
-              <tr key={row.chinese} className="border-t border-border">
-                <td className="px-3 py-2 font-medium">{row.chinese}</td>
-                <td className="px-3 py-2 text-muted-foreground">{row.pinyin}</td>
-                <td className="px-3 py-2">{row.meaning}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+        <div className="w-full max-w-md">
+          <VocabTableGroup words={[...PREVIEW_ROWS]} />
+        </div>
       </section>
 
       {/* Closing CTA */}

@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { requireSession } from "@/lib/require-session";
-import { getCombinedWords } from "@/lib/queries";
+import { getCombinedWords, getLevelName } from "@/lib/queries";
 import { isLevelSlug } from "@/lib/hsk-level";
 import { VocabTable } from "@/components/VocabTable";
 import { pillClasses } from "@/components/pill-classes";
@@ -15,8 +15,11 @@ export default async function CombinedLearnPage({
   const { level: levelSlug } = await params;
   if (!isLevelSlug(levelSlug)) notFound();
 
-  const words = await getCombinedWords(levelSlug);
-  if (words.length === 0) notFound();
+  const [words, level] = await Promise.all([
+    getCombinedWords(levelSlug),
+    getLevelName(levelSlug),
+  ]);
+  if (words.length === 0 || !level) notFound();
 
   return (
     <main className="mx-auto flex w-full max-w-5xl flex-col gap-8 px-6 py-12">
@@ -25,10 +28,10 @@ export default async function CombinedLearnPage({
           href={`/hsk/${levelSlug}`}
           className="text-sm text-muted-foreground hover:text-foreground"
         >
-          ← HSK {levelSlug}
+          ← {level.name}
         </Link>
         <h1 className="mt-2 text-2xl font-bold">
-          HSK {levelSlug} — Combined ({words.length} words)
+          {level.name} — Combined ({words.length} words)
         </h1>
       </div>
 

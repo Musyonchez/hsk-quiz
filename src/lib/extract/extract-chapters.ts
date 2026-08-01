@@ -3,7 +3,8 @@ import type { Dirent } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { parseAllTables } from "./markdown-table";
-import { extractHsk3Chapters } from "./extract-hsk3-chapters";
+import { extractInRepoChapters } from "./in-repo-chapters";
+import { HSK3_CHAPTERS } from "./hsk3-chapters-data";
 import { ALL_LEVELS, type LevelSlug } from "@/lib/hsk-level";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -146,13 +147,15 @@ export async function extractAllChapters(): Promise<ChapterData[]> {
   const fromMarkdown = await Promise.all(
     ALL_LEVELS.map((level) => extractChaptersForLevel(level.slug))
   );
-  // HSK3 has no vocabulary.md files — its chapters come from in-repo data
-  // instead (extract-hsk3-chapters.ts). Its markdown-based entry above will
-  // always be [] until/if that changes.
+  // HSK3 has no vocabulary.md files — its chapters come from the in-repo
+  // hsk3-chapters-data.ts instead (see extractInRepoChapters). Its
+  // markdown-based entry above will always be [] until/if that changes.
   //
-  // HSK4A/4B/5A/5B are fully transcribed (extract-hsk4a-chapters.ts and
-  // friends) but deliberately not included here — see the comment on
-  // ALL_LEVELS in hsk-level.ts for why. Re-add them to the array below (and
-  // their slugs to ALL_LEVELS) once HSK4+ goes live on the site again.
-  return [...fromMarkdown.flat(), ...extractHsk3Chapters()];
+  // HSK4A/4B/5A/5B are fully transcribed the same way (hsk4a-chapters-data.ts
+  // and friends) but deliberately not included here — see the comment on
+  // ALL_LEVELS in hsk-level.ts for why. Re-add them once HSK4+ goes live on
+  // the site again: import their data file and add
+  // `...extractInRepoChapters("4a", HSK4A_CHAPTERS)` etc. below, plus the
+  // slug to ALL_LEVELS.
+  return [...fromMarkdown.flat(), ...extractInRepoChapters("3", HSK3_CHAPTERS)];
 }

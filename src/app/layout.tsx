@@ -15,7 +15,7 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "HSK Quiz",
-  description: "Type the pinyin for HSK 1 and HSK 2 vocabulary, by chapter or the full level.",
+  description: "Type the pinyin for HSK vocabulary, by chapter or the full level.",
 };
 
 export default function RootLayout({

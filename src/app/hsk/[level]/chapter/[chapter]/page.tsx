@@ -26,7 +26,7 @@ export default async function ChapterLearnPage({
           href={`/hsk/${levelSlug}`}
           className="text-sm text-muted-foreground hover:text-foreground"
         >
-          ← HSK {levelSlug}
+          ← {chapter.level.name}
         </Link>
         <h1 className="mt-2 text-2xl font-bold">
           Chapter {chapter.number} — {chapter.title}

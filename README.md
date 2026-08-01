@@ -1,6 +1,6 @@
 # HSK Quiz Site
 
-A Sporcle-style typing quiz for the HSK 1/2 vocabulary in this repo. See
+A Sporcle-style typing quiz for the HSK 1-3 vocabulary in this repo. See
 [`docs/`](docs/01-overview.md) for the full spec — start at
 [`docs/01-overview.md`](docs/01-overview.md).
 

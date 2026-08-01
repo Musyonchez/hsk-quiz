@@ -53,8 +53,7 @@ export default function RegisterPage() {
         </span>
         <h1 className="text-2xl font-bold">HSK Quiz</h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          Type the pinyin for HSK 1 and HSK 2 vocabulary, by chapter or the
-          full level.
+          Type the pinyin for HSK vocabulary, by chapter or the full level.
         </p>
       </div>
 

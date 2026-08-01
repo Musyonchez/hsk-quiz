@@ -36,7 +36,10 @@ export function VocabTable({
   );
 }
 
-function VocabTableGroup({ words }: { words: VocabWord[] }) {
+// Exported so pages that just need the bare Chinese/Pinyin/English table
+// (e.g. the landing page's small static preview) can reuse it instead of
+// duplicating this markup.
+export function VocabTableGroup({ words }: { words: VocabWord[] }) {
   return (
     <table className="w-full overflow-hidden rounded-lg border border-border text-sm">
       <thead className="bg-surface-raised text-left text-xs uppercase tracking-wide text-muted-foreground">
