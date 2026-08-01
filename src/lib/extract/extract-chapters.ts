@@ -1,8 +1,10 @@
 import { readFile, readdir } from "node:fs/promises";
+import type { Dirent } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { parseAllTables } from "./markdown-table";
 import { extractHsk3Chapters } from "./extract-hsk3-chapters";
+import { ALL_HSK_LEVELS, type HskLevel } from "@/lib/hsk-level";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -18,7 +20,7 @@ export interface ChapterWordRow {
 }
 
 export interface ChapterData {
-  level: 1 | 2 | 3;
+  level: HskLevel;
   chapterNumber: number;
   title: string;
   words: ChapterWordRow[];
@@ -74,7 +76,7 @@ function parseVocabTableRows(tableRows: string[][]): ChapterWordRow[] {
 }
 
 async function extractOneChapter(
-  level: 1 | 2 | 3,
+  level: HskLevel,
   chapterNumber: number,
   filePath: string
 ): Promise<ChapterData> {
@@ -110,11 +112,19 @@ async function extractOneChapter(
   return { level, chapterNumber, title, words };
 }
 
-export async function extractChaptersForLevel(
-  level: 1 | 2 | 3
-): Promise<ChapterData[]> {
+export async function extractChaptersForLevel(level: HskLevel): Promise<ChapterData[]> {
   const levelDir = path.join(wordsRoot, `hsk${level}`);
-  const entries = await readdir(levelDir, { withFileTypes: true });
+  // Not every level has a characters/words/hsk{N}/ folder yet (HSK4-6 don't
+  // exist at all yet, and HSK3's is an empty .keep placeholder) — treat a
+  // missing directory as "no markdown chapters for this level" rather than
+  // letting readdir's ENOENT crash the whole seed run.
+  let entries: Dirent[];
+  try {
+    entries = await readdir(levelDir, { withFileTypes: true });
+  } catch (err) {
+    if ((err as NodeJS.ErrnoException).code === "ENOENT") return [];
+    throw err;
+  }
 
   const chapterDirs = entries
     .filter((e) => e.isDirectory() && /^chapter\d+$/.test(e.name))
@@ -133,13 +143,11 @@ export async function extractChaptersForLevel(
 }
 
 export async function extractAllChapters(): Promise<ChapterData[]> {
-  const [hsk1, hsk2, hsk3FromMarkdown] = await Promise.all([
-    extractChaptersForLevel(1),
-    extractChaptersForLevel(2),
-    extractChaptersForLevel(3),
-  ]);
+  const fromMarkdown = await Promise.all(ALL_HSK_LEVELS.map((level) => extractChaptersForLevel(level)));
   // HSK3 has no vocabulary.md files yet — its chapters come from
   // extract-hsk3-chapters.ts's in-repo data instead (see that file's
-  // comment). hsk3FromMarkdown will always be [] until/if that changes.
-  return [...hsk1, ...hsk2, ...hsk3FromMarkdown, ...extractHsk3Chapters()];
+  // comment). Its markdown-based entry above will always be [] until/if
+  // that changes. HSK4-6 have neither a markdown folder nor in-repo chapter
+  // data yet, so they simply contribute no chapters for now.
+  return [...fromMarkdown.flat(), ...extractHsk3Chapters()];
 }

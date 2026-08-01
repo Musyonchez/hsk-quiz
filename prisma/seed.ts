@@ -2,10 +2,11 @@ import "dotenv/config";
 import { prisma } from "@/lib/db";
 import { extractAllCombinedLevels } from "@/lib/extract/extract-combined";
 import { extractAllChapters } from "@/lib/extract/extract-chapters";
+import { ALL_HSK_LEVELS, type HskLevel } from "@/lib/hsk-level";
 
-async function ensureLevels(): Promise<Record<1 | 2 | 3, number>> {
-  const ids = {} as Record<1 | 2 | 3, number>;
-  for (const level of [1, 2, 3] as const) {
+async function ensureLevels(): Promise<Record<HskLevel, number>> {
+  const ids = {} as Record<HskLevel, number>;
+  for (const level of ALL_HSK_LEVELS) {
     const row = await prisma.level.upsert({
       where: { number: level },
       create: { number: level, name: `HSK ${level}` },
@@ -16,7 +17,7 @@ async function ensureLevels(): Promise<Record<1 | 2 | 3, number>> {
   return ids;
 }
 
-async function seedCombinedLevels(levelIds: Record<1 | 2 | 3, number>) {
+async function seedCombinedLevels(levelIds: Record<HskLevel, number>) {
   const levels = await extractAllCombinedLevels();
 
   for (const { level, words } of levels) {
@@ -78,7 +79,7 @@ async function seedCombinedLevels(levelIds: Record<1 | 2 | 3, number>) {
   }
 }
 
-async function seedChapters(levelIds: Record<1 | 2 | 3, number>) {
+async function seedChapters(levelIds: Record<HskLevel, number>) {
   const chapters = await extractAllChapters();
 
   for (const chapterData of chapters) {

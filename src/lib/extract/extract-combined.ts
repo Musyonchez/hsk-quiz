@@ -2,6 +2,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { extractCombinedVocab, type CombinedVocabRow } from "./pdf-vocab-table";
 import { applyCombinedVocabCorrections } from "./combined-vocab-corrections";
+import { ALL_HSK_LEVELS, type HskLevel } from "@/lib/hsk-level";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -15,18 +16,16 @@ const combinedVocabDir = path.join(
 );
 
 export interface CombinedLevelData {
-  level: 1 | 2 | 3;
+  level: HskLevel;
   words: CombinedVocabRow[];
 }
 
-export async function extractCombinedLevel(
-  level: 1 | 2 | 3
-): Promise<CombinedLevelData> {
+export async function extractCombinedLevel(level: HskLevel): Promise<CombinedLevelData> {
   const pdfPath = path.join(combinedVocabDir, `HSK ${level} Vocabulary list.pdf`);
   const words = applyCombinedVocabCorrections(level, await extractCombinedVocab(pdfPath));
   return { level, words };
 }
 
 export async function extractAllCombinedLevels(): Promise<CombinedLevelData[]> {
-  return Promise.all([extractCombinedLevel(1), extractCombinedLevel(2), extractCombinedLevel(3)]);
+  return Promise.all(ALL_HSK_LEVELS.map((level) => extractCombinedLevel(level)));
 }

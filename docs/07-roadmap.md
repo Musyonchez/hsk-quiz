@@ -78,6 +78,20 @@ Phased so each phase produces something runnable/checkable before moving on.
   and `只有……才……` were excluded from the combined list. Verified via Playwright: all 20
   chapters render on the level hub, chapter 18's learn page matches the transcription exactly,
   and the chapter 1 quiz plays correctly against this new data source.
+- **HSK4/5/6 combined levels stood up (backend/DB only, no frontend changes yet — explicit
+  instruction to batch all the frontend work for these levels into one later pass instead of
+  doing it per-level)**: all three levels' `HSK-All-Levels-Vocabulary` PDFs already had a real
+  text layer and parse cleanly with the same header-typo fix HSK3 needed. Seeded counts (1200 /
+  2500 / 5008 cumulative words) line up with the official HSK vocabulary sizes, a good sign the
+  extraction is sound. Introduced `src/lib/hsk-level.ts` (`HskLevel = 1|2|3|4|5|6`) as a single
+  source of truth instead of hunting down every inlined `1 | 2 | 3` union, and fixed a real bug
+  the widening would have caused: `combined-vocab-corrections.ts`'s fallback branch would have
+  silently applied HSK3-specific corrections to HSK4/5/6 data — split into an explicit no-op
+  branch for levels with no corrections yet instead. `extract-chapters.ts` now tolerates a
+  level with no `characters/words/hsk{N}/` folder at all (HSK4-6 have none) instead of crashing
+  on `readdir`. No corrections or chapters for HSK4-6 yet — waiting on official-textbook
+  transcriptions the same way HSK1-3 got theirs. Verified zero orphans across every level/
+  chapter after reseeding.
 
 ## Phase 2 — Chapter data extraction ✅
 

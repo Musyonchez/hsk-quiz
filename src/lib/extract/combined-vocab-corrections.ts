@@ -1,4 +1,5 @@
 import type { CombinedVocabRow } from "./pdf-vocab-table";
+import type { HskLevel } from "@/lib/hsk-level";
 
 // Corrections found by diffing our combined-word extraction (sourced from
 // raw/HSK-All-Levels-Vocabulary, a third-party digmandarin.com word list)
@@ -116,7 +117,7 @@ const HSK3_ADDITIONS: CombinedVocabRow[] = [
 ];
 
 export function applyCombinedVocabCorrections(
-  level: 1 | 2 | 3,
+  level: HskLevel,
   words: CombinedVocabRow[]
 ): CombinedVocabRow[] {
   if (level === 1) {
@@ -129,6 +130,13 @@ export function applyCombinedVocabCorrections(
     return [...corrected, ...HSK2_ADDITIONS];
   }
 
-  const corrected = words.map((word) => HSK3_REPLACEMENTS[word.chinese] ?? word);
-  return [...corrected, ...HSK3_ADDITIONS];
+  if (level === 3) {
+    const corrected = words.map((word) => HSK3_REPLACEMENTS[word.chinese] ?? word);
+    return [...corrected, ...HSK3_ADDITIONS];
+  }
+
+  // HSK4/5/6: no official-textbook diff done yet (no transcription supplied
+  // yet, unlike 1/2/3 — see the git log for that process). Raw PDF
+  // extraction only, until corrections are supplied the same way.
+  return words;
 }

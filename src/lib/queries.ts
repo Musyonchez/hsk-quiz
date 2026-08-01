@@ -1,8 +1,7 @@
 import { prisma } from "@/lib/db";
+import { isHskLevel } from "@/lib/hsk-level";
 
-export function isLevelNumber(n: number): n is 1 | 2 | 3 {
-  return n === 1 || n === 2 || n === 3;
-}
+export const isLevelNumber = isHskLevel;
 
 export function getLevelsOverview() {
   return prisma.level.findMany({
