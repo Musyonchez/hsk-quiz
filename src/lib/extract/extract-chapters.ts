@@ -27,14 +27,6 @@ const DIALOGUE_HEADING = "## 课文 Text — Dialogues";
 const GRAMMAR_HEADING = "## 注释 Grammar Notes";
 const VOCAB_HEADING = "## 词汇 Vocabulary — New Words";
 
-// A standalone bold marker line, e.g. "**Proper Nouns**" or "**Proper nouns:**".
-// Deliberately does NOT match the one inline variant seen in hsk2/chapter13
-// ("**专有名词 Proper Noun:** 杨笑笑 ... — name of a person") — that line has
-// its content on the same line as the marker, not as a following table, and
-// is rare enough (1 of 30 chapters) that it's a documented gap rather than a
-// special case in the parser. See website/docs/03-content-extraction-rules.md.
-const PROPER_NOUNS_MARKER = /^\*\*Proper\s+Nouns?\s*:?\*\*\s*$/i;
-
 /** Lines from just after `startHeading` up to (not including) `endHeading`. */
 function sliceBetweenHeadings(
   lines: string[],
@@ -60,8 +52,7 @@ function sliceSection(lines: string[], heading: string): string[] {
 }
 
 // A source Type column is sometimes a bare "—" placeholder rather than left
-// empty (e.g. 为什么 in hsk2/chapter1) — treated the same as no type at all,
-// consistent with how Proper Noun rows (which have no Type column) store it.
+// empty (e.g. 为什么 in hsk2/chapter1) — treated the same as no type at all.
 function normalizeWordType(value: string): string | null {
   if (!value || value === "—" || value === "-") return null;
   return value;
@@ -79,27 +70,6 @@ function parseVocabTableRows(tableRows: string[][]): ChapterWordRow[] {
       wordType: normalizeWordType(cells[3]),
       meaning: cells[4] || null,
     }));
-}
-
-function parseProperNounRows(lines: string[]): ChapterWordRow[] {
-  const rows: ChapterWordRow[] = [];
-  for (let i = 0; i < lines.length; i++) {
-    if (!PROPER_NOUNS_MARKER.test(lines[i].trim())) continue;
-    const tables = parseAllTables(lines.slice(i + 1, i + 20));
-    const table = tables[0];
-    if (!table) continue;
-    for (const cells of table) {
-      // Columns are [Character, Pinyin, Meaning] — no "#" and no "Type".
-      if (cells.length < 3) continue;
-      rows.push({
-        chinese: cells[0],
-        pinyin: cells[1],
-        wordType: null,
-        meaning: cells[2] || null,
-      });
-    }
-  }
-  return rows;
 }
 
 async function extractOneChapter(
@@ -122,11 +92,9 @@ async function extractOneChapter(
   const vocabTables = parseAllTables(vocabSectionLines);
   const vocabRows = vocabTables.flatMap(parseVocabTableRows);
 
-  const properNounRows = parseProperNounRows(courseSectionLines);
-
   const seen = new Set<string>();
   const words: ChapterWordRow[] = [];
-  for (const row of [...vocabRows, ...properNounRows]) {
+  for (const row of vocabRows) {
     if (!row.pinyin) {
       console.warn(
         `[extract-chapters] HSK${level} chapter${chapterNumber}: skipping "${row.chinese}" — missing pinyin`

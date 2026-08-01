@@ -17,13 +17,21 @@ Concretely, that range contains (in the two sample files checked):
 - ...the per-scene `**New Words — Scene N**` tables (HSK 2 style) *and* the consolidated
   `## 词汇 Vocabulary — New Words` table both fall inside this range and are exactly the
   single-word entries we want.
-- Any `**Proper nouns:**` table (seen in `hsk1/chapter3`) also falls in this range and should
-  be included — proper nouns like 中国/美国 do appear in HSK 1 material.
+- Any `**Proper nouns:**` table (seen in `hsk1/chapter3`) also falls in this range, but is
+  **deliberately excluded** from the quiz word list — see the note below.
 
-So in practice: **use the 词汇 Vocabulary — New Words table (plus any Proper Nouns table) as
-the word list**, since it's the deduplicated superset of the per-scene tables and is confirmed
-complete-with-pinyin per the pinyin guide. Do not also pull the per-scene New Words tables —
-that would just duplicate the same words.
+So in practice: **use the 词汇 Vocabulary — New Words table as the word list**, since it's the
+deduplicated superset of the per-scene tables and is confirmed complete-with-pinyin per the
+pinyin guide. Do not also pull the per-scene New Words tables — that would just duplicate the
+same words.
+
+**Proper nouns are never extracted, even when a chapter's markdown has a table for them.**
+Personal names (李月, 王方, 大卫, 张...) aren't useful pinyin-typing quiz material — knowing
+that "李月" is pronounced "Lǐ Yuè" isn't a language skill the way knowing 老师 means "teacher"
+is. Country names like 中国/美国 get swept up in the same exclusion for consistency, since the
+source markdown doesn't distinguish "person name" from "place name" within one Proper Nouns
+table. `hsk1/chapter3`'s vocabulary.md is the one file with such a table; `extract-chapters.ts`
+ignores it entirely rather than parsing and filtering it.
 
 Row shape to extract: `{ chinese, pinyin, type, meaning }` from the `# | Character | Pinyin |
 Type | Meaning` table header (column name is `Character` in the file but it holds the Chinese
@@ -61,8 +69,8 @@ describes the *criteria* a human (or a future, smarter pass) should apply, not s
 
 ## Rule 3 — Dedup across a chapter
 
-Before writing a chapter's quiz JSON, dedupe by Chinese characters (a word appearing in both
-词汇 and a Proper Nouns table, or reused across scenes, should appear once).
+Before writing a chapter's quiz JSON, dedupe by Chinese characters (a word reused across scenes
+should appear once).
 
 ## Rule 4 — Missing pinyin
 
