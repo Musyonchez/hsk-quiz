@@ -4,8 +4,9 @@ The quiz screen ([06-quiz-mechanics.md](06-quiz-mechanics.md)) is one page among
 doc lists every page so none of them get designed as an afterthought.
 
 Every page shares the `<AppHeader>` component from [08-ui-ux.md](08-ui-ux.md): site name/logo
-and level switcher (`HSK 1` / `HSK 2`) on the left, `Leaderboard` / `Friends` links and the
-logged-in `<UserBadge>` (with a logout action) on the right. Any page requiring auth redirects
+and a level switcher (one link per live `Level` row — currently `HSK 1` / `HSK 2` / `HSK 3`) on
+the left, `Leaderboard` / `Friends` links and the logged-in `<UserBadge>` (with a logout action)
+on the right. Any page requiring auth redirects
 to `/login` if there's no valid session (checked server-side in a layout/page, not client-side
 only).
 
@@ -47,18 +48,18 @@ handlers.
 
 ## 1.5. Dashboard — `/dashboard`
 
-- Everything the old "Home" page was: two large cards, **HSK 1** and **HSK 2**, each showing
-  chapter count and, once a player has played anything, their most recent activity (e.g. "Last
-  played: Chapter 5 — 82%") pulled from `GET /api/attempts/recent` — a light personal touch, not
-  a full analytics dashboard.
+- Everything the old "Home" page was: one large card per live level (currently HSK1-3), each
+  showing chapter count and, once a player has played anything, their most recent activity
+  (e.g. "Last played: Chapter 5 — 82%") pulled from `GET /api/attempts/recent` — a light
+  personal touch, not a full analytics dashboard.
 - Requires a session — redirects to `/login` if none (per the auth rule at the top of this
   doc). This is the actual "pick a level" starting point once logged in; `/` is just the public
   door in front of it.
 
 ## 2. Level hub — `/hsk/[level]`
 
-- Grid of chapter cards (Chapter 1 – 15), each showing the chapter title (e.g. "Lesson 5 —
-  就买这件吧") and, if played before, best score.
+- Grid of chapter cards (chapter count varies by level — 15 for HSK1/HSK2, 20 for HSK3), each
+  showing the chapter title (e.g. "Lesson 5 — 就买这件吧") and, if played before, best score.
 - One additional card, visually distinct (larger, or first in the grid) for **Combined** — the
   full-level quiz, styled like the "Play Another" card from the reference screenshots.
 - Clicking a chapter card goes to its learn page, not straight into the quiz — matches the

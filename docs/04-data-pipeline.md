@@ -24,24 +24,42 @@ app strictly separated: pages only ever read from the database, never from `lib/
 
 ## `extract-combined.ts`
 
-Reads the two PDFs in `raw/HSK-All-Levels-Vocabulary/HSK All Levels Vocabulary/`, parses the
-`Chinese | Pinyin | English` rows and category header rows (`Personal Pron.`, `Numeral`,
-`Noun`, ...), returns one flat array per level: `{ chinese, pinyin, english, category }[]`.
-Rows without an English gloss (auxiliary particles like 的/了/吗/呢) are kept — the quiz only
-needs `chinese`/`pinyin`.
+For HSK1-3: reads that level's PDF in `raw/HSK-All-Levels-Vocabulary/HSK All Levels
+Vocabulary/` via `pdf-vocab-table.ts` (built on `pdfjs-dist`, using coordinate-based text
+extraction since the source is a styled table, not plain text/markdown), parses the `Chinese |
+Pinyin | English` rows and category header rows (`Personal Pron.`, `Numeral`, `Noun`, ...),
+then applies that level's hand-verified corrections from `combined-vocab-corrections.ts`
+(fixing PDF transcription bugs and adding words the PDF was missing, diffed against the
+official textbook appendix — see that file's own comments for the full rationale per level).
+Returns one flat array per level: `{ chinese, pinyin, english, category }[]`. Rows without an
+English gloss (auxiliary particles like 的/了/吗/呢) are kept — the quiz only needs
+`chinese`/`pinyin`.
 
-PDF parsing library: needs a Node PDF-to-text/table library (e.g. `pdf-parse` or
-`pdfjs-dist`) — decide at implementation time based on how cleanly it preserves the 3-column
-table layout; may need coordinate-based text extraction rather than naive text-stream reading
-since the source is a styled table, not plain text.
+HSK4A/4B (and HSK5A/5B/6A/6B whenever they're wired back in — see
+[07-roadmap.md](07-roadmap.md)) don't go through this PDF pipeline at all: each HSK4-6 book is
+sourced directly from its own transcribed textbook appendix in an in-repo data file
+(`hsk4a-combined-data.ts` and friends), since they're published as two separate volumes that
+the cumulative all-levels PDF doesn't match. `extract-combined.ts` dispatches on level slug to
+pick the right path.
 
 ## `extract-chapters.ts`
 
-Walks `characters/words/hsk{1,2}/chapter*/vocabulary.md`, applies the rules in
+For HSK1/HSK2: walks `characters/words/hsk{1,2}/chapter*/vocabulary.md`, applies the rules in
 [03-content-extraction-rules.md](03-content-extraction-rules.md), returns per chapter:
-`{ level, chapterNumber, title, words: [...], grammarPatterns: [...] }`. Also reads the
-matching `grammer.md` when present (HSK 2) to pull the selective grammar-pattern items
-described in Rule 2 there.
+`{ level, chapterNumber, title, words: [...] }`.
+
+For HSK3 (and HSK4A/4B/5A/5B whenever wired back in): no `vocabulary.md` exists at all — chapter
+word lists live in an in-repo TypeScript data file instead (`hsk3-chapters-data.ts` and
+friends), fed through the shared `extractInRepoChapters()` adapter into the same `ChapterData`
+shape the markdown parser produces, so `seed.ts` can't tell the two sources apart. See
+[02-data-sources.md](02-data-sources.md) for why HSK3+ diverges from the markdown source.
+
+**`GrammarPattern` is not extracted by either path**, despite being modeled in the schema —
+this was a deliberate call, not an oversight: which grammar notes are "HSK-exam relevant" is a
+judgment call, and the source chapters' grammar-notes headings aren't consistent enough
+(numbered vs. unnumbered, Chinese- vs. English-first, inline vs. a separate `grammer.md`) to
+make that judgment reliably from markdown structure alone. See
+[07-roadmap.md](07-roadmap.md).
 
 `title` comes from the file's first line — every sample chapter opens with a level-1 heading
 of the form `# Lesson N — 你叫什么名字 (Nǐ jiào shénme míngzi) What's Your Name`. Take that
@@ -59,16 +77,23 @@ line-based state machine.
 ## `seed.ts`
 
 Orchestrates both extractors and upserts into the database in this order (respecting foreign
-keys): `Level` → `Chapter` → `Word` (chapter-sourced) → `Word` (combined-sourced, `chapterId`
-null) → `GrammarPattern`. Upsert keyed on `(levelId, chapterNumber)` / `(chapterId, chinese)`
-so re-running the seed after a source file edit updates existing rows instead of duplicating
-them.
+keys): `Level` → `Word` (combined-sourced, `chapterId` null) → `Chapter` → `Word`
+(chapter-sourced). `Chapter` is upserted on `(levelId, number)`; chapter-sourced `Word` on
+`(chapterId, chinese)`. Combined-sourced words have no such compound unique key available (every
+combined word shares `chapterId: null`, so a naive `(levelId, chinese, pinyin)` key can't be
+declared as a real DB constraint) — `seedCombinedLevels` works around this with an explicit
+find-then-create/update per word instead of a single `upsert` call. Either way, re-running the
+seed after a source file edit updates existing rows instead of duplicating them, and also
+deletes rows a previous run created that the current extraction no longer produces (e.g. a word
+corrected in `combined-vocab-corrections.ts`, or a whole category — like proper nouns — dropped
+from extraction entirely).
 
 ## When it runs
 
 - `npm run db:seed`, manually, against whichever database `DATABASE_URL`/the Prisma
   `schema.prisma` currently points at (SQLite in dev, Postgres in prod).
-- Re-run whenever a `vocabulary.md`/`grammer.md` is edited (e.g. after a pinyin backfill pass)
-  or a new chapter is completed, and once against prod after a content update ships.
+- Re-run whenever a `vocabulary.md`/`grammer.md` is edited (HSK1/HSK2) or an in-repo data file
+  like `hsk3-chapters-data.ts` is edited (HSK3+), or a new chapter/correction is added, and once
+  against prod after a content update ships.
 - Never runs automatically inside a request handler — kept strictly out of the API server's
   runtime path.

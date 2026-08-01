@@ -4,6 +4,12 @@ This is the exact rule set for turning one `vocabulary.md` into one chapter's qu
 It's written as a spec so the parser's behavior is unambiguous and reviewable without reading
 the parser code.
 
+Applies to HSK1/HSK2 only — those are the only levels with `vocabulary.md` files at all. HSK3
+and up source their chapter word lists from an in-repo data file instead (no markdown, no
+scenes/dialogues to filter out of); see [02-data-sources.md](02-data-sources.md). The
+proper-noun-exclusion and no-duplicate-word principles below still apply conceptually to those
+levels — they just don't need this doc's markdown-specific parsing rules to enforce them.
+
 ## Rule 1 — Primary range: everything between 课文 and 注释
 
 Take every Chinese/Pinyin pair that appears **at or below** the heading

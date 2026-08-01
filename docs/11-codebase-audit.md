@@ -54,25 +54,24 @@ what got fixed immediately (low-risk, clear-cut) and what's flagged for later
   starter assets, never referenced anywhere in `src/` (the site uses
   `lucide-react` icons and a custom "词" glyph instead). Deleted; `public/`
   is now empty.
+- **Planning docs updated to match HSK1-3 reality**: `01-overview.md`,
+  `02-data-sources.md`, `04-data-pipeline.md`, `03-content-extraction-rules.md`,
+  and `09-pages.md` all still described (or, in `01-overview.md`'s case,
+  explicitly stated) a two-level HSK1/HSK2-only world — "HSK 3 is out of
+  scope for now", `hsk{1,2}` path patterns, "two large cards, HSK 1 and HSK
+  2", a claim that `GrammarPattern` gets extracted (it deliberately doesn't —
+  see [07-roadmap.md](07-roadmap.md)), and a seed-order description that
+  didn't match `seed.ts`'s actual `Level → Word(combined) → Chapter →
+  Word(chapter)` sequence. All updated in place to describe HSK1-3 as they
+  actually work today (markdown source for HSK1/2, in-repo data files for
+  HSK3+, PDF-backed combined lists for HSK1-3 vs. appendix-transcription for
+  HSK4+), while leaving `07-roadmap.md` itself untouched as the dated
+  changelog it's meant to be.
 - Verified after every change: `tsc --noEmit`, `eslint`, `next build`, and a
   full reseed all clean, with identical per-chapter word counts before and
   after the adapter consolidation (no behavioral change, pure dedup).
 
 ## Noted, not fixed (judgment calls / deferred)
-
-- **The original planning docs (`01-overview.md`, `02-data-sources.md`,
-  `04-data-pipeline.md`, `09-pages.md`) still describe a two-level
-  (HSK1/HSK2-only) world**: `01-overview.md` explicitly says "HSK 3 is out of
-  scope for now", three of them use `hsk{1,2}` path patterns, and
-  `09-pages.md`'s dashboard section says "two large cards, HSK 1 and HSK 2" —
-  all stale since HSK3 (and its in-repo, non-markdown chapter data) fully
-  shipped. Not edited here: these are
-  pre-build vision/spec docs, distinct in kind from `07-roadmap.md`'s
-  changelog, and rewriting their scope is a real editorial decision (do they
-  get updated in place, or does a later doc supersede them the way
-  `07-roadmap.md` already tracks what actually got built?) rather than a
-  mechanical fix — flagging for a deliberate choice rather than making it
-  unilaterally.
 
 - **`Attempt` is read but never written.** The dashboard calls
   `getMostRecentAttempt()` and has UI for "Last played: ...", and the

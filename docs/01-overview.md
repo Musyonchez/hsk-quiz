@@ -2,9 +2,11 @@
 
 ## What this is
 
-A Sporcle-style typing quiz site for the vocabulary already built up in
-[characters/words/](../../characters/words/) (HSK 1 and HSK 2) and the raw HSK vocabulary
-lists in [raw/](../../raw/). Modeled directly on the screenshots supplied for this feature:
+A Sporcle-style typing quiz site for HSK vocabulary — HSK1/HSK2 sourced from
+[characters/words/](../../characters/words/), HSK3 and up sourced from an in-repo data file per
+level (see [02-data-sources.md](02-data-sources.md) for why), and the raw HSK vocabulary lists
+in [raw/](../../raw/) for the combined-level word lists. Modeled directly on the screenshots
+supplied for this feature:
 a results screen, a browsable answer-key table, and a timed typing quiz where you type the
 pinyin for each Chinese word and the row highlights as you go.
 
@@ -12,13 +14,17 @@ pinyin for each Chinese word and the row highlights as you go.
 
 Two granularities per level:
 
-1. **Individual chapter quizzes** — one quiz per `characters/words/hsk{1,2}/chapter{N}/`,
-   built from that chapter's `vocabulary.md`.
-2. **Combined level quizzes** — one quiz per HSK level (HSK 1 combined, HSK 2 combined),
-   built from `raw/HSK-All-Levels-Vocabulary/HSK All Levels Vocabulary/HSK {1,2} Vocabulary
-   list.pdf`.
+1. **Individual chapter quizzes** — one quiz per chapter, built from that chapter's
+   `vocabulary.md` for HSK1/HSK2, or an in-repo data file for HSK3 and up (see
+   [02-data-sources.md](02-data-sources.md)).
+2. **Combined level quizzes** — one quiz per HSK level, built from the official all-levels PDF
+   for HSK1-3, or that book's own transcribed textbook appendix for HSK4 and up (each of
+   HSK4-6 is published as two separate volumes, so the cumulative PDF doesn't apply past HSK3 —
+   see [02-data-sources.md](02-data-sources.md)).
 
-HSK 3 is out of scope for now — `characters/words/hsk3/` is still empty ([[one-chapter-at-a-time]] applies to that content, unrelated to this build).
+Currently live on the site: HSK1-3. HSK4A/4B are fully transcribed but not yet wired in, and
+HSK5A/5B/6A/6B are still pending their own transcriptions — see
+[07-roadmap.md](07-roadmap.md)'s "HSK4+ paused" entry for the current state and why.
 
 ## Self-sufficient app, not a static site
 
@@ -59,12 +65,17 @@ reproduced, not skipped:
 ## Why two data sources instead of one
 
 The per-chapter `vocabulary.md` files are hand-curated and richer (scenes, grammar notes,
-character notes) but only exist for HSK 1 and HSK 2 chapters. The combined-level view needs
-the *complete* official word list per level, which only exists in the raw PDFs — the chapter
-files alone don't necessarily add up to the full HSK list. So:
+character notes), but per explicit instruction no new content was added under
+`characters/words/` past HSK2 — so they only exist for HSK1/HSK2 chapters. The combined-level
+view needs the *complete* official word list per level, which for HSK1-3 only exists in the raw
+PDFs — the chapter files alone don't necessarily add up to the full HSK list. So:
 
-- Chapter quizzes read from `characters/words/hsk*/chapter*/vocabulary.md`.
-- Combined quizzes read from `raw/HSK-All-Levels-Vocabulary/.../HSK {N} Vocabulary list.pdf`.
+- HSK1/HSK2 chapter quizzes read from `characters/words/hsk{1,2}/chapter*/vocabulary.md`.
+- HSK3+ chapter quizzes read from an in-repo TypeScript data file instead (no `vocabulary.md`
+  involved at all — see [02-data-sources.md](02-data-sources.md)).
+- HSK1-3 combined quizzes read from `raw/HSK-All-Levels-Vocabulary/.../HSK {N} Vocabulary
+  list.pdf`; HSK4+ read from an in-repo data file the same way their chapters do, since each
+  book is published as its own volume the cumulative PDF doesn't cover.
 
 See [02-data-sources.md](02-data-sources.md) for the extraction rules for each.
 

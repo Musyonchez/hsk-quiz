@@ -3,7 +3,8 @@
 ## 1. Combined level lists (raw PDF)
 
 Path: `raw/HSK-All-Levels-Vocabulary/HSK All Levels Vocabulary/HSK {N} Vocabulary list.pdf`
-(only `HSK 1` and `HSK 2` are used).
+(`HSK 1`, `HSK 2`, and `HSK 3` are used this way — see the note after §2 for why HSK4+ don't
+follow this pattern).
 
 Format confirmed by inspection: a single table per PDF with columns `Chinese | Pinyin |
 English`, broken into word-class sections (`Personal Pron.`, `Numeral`, `Quantifier`, `Adverb`,
@@ -56,6 +57,18 @@ Known structural facts (verified against all 30 chapter files, not just the orig
   marker (a chapter-level footnote calls these "useful but not core exam vocabulary"). Words
   are read from the table positionally, not by that column, so this doesn't need special
   handling; it's noted here only because it's easy to mistake for a parsing artifact.
+
+**HSK3 and later don't use `vocabulary.md` at all.** Per explicit instruction, no new content
+was added under `characters/words/` past HSK2 — `characters/words/hsk3/` is still just the
+`.keep` placeholder. HSK3's chapter word lists instead live as an in-repo TypeScript data file
+(`website/src/lib/extract/hsk3-chapters-data.ts`), transcribed the same way as its combined list
+(official textbook appendix, by lesson), and fed into the same `ChapterData` shape the markdown
+parser produces via a shared adapter (`extractInRepoChapters` in `in-repo-chapters.ts`) so
+`prisma/seed.ts` can't tell the two sources apart. Everything in this section's "known
+structural facts" is specific to HSK1/HSK2's actual `.md` files; it doesn't apply to HSK3+.
+HSK4A/4B/5A/5B follow the same in-repo-data pattern (currently unwired — see
+[07-roadmap.md](07-roadmap.md)'s "HSK4+ paused" entry) rather than reviving the PDF/markdown
+split described above.
 
 ## 3. Appendices (reference, not primary source)
 
