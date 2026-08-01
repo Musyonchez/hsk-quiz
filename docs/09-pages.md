@@ -21,10 +21,19 @@ handlers.
 
 ## 0. Login — `/login`
 
-- Username + password form, single `Log in` button. No "forgot password" flow and no signup
-  link — accounts are provisioned server-side (see [05-architecture.md](05-architecture.md)),
-  so there's nothing for a self-service flow to do here.
+- Username + password form, single `Log in` button, plus a link to `/register` for a new
+  visitor. No "forgot password" flow (see [01-overview.md](01-overview.md)'s non-goals — no
+  email is collected at all, so there's no address to send a reset link to).
 - On success, redirect to `/` (home) or back to whatever page triggered the redirect.
+
+## 0.5. Register — `/register`
+
+- Username + password (+ optional display name) form, single `Register` button. Same visual
+  treatment as Login — same card, same branding block above it — since they're one flow a
+  visitor bounces between, not two different-feeling pages.
+- On success, the account is created *and* logged in immediately (no separate "now go log in"
+  step) — same redirect-to-`/` behavior as Login.
+- No email field, no verification step — see [01-overview.md](01-overview.md)'s non-goals.
 
 ## 1. Home — `/`
 
@@ -88,7 +97,7 @@ handlers.
   needed at launch).
 - **Add a friend** — a single username text field + `Send request` button, hitting
   `POST /api/friends/requests`. No user search/directory — you have to know the exact
-  username, consistent with accounts being provisioned rather than publicly discoverable.
+  username; accounts are publicly self-registered but not publicly browsable.
 
 ## Explicitly not building
 

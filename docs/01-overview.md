@@ -40,10 +40,10 @@ Reversing the earlier draft's "no accounts" stance: the site has real login, and
 reference screenshots' `AVG SCORE` / `AVG FRIEND SCORE` / leaderboard-style features are
 reproduced, not skipped:
 
-- **Login is account-based, not open self-signup.** Accounts are provisioned for specific
-  known users (you and whoever you invite) rather than a public "create an account" flow —
-  see [05-architecture.md](05-architecture.md) for how accounts get created and
-  [09-pages.md](09-pages.md) for the login page itself.
+- **Login is account-based, with public self-service registration.** Anyone can create an
+  account from `/register` (username + password, no email/verification step) — see
+  [05-architecture.md](05-architecture.md) for how accounts get created and
+  [09-pages.md](09-pages.md) for the login/register pages themselves.
 - **Friends** — a user can add another known user as a friend; friend status gates what shows
   up on the friends leaderboard.
 - **Leaderboard** — per-quiz global leaderboard (all users) and a friends-only view, both
@@ -52,7 +52,8 @@ reproduced, not skipped:
 ## Non-goals (for now)
 
 - No listening/audio component (separate from [hsk2-listening-plan](../../hsk2-listening-plan/plan.md)).
-- No public self-service signup — see above, accounts are provisioned, not open registration.
+- No email collection or "forgot password" flow — accounts are just a username + password (see
+  above), so there's no address to send a reset link to.
 - No mobile app — a responsive web page is enough.
 
 ## Why two data sources instead of one

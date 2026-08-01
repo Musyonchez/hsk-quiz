@@ -6,12 +6,12 @@ spec, not against whatever a first draft happened to look like.
 
 ## Visual language (from the reference screenshots)
 
-- **Dark theme by default.** Near-black backgrounds (`#0f0f10`–`#1a1a1c` range), off-white
-  text (`#f5f5f5`), not pure black/white — matches the reference screenshots' results and quiz
-  screens.
-- **One accent color: orange** (`#f5a623`–`#ff8c1a` range), used sparingly and consistently for
-  the single primary action per screen — `REPLAY`, `PLAY QUIZ`, the score ring/badge — never
-  for body text or secondary buttons.
+- **Dark theme by default**, matching the reference screenshots' results and quiz screens — see
+  [10-color-palette.md](10-color-palette.md) for the actual token values (an "ink / paper /
+  seal" palette, not generic near-black-plus-orange).
+- **One accent color**, used sparingly and consistently for the single primary action per
+  screen — `REPLAY`, `PLAY QUIZ`, the score ring/badge — never for body text or secondary
+  buttons. Exact hex in [10-color-palette.md](10-color-palette.md).
 - **Two button styles**: solid orange pill (primary action) and outline pill on dark
   background (secondary action, e.g. `STATS` next to `REPLAY`). No third button style.
 - **Cards, not modals.** "Play Next" / "Play Another" are dark cards with a thumbnail-style
@@ -21,9 +21,9 @@ spec, not against whatever a first draft happened to look like.
   columns, dark rows with a slightly lighter stripe for the header, black cells for the "not
   yet visible" character/definition columns during a quiz) is the dominant visual element on
   learn and quiz pages — don't compress it into a sidebar or hide it behind tabs.
-- **Highlight states**: yellow background = current row (mid-quiz); implied green = correctly
-  answered row; the character cell always stays visible, only the pinyin cell is
-  blanked/revealed.
+- **Highlight states**: `--current` (gold) background = current row (mid-quiz), `--success`
+  (jade) = correctly answered row — see [10-color-palette.md](10-color-palette.md); the
+  character cell always stays visible, only the pinyin cell is blanked/revealed.
 - **Typography**: a plain system sans-serif for English/pinyin UI text; Chinese characters need
   a font stack that includes a CJK-capable face (system default `-apple-system, "Segoe UI",
   "Noto Sans SC", sans-serif` is enough — no need to bundle a custom CJK webfont, it's heavy

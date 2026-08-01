@@ -37,8 +37,8 @@ Phased so each phase produces something runnable/checkable before moving on.
 
 ## Phase 3 — Auth + accounts
 
-- `scripts/create-user.ts` provisioning script, session cookie helpers, `/login` page and
-  `/api/auth/*` routes (per [05-architecture.md](05-architecture.md)).
+- Session cookie helpers, `/login` and `/register` pages, and `/api/auth/*` routes (login,
+  register, logout, me) per [05-architecture.md](05-architecture.md).
 - Pulled forward ahead of any content pages because attempts/leaderboard/friends all depend on
   a real logged-in user existing — building those first would mean faking auth and then
   redoing them.

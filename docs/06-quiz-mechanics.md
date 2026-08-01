@@ -57,8 +57,9 @@ toggle, `SCORE 0/N`, `TIMER 10:00` (configurable, default matches reference).
 - **`AVG SCORE`** — reproduced for real now that there's a `User` table: average of all users'
   best scores for this `quizKey`. Computed client-side by averaging the array returned from
   `GET /api/leaderboard?quizKey=&scope=global` — that endpoint returns every ranked row
-  unpaginated (the user base here is small and provisioned, never public-scale, so there's no
-  need for a separate aggregate endpoint or server-side `AVG()` query).
+  unpaginated (this is a small personal site, not a public-scale product, so there's no need
+  for a separate aggregate endpoint or server-side `AVG()` query — revisit if the user count
+  ever grows enough for that assumption to stop holding).
 - **`AVG FRIEND SCORE`** — same client-side average, over `GET
   /api/leaderboard?quizKey=&scope=friends` instead. A link from here into the full leaderboard
   page — see [09-pages.md](09-pages.md).

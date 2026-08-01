@@ -68,10 +68,9 @@ new request to the same person (a repeat `POST /api/friends/requests` for a row 
 
 ## Accounts and auth
 
-- **Provisioning, not self-signup**: a small admin script (`scripts/create-user.ts`)
-  creates a `User` row with a hashed password (e.g. via `argon2` or `bcrypt`) — there is no
-  public "sign up" endpoint or page. This matches the "specific user use" requirement: the set
-  of people who can log in is whatever the site owner has explicitly created.
+- **Public self-service registration**: `POST /api/auth/register` creates a `User` row with a
+  hashed password (`scrypt`, via Node's built-in `node:crypto` — no extra dependency) and logs
+  the new user in immediately. No email, no verification step, no admin approval.
 - **Sessions**: a plain server-side session token in an HTTP-only, `Secure`, `SameSite=Lax`
   cookie, hashed at rest in the `Session` table, checked in a small `getSession()` helper
   called from Server Components and Route Handlers alike. No JWT, no `next-auth`/third-party
@@ -91,13 +90,12 @@ website/
     schema.prisma
     migrations/
     seed.ts                  # calls lib/extract/* and writes rows via Prisma
-  scripts/
-    create-user.ts           # provisions a login (username + password) — no signup page
   src/
     app/
       layout.tsx             # <AppHeader> + Tailwind globals
       page.tsx                # Home (§1 in 09-pages.md)
       login/page.tsx
+      register/page.tsx
       hsk/[level]/page.tsx                       # Level hub
       hsk/[level]/chapter/[chapter]/page.tsx      # Learn page
       hsk/[level]/chapter/[chapter]/quiz/page.tsx # Quiz + results
@@ -107,6 +105,7 @@ website/
       friends/page.tsx
       api/
         auth/login/route.ts
+        auth/register/route.ts
         auth/logout/route.ts
         auth/me/route.ts
         levels/route.ts
@@ -127,7 +126,8 @@ website/
     lib/
       extract/                # extract-combined.ts, extract-chapters.ts (pure parsers)
       db.ts                   # Prisma client singleton
-      session.ts              # cookie/session helpers used by pages + route handlers
+      auth.ts                 # password hashing + session create/lookup
+      require-session.ts      # Server Component guard: redirects to /login if unauthenticated
     quiz/                     # quiz engine: input matching, scoring, timer (framework-free)
   dev.db                      # sqlite file, git-ignored
   tailwind.config.ts
@@ -140,6 +140,7 @@ website/
 | Method & path | Auth? | Returns |
 |---|---|---|
 | `POST /api/auth/login` | — | sets session cookie for `{ username, password }` |
+| `POST /api/auth/register` | — | creates a `User` + sets session cookie for `{ username, password }` |
 | `POST /api/auth/logout` | session | clears session |
 | `GET /api/auth/me` | session | current user's `{ username, displayName }` |
 | `GET /api/levels` | — | `[{ number, name, chapterCount }]` |
