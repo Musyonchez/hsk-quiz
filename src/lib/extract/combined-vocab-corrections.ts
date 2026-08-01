@@ -31,11 +31,22 @@ const HSK1_REPLACEMENTS: Record<string, CombinedVocabRow> = {
   饭馆: { chinese: "饭店", pinyin: "fàndiàn", english: "hotel, restaurant", category: "Noun" },
   日: { chinese: "号", pinyin: "hào", english: "date, number", category: "Noun" },
   没: { chinese: "没有", pinyin: "méiyǒu", english: "there is not", category: "Adverb" },
+  // The source PDF crams two distinct words into one row ("这 (这儿)" etc.) —
+  // kept as the short/root form here, with the "儿"-suffixed word added as
+  // its own row below, since 这/那/哪 and 这儿/那儿/哪儿 are different words
+  // ("this" vs "here", "that" vs "there", "which" vs "where"), not one word
+  // with an optional syllable.
+  "这 (这儿)": { chinese: "这", pinyin: "zhè", english: "this", category: "Demonstrative Pron." },
+  "那 (那儿)": { chinese: "那", pinyin: "nà", english: "that", category: "Demonstrative Pron." },
+  "哪（哪儿）": { chinese: "哪", pinyin: "nǎ", english: "which", category: "Interrogative Pron." },
 };
 
 const HSK1_ADDITIONS: CombinedVocabRow[] = [
   { chinese: "说", pinyin: "shuō", english: "speak, say", category: "Verb" },
   { chinese: "一点儿", pinyin: "yìdiǎnr", english: "a little", category: "Quantifier" },
+  { chinese: "这儿", pinyin: "zhèr", english: "here", category: "Demonstrative Pron." },
+  { chinese: "那儿", pinyin: "nàr", english: "there", category: "Demonstrative Pron." },
+  { chinese: "哪儿", pinyin: "nǎr", english: "where", category: "Interrogative Pron." },
 ];
 
 // HSK2's own PDF repeats the 饭馆/没 mistakes from its cumulative copy of the
@@ -48,6 +59,10 @@ const HSK2_REPLACEMENTS: Record<string, CombinedVocabRow> = {
   男人: { chinese: "男", pinyin: "nán", english: "man, male", category: "Adjective" },
   女人: { chinese: "女", pinyin: "nǚ", english: "woman, female", category: "Adjective" },
   玩: { chinese: "玩儿", pinyin: "wánr", english: "to play, to have fun", category: "Verb" },
+  // Same two-words-in-one-row bug as HSK1's PDF — see the comment there.
+  "这 (这儿)": { chinese: "这", pinyin: "zhè", english: "this", category: "Demonstrative Pron." },
+  "那 (那儿)": { chinese: "那", pinyin: "nà", english: "that", category: "Demonstrative Pron." },
+  "哪（哪儿）": { chinese: "哪", pinyin: "nǎ", english: "which", category: "Interrogative Pron." },
 };
 
 const HSK2_ADDITIONS: CombinedVocabRow[] = [
@@ -55,6 +70,9 @@ const HSK2_ADDITIONS: CombinedVocabRow[] = [
   // still official HSK2-syllabus words since the list is cumulative.
   { chinese: "说", pinyin: "shuō", english: "speak, say", category: "Verb" },
   { chinese: "一点儿", pinyin: "yìdiǎnr", english: "a little", category: "Quantifier" },
+  { chinese: "这儿", pinyin: "zhèr", english: "here", category: "Demonstrative Pron." },
+  { chinese: "那儿", pinyin: "nàr", english: "there", category: "Demonstrative Pron." },
+  { chinese: "哪儿", pinyin: "nǎr", english: "where", category: "Interrogative Pron." },
   // Genuinely new-to-HSK2 words missing from the source PDF.
   { chinese: "比", pinyin: "bǐ", english: "than", category: "Preposition" },
   { chinese: "宾馆", pinyin: "bīnguǎn", english: "hotel", category: "Noun" },
@@ -84,11 +102,17 @@ const HSK2_ADDITIONS: CombinedVocabRow[] = [
 // distinguish from the first.
 const HSK3_REPLACEMENTS: Record<string, CombinedVocabRow> = {
   "花 （动）": { chinese: "花", pinyin: "huā", english: "flower; to spend", category: null },
+  // Same two-words-in-one-row bug as HSK1/2's PDFs — see HSK1_REPLACEMENTS'
+  // comment. This PDF's exact spacing/parens differ slightly from theirs.
+  "这 （这儿）": { chinese: "这", pinyin: "zhè", english: "this", category: null },
+  "那 （那儿）": { chinese: "那", pinyin: "nà", english: "that", category: null },
+  "哪 （哪儿）": { chinese: "哪", pinyin: "nǎ", english: "which", category: null },
 };
 
 const HSK3_ADDITIONS: CombinedVocabRow[] = [
   { chinese: "词典", pinyin: "cídiǎn", english: "dictionary", category: "Noun" },
-  { chinese: "笔记本（电脑）", pinyin: "bǐjìběn (diànnǎo)", english: "notebook, laptop", category: "Noun" },
+  { chinese: "笔记本", pinyin: "bǐjìběn", english: "notebook", category: "Noun" },
+  { chinese: "笔记本电脑", pinyin: "bǐjìběn diànnǎo", english: "laptop", category: "Noun" },
   { chinese: "感兴趣", pinyin: "gǎn xìngqù", english: "to be interested in", category: null },
   { chinese: "个子", pinyin: "gèzi", english: "height, stature", category: "Noun" },
   { chinese: "后来", pinyin: "hòulái", english: "later, afterwards", category: "Noun" },
@@ -108,6 +132,9 @@ const HSK3_ADDITIONS: CombinedVocabRow[] = [
   // 只 (zhǐ, "only") already exists; this is 只 (zhī, a measure word for
   // certain animals), distinguished from the first by pinyin.
   { chinese: "只", pinyin: "zhī", english: "used for certain animals", category: "Quantifier" },
+  { chinese: "这儿", pinyin: "zhèr", english: "here", category: null },
+  { chinese: "那儿", pinyin: "nàr", english: "there", category: null },
+  { chinese: "哪儿", pinyin: "nǎr", english: "where", category: null },
   // "不但……而且……" and "只有……才……" (both in the official appendix) are
   // paired grammar-pattern skeletons, not standalone typable vocabulary —
   // deliberately excluded here the same way "太……了" was excluded from

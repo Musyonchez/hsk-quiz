@@ -28,5 +28,12 @@ export function normalizePinyin(input: string): string {
 export function matchesPinyin(typed: string, target: string): boolean {
   const normalizedTyped = normalizePinyin(typed);
   if (!normalizedTyped) return false;
-  return normalizedTyped === normalizePinyin(target);
+  // A handful of source rows record tone-sandhi alternates as "bù / bú" for
+  // one word (不) rather than picking a single citation form — split on "/"
+  // and accept a match against any one alternate, instead of requiring the
+  // literal (untypeable) "bu/bu" the old single-normalize path produced.
+  return target
+    .split("/")
+    .map(normalizePinyin)
+    .some((alternate) => alternate === normalizedTyped);
 }

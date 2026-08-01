@@ -1,12 +1,21 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { ArrowRight, ChevronLeft, ChevronRight, Flag, Pause, Play, Shuffle } from "lucide-react";
+import {
+  ArrowRight,
+  ChevronLeft,
+  ChevronRight,
+  Flag,
+  Pause,
+  Play,
+  Shuffle,
+} from "lucide-react";
 import { matchesPinyin } from "@/quiz/pinyin-match";
 import { formatDuration } from "@/quiz/format-time";
 import type { QuizNavTarget } from "@/quiz/quiz-navigation";
 import { pillClasses } from "@/components/pill-classes";
 import { QuizLinkCard } from "@/components/QuizLinkCard";
+import { VocabTableGroup } from "@/components/VocabTable";
 
 export type QuizWord = {
   id: number;
@@ -20,9 +29,13 @@ const QUIZ_DURATION_SECONDS = 600;
 // Client-side average since GET /api/leaderboard returns every ranked row
 // unpaginated — no separate aggregate endpoint needed at this app's scale
 // (see docs/06-quiz-mechanics.md).
-function averagePercent(rows: { score: number; total: number }[]): number | null {
+function averagePercent(
+  rows: { score: number; total: number }[],
+): number | null {
   if (rows.length === 0) return null;
-  const percents = rows.map((row) => (row.total > 0 ? (row.score / row.total) * 100 : 0));
+  const percents = rows.map((row) =>
+    row.total > 0 ? (row.score / row.total) * 100 : 0,
+  );
   return Math.round(percents.reduce((sum, p) => sum + p, 0) / percents.length);
 }
 
@@ -90,12 +103,16 @@ function QuizRunnerInner({
   // to compute derivable state at render time rather than mirror it into
   // state via an effect (which causes an extra render and, if you're not
   // careful with the dependency array, a setState-in-effect lint error).
-  const [finishedState, setFinishedState] = useState<"completed" | "gaveup" | null>(null);
-  const finished = finishedState ?? (started && secondsLeft === 0 ? "timeup" : null);
+  const [finishedState, setFinishedState] = useState<
+    "completed" | "gaveup" | null
+  >(null);
+  const finished =
+    finishedState ?? (started && secondsLeft === 0 ? "timeup" : null);
   const [bestPercent, setBestPercent] = useState<number | null>(null);
   const [avgGlobalPercent, setAvgGlobalPercent] = useState<number | null>(null);
   const [avgFriendPercent, setAvgFriendPercent] = useState<number | null>(null);
   const [showStats, setShowStats] = useState(false);
+  const statsDefaultSetRef = useRef(false);
   const submittedRef = useRef(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -121,15 +138,15 @@ function QuizRunnerInner({
       .then(() =>
         Promise.all([
           fetch(`/api/attempts/best?quizKey=${encodedKey}`).then((res) =>
-            res.ok ? res.json() : null
+            res.ok ? res.json() : null,
           ),
-          fetch(`/api/leaderboard?quizKey=${encodedKey}&scope=global`).then((res) =>
-            res.ok ? res.json() : []
+          fetch(`/api/leaderboard?quizKey=${encodedKey}&scope=global`).then(
+            (res) => (res.ok ? res.json() : []),
           ),
-          fetch(`/api/leaderboard?quizKey=${encodedKey}&scope=friends`).then((res) =>
-            res.ok ? res.json() : []
+          fetch(`/api/leaderboard?quizKey=${encodedKey}&scope=friends`).then(
+            (res) => (res.ok ? res.json() : []),
           ),
-        ])
+        ]),
       )
       .then(
         ([best, globalRows, friendRows]: [
@@ -137,13 +154,23 @@ function QuizRunnerInner({
           { score: number; total: number }[],
           { score: number; total: number }[],
         ]) => {
-          if (best && best.total > 0) setBestPercent(Math.round((best.score / best.total) * 100));
+          if (best && best.total > 0)
+            setBestPercent(Math.round((best.score / best.total) * 100));
           setAvgGlobalPercent(averagePercent(globalRows));
           setAvgFriendPercent(averagePercent(friendRows));
-        }
+        },
       )
       .catch((err) => console.error("Failed to record quiz attempt", err));
   }, [finished, quizKey, score, total, secondsLeft]);
+
+  // Default Stats to open if anything was missed, closed on a perfect run —
+  // set once when the quiz finishes, not re-derived on every render, so a
+  // manual toggle afterward (via the Stats/Hide stats button) sticks.
+  useEffect(() => {
+    if (!finished || statsDefaultSetRef.current) return;
+    statsDefaultSetRef.current = true;
+    setShowStats(score < total);
+  }, [finished, score, total]);
 
   useEffect(() => {
     if (!started || finished || paused) return;
@@ -165,49 +192,95 @@ function QuizRunnerInner({
 
   function handleInputChange(value: string) {
     setInput(value);
-    if (currentWord && matchesPinyin(value, currentWord.pinyin)) {
-      setCorrectIds((prev) => {
-        const next = new Set(prev).add(currentWord.id);
-        if (next.size === total) setFinishedState("completed");
-        return next;
-      });
-      setInput("");
-      const nextUnanswered = order.findIndex(
-        (w, i) => i !== currentIndex && !correctIds.has(w.id)
-      );
-      if (nextUnanswered !== -1) goTo(nextUnanswered);
+    if (!currentWord || !matchesPinyin(value, currentWord.pinyin)) return;
+
+    const updatedCorrectIds = new Set(correctIds).add(currentWord.id);
+    setCorrectIds(updatedCorrectIds);
+    setInput("");
+
+    if (updatedCorrectIds.size === total) {
+      setFinishedState("completed");
+      return;
+    }
+
+    // Walk forward from the current position (wrapping around) rather than
+    // always restarting the search from index 0 — otherwise answering out
+    // of order (e.g. skip to word 3 with Next, answer it) jumps back to an
+    // earlier word you deliberately skipped past instead of continuing on.
+    for (let step = 1; step <= total; step++) {
+      const index = (currentIndex + step) % total;
+      if (!updatedCorrectIds.has(order[index].id)) {
+        goTo(index);
+        break;
+      }
     }
   }
 
   if (finished) {
     const percent = total > 0 ? Math.round((score / total) * 100) : 0;
     const heading =
-      finished === "timeup" ? "Time's up!" : finished === "gaveup" ? "Quiz ended" : "Quiz complete!";
+      finished === "timeup"
+        ? "Time's up!"
+        : finished === "gaveup"
+          ? "Quiz ended"
+          : "Quiz complete!";
     // The stats breakdown is derived from correctIds, the same state already
     // submitted via POST /api/attempts — no extra API call needed, per
     // docs/09-pages.md §6.
-    const correctWords = order.filter((word) => correctIds.has(word.id));
     const missedWords = order.filter((word) => !correctIds.has(word.id));
 
     return (
       <div className="flex flex-col gap-6">
+        {(nextQuiz || anotherQuiz) && (
+          <div className="grid gap-4 sm:grid-cols-2">
+            {nextQuiz && (
+              <QuizLinkCard
+                href={nextQuiz.href}
+                eyebrow={nextQuiz.eyebrow}
+                title={nextQuiz.title}
+                icon={ArrowRight}
+              />
+            )}
+            {anotherQuiz && (
+              <QuizLinkCard
+                href={anotherQuiz.href}
+                eyebrow={anotherQuiz.eyebrow}
+                title={anotherQuiz.title}
+                icon={Shuffle}
+              />
+            )}
+          </div>
+        )}
+
         <div className="flex flex-col items-center gap-6 rounded-xl border border-border bg-surface p-10 text-center">
           <h2 className="text-2xl font-bold">{heading}</h2>
-          <p className="text-5xl font-bold tabular-nums text-accent">{percent}%</p>
+          <p className="text-5xl font-bold tabular-nums text-accent">
+            {percent}%
+          </p>
           <p className="text-muted-foreground">
             {score} / {total} correct
           </p>
           {bestPercent !== null && (
-            <p className="text-sm text-muted-foreground">your best: {bestPercent}%</p>
+            <p className="text-sm text-muted-foreground">
+              your best: {bestPercent}%
+            </p>
           )}
           {(avgGlobalPercent !== null || avgFriendPercent !== null) && (
             <p className="text-sm text-muted-foreground">
-              {avgGlobalPercent !== null && <>avg score: {avgGlobalPercent}% </>}
-              {avgFriendPercent !== null && <>· avg friend score: {avgFriendPercent}%</>}
+              {avgGlobalPercent !== null && (
+                <>avg score: {avgGlobalPercent}% </>
+              )}
+              {avgFriendPercent !== null && (
+                <>· avg friend score: {avgFriendPercent}%</>
+              )}
             </p>
           )}
           <div className="flex gap-3">
-            <button type="button" onClick={onReplay} className={pillClasses("primary")}>
+            <button
+              type="button"
+              onClick={onReplay}
+              className={pillClasses("primary")}
+            >
               Replay
             </button>
             <button
@@ -229,43 +302,20 @@ function QuizRunnerInner({
           </a>
 
           {showStats && (
-            <div className="grid w-full gap-6 text-left sm:grid-cols-2">
-              <div>
-                <h3 className="mb-2 text-sm font-semibold text-success">
-                  Correct ({correctWords.length})
-                </h3>
-                <StatsWordList words={correctWords} />
-              </div>
-              <div>
-                <h3 className="mb-2 text-sm font-semibold text-danger">
-                  Missed ({missedWords.length})
-                </h3>
-                <StatsWordList words={missedWords} />
-              </div>
+            <div className="w-full text-left">
+              <h3 className="mb-2 text-sm font-semibold text-danger">
+                Missed ({missedWords.length})
+              </h3>
+              {missedWords.length === 0 ? (
+                <p className="text-sm text-muted-foreground">
+                  None — you got every word.
+                </p>
+              ) : (
+                <VocabTableGroup words={missedWords} />
+              )}
             </div>
           )}
         </div>
-
-        {(nextQuiz || anotherQuiz) && (
-          <div className="grid gap-4 sm:grid-cols-2">
-            {nextQuiz && (
-              <QuizLinkCard
-                href={nextQuiz.href}
-                eyebrow={nextQuiz.eyebrow}
-                title={nextQuiz.title}
-                icon={ArrowRight}
-              />
-            )}
-            {anotherQuiz && (
-              <QuizLinkCard
-                href={anotherQuiz.href}
-                eyebrow={anotherQuiz.eyebrow}
-                title={anotherQuiz.title}
-                icon={Shuffle}
-              />
-            )}
-          </div>
-        )}
       </div>
     );
   }
@@ -277,17 +327,31 @@ function QuizRunnerInner({
           <span className="text-sm font-semibold tabular-nums">
             SCORE {score}/{total}
           </span>
-          <span className="text-sm font-semibold tabular-nums">{formatDuration(secondsLeft)}</span>
+          <span className="text-sm font-semibold tabular-nums">
+            {formatDuration(secondsLeft)}
+          </span>
           <div className="flex items-center gap-2">
-            <ToolbarButton onClick={() => goTo(currentIndex - 1)} disabled={!started} label="Prev">
+            <ToolbarButton
+              onClick={() => goTo(currentIndex - 1)}
+              disabled={!started}
+              label="Prev"
+            >
               <ChevronLeft size={16} />
               Prev
             </ToolbarButton>
-            <ToolbarButton onClick={() => setPaused((p) => !p)} disabled={!started} label="Pause">
+            <ToolbarButton
+              onClick={() => setPaused((p) => !p)}
+              disabled={!started}
+              label="Pause"
+            >
               {paused ? <Play size={16} /> : <Pause size={16} />}
               {paused ? "Resume" : "Pause"}
             </ToolbarButton>
-            <ToolbarButton onClick={() => goTo(currentIndex + 1)} disabled={!started} label="Next">
+            <ToolbarButton
+              onClick={() => goTo(currentIndex + 1)}
+              disabled={!started}
+              label="Next"
+            >
               Next
               <ChevronRight size={16} />
             </ToolbarButton>
@@ -306,10 +370,15 @@ function QuizRunnerInner({
         {!started ? (
           <div className="flex flex-col items-center gap-4 rounded-xl border border-border bg-surface p-10 text-center shadow-lg shadow-background/50">
             <p className="text-muted-foreground">
-              {total} words · {formatDuration(QUIZ_DURATION_SECONDS)} on the clock
+              {total} words · {formatDuration(QUIZ_DURATION_SECONDS)} on the
+              clock
             </p>
             <div className="flex items-center gap-3">
-              <button type="button" onClick={() => setStarted(true)} className={pillClasses("primary")}>
+              <button
+                type="button"
+                onClick={() => setStarted(true)}
+                className={pillClasses("primary")}
+              >
                 Start quiz
               </button>
               <ToolbarButton
@@ -370,7 +439,9 @@ function QuizRunnerInner({
                 }
               >
                 <td className="px-3 py-2 font-medium">{word.chinese}</td>
-                <td className="px-3 py-2 text-muted-foreground">{isCorrect ? word.pinyin : "—"}</td>
+                <td className="px-3 py-2 text-muted-foreground">
+                  {isCorrect ? word.pinyin : "—"}
+                </td>
                 <td className="px-3 py-2">{word.meaning ?? "—"}</td>
               </tr>
             );
@@ -378,22 +449,6 @@ function QuizRunnerInner({
         </tbody>
       </table>
     </div>
-  );
-}
-
-function StatsWordList({ words }: { words: QuizWord[] }) {
-  if (words.length === 0) {
-    return <p className="text-sm text-muted-foreground">None.</p>;
-  }
-  return (
-    <ul className="flex flex-col gap-1 text-sm">
-      {words.map((word) => (
-        <li key={word.id} className="flex items-center justify-between gap-3">
-          <span className="font-medium">{word.chinese}</span>
-          <span className="text-muted-foreground">{word.pinyin}</span>
-        </li>
-      ))}
-    </ul>
   );
 }
 
