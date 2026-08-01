@@ -5,6 +5,7 @@ import { fileURLToPath } from "node:url";
 import { parseAllTables } from "./markdown-table";
 import { extractHsk3Chapters } from "./extract-hsk3-chapters";
 import { extractHsk4aChapters } from "./extract-hsk4a-chapters";
+import { extractHsk4bChapters } from "./extract-hsk4b-chapters";
 import { ALL_LEVELS, type LevelSlug } from "@/lib/hsk-level";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -147,10 +148,16 @@ export async function extractAllChapters(): Promise<ChapterData[]> {
   const fromMarkdown = await Promise.all(
     ALL_LEVELS.map((level) => extractChaptersForLevel(level.slug))
   );
-  // HSK3 and HSK4A have no vocabulary.md files — their chapters come from
-  // in-repo data instead (extract-hsk3-chapters.ts, extract-hsk4a-chapters.ts).
-  // Their markdown-based entries above will always be [] until/if that
-  // changes. HSK4B/5/6 have neither a markdown folder nor in-repo chapter
-  // data yet, so they simply contribute no chapters for now.
-  return [...fromMarkdown.flat(), ...extractHsk3Chapters(), ...extractHsk4aChapters()];
+  // HSK3, HSK4A, and HSK4B have no vocabulary.md files — their chapters come
+  // from in-repo data instead (extract-hsk3-chapters.ts,
+  // extract-hsk4a-chapters.ts, extract-hsk4b-chapters.ts). Their
+  // markdown-based entries above will always be [] until/if that changes.
+  // HSK5/6 have neither a markdown folder nor in-repo chapter data yet, so
+  // they simply contribute no chapters for now.
+  return [
+    ...fromMarkdown.flat(),
+    ...extractHsk3Chapters(),
+    ...extractHsk4aChapters(),
+    ...extractHsk4bChapters(),
+  ];
 }

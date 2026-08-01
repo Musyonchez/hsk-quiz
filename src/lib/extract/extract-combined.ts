@@ -3,6 +3,7 @@ import { fileURLToPath } from "node:url";
 import { extractCombinedVocab, type CombinedVocabRow } from "./pdf-vocab-table";
 import { applyCombinedVocabCorrections } from "./combined-vocab-corrections";
 import { HSK4A_COMBINED_WORDS } from "./hsk4a-combined-data";
+import { HSK4B_COMBINED_WORDS } from "./hsk4b-combined-data";
 import { ALL_LEVELS, type LevelSlug } from "@/lib/hsk-level";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -38,6 +39,9 @@ export async function extractCombinedLevel(slug: LevelSlug): Promise<CombinedLev
   }
   if (slug === "4a") {
     return { slug, words: HSK4A_COMBINED_WORDS };
+  }
+  if (slug === "4b") {
+    return { slug, words: HSK4B_COMBINED_WORDS };
   }
   throw new Error(`No combined-word source wired up yet for level slug "${slug}"`);
 }

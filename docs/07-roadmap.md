@@ -105,6 +105,20 @@ Phased so each phase produces something runnable/checkable before moving on.
   The dev SQLite database was reset (not migrated) to add the new required `slug` column, since
   every row in it is reseedable from source data with no hand-entered content at risk. Verified
   zero orphans across every level/chapter after reseeding, `tsc --noEmit` and `eslint` both clean.
+- **HSK4B added** the same way as HSK4A: `hsk4b-combined-data.ts` (268 words, from the HSK 4
+  下册 textbook's own end-of-book appendix) and `hsk4b-chapters-data.ts` (10 chapters, lessons
+  11-20 — chapter numbers follow the textbook's own continuous lesson numbering rather than
+  restarting at 1, so the in-app "Lesson N" title matches what's printed in the book), plus
+  `extract-hsk4b-chapters.ts` mirroring the HSK4A adapter, and a `"4b"` branch in
+  `extract-combined.ts`'s dispatch. One new edge case: 省 (shěng) is taught twice in this book
+  with the *same* pinyin but two different senses ("province" in lesson 13 vs. "to save,
+  economize" in lesson 14) — unlike 还/长/只's homograph pairs, chinese+pinyin can't
+  distinguish these two rows, so they're merged into one combined-list row the same way 花
+  (flower; to spend) was merged for HSK3. `ALL_LEVELS` in `hsk-level.ts` now has `4a` and `4b`;
+  `5a`/`5b`/`6a`/`6b` still pending their own transcriptions. Reseeded and verified: 268
+  combined words (matches the transcribed appendix row count exactly, confirming the 省 merge
+  didn't drop data) + 311 chapter words across the 10 chapters, `tsc --noEmit` and `eslint`
+  clean.
 
 ## Phase 2 — Chapter data extraction ✅
 

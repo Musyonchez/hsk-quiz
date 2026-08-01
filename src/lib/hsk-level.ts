@@ -24,6 +24,7 @@ export const ALL_LEVELS: readonly LevelDefinition[] = [
   { slug: "2", number: 2, part: null, name: "HSK 2" },
   { slug: "3", number: 3, part: null, name: "HSK 3" },
   { slug: "4a", number: 4, part: "A", name: "HSK 4A" },
+  { slug: "4b", number: 4, part: "B", name: "HSK 4B" },
 ];
 
 export function isLevelSlug(value: string): value is LevelSlug {

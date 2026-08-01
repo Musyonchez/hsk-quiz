@@ -129,11 +129,13 @@ website/
       extract/                # extract-combined.ts, extract-chapters.ts (pure parsers);
                                # hsk3-chapters-data.ts holds HSK3's chapter word lists
                                # in-repo (no vocabulary.md source exists for HSK3 yet);
-                               # hsk4a-combined-data.ts / hsk4a-chapters-data.ts hold
-                               # HSK4A's word lists the same way — HSK4/5/6 are split
-                               # into independent per-book Level rows (see hsk-level.ts),
-                               # each sourced from that book's own textbook appendix
-                               # rather than the cumulative all-levels PDF used for 1-3
+                               # hsk4a-combined-data.ts / hsk4a-chapters-data.ts and
+                               # hsk4b-combined-data.ts / hsk4b-chapters-data.ts hold
+                               # HSK4A's and HSK4B's word lists the same way — HSK4/5/6
+                               # are split into independent per-book Level rows (see
+                               # hsk-level.ts), each sourced from that book's own
+                               # textbook appendix rather than the cumulative
+                               # all-levels PDF used for 1-3
       db.ts                   # Prisma client singleton
       auth.ts                 # password hashing + session create/lookup
       require-session.ts      # Server Component guard: redirects to /login if unauthenticated
