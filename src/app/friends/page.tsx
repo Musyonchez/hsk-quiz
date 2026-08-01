@@ -1,3 +1,4 @@
+import { Users } from "lucide-react";
 import { requireSession } from "@/lib/require-session";
 import { getFriendsData } from "@/lib/queries";
 import { UserBadge } from "@/components/UserBadge";
@@ -11,7 +12,10 @@ export default async function FriendsPage() {
   return (
     <main className="mx-auto flex w-full max-w-2xl flex-col gap-8 px-6 py-12">
       <div>
-        <h1 className="text-2xl font-bold">Friends</h1>
+        <h1 className="flex items-center gap-2 text-2xl font-bold">
+          <Users size={22} className="text-muted-foreground" />
+          Friends
+        </h1>
         <p className="mt-1 text-muted-foreground">
           Add a friend to compare scores on the friends leaderboard.
         </p>

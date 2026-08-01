@@ -246,10 +246,30 @@ three shippable sub-phases:
   Play Next/Play Another targets at both the middle and last live level. `tsc --noEmit` and
   `eslint` clean throughout.
 
-## Phase 7 — Polish pass
+## Phase 7 — Polish pass ✅
 
-- Visual pass to match the reference screenshots' look (dark cards, orange accent, table
-  styling) and the icon set (`lucide-react`) consistently across every page built above.
+- **Audited first, before touching anything**: grepped for any raw Tailwind palette color
+  (`bg-red-500`, `text-orange-*`, etc.) outside the `--accent`/`--success`/`--current-row`/
+  `--danger` token system from [10-color-palette.md](10-color-palette.md) — zero hits. The
+  ink/paper/seal palette and "one accent per screen" rule were already fully compliant across
+  every page; nothing to fix there.
+- **Icon set gap, per [08-ui-ux.md](08-ui-ux.md)'s explicit callout**: `lucide-react` was only
+  used on the landing page, the password show/hide toggle, and the quiz toolbar — the doc names
+  "trophy for leaderboard, users for friends" as expected usage that was never added. Fixed:
+  `<Trophy>`/`<Users>` in `AppHeader`'s nav links and the `/leaderboard`/`/friends` page headings.
+- **`<QuizLinkCard>` got its spec'd "thumbnail-style icon"** (per [08-ui-ux.md](08-ui-ux.md)'s
+  "Cards, not modals" section) via a new optional `icon` prop — a small badge box to the left of
+  the eyebrow/title text. Wired up on the level hub's "Combined" card (`Layers`), the leaderboard
+  picker's "Combined" card (`Trophy`), and the quiz results screen's `PLAY NEXT`/`PLAY ANOTHER`
+  cards (`ArrowRight`/`Shuffle`).
+- **Found and fixed a real duplication while auditing the leaderboard picker page**: it hand-
+  rolled the exact same card markup `<QuizLinkCard>` already provides, instead of reusing the
+  shared component — the kind of drift [08-ui-ux.md](08-ui-ux.md)'s component inventory exists to
+  prevent. Replaced with `<QuizLinkCard>` calls; net fewer lines, one less place a future card
+  restyle could be missed.
+- Verified visually via Playwright across the dashboard, level hub, leaderboard (both the picker
+  and a specific quiz's page), friends, and a quiz results screen. `tsc --noEmit` and `eslint`
+  clean throughout.
 
 ## Explicitly deferred (not in any phase above)
 

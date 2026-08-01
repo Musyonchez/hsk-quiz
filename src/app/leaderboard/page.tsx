@@ -1,9 +1,11 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { Trophy } from "lucide-react";
 import { requireSession } from "@/lib/require-session";
 import { getLevelWithChapters, getLevelsOverview } from "@/lib/queries";
 import { isLevelSlug } from "@/lib/hsk-level";
 import { quizKeyFor } from "@/quiz/quiz-key";
+import { QuizLinkCard } from "@/components/QuizLinkCard";
 
 export default async function LeaderboardPickerPage({
   searchParams,
@@ -17,7 +19,10 @@ export default async function LeaderboardPickerPage({
     const levels = await getLevelsOverview();
     return (
       <main className="mx-auto flex w-full max-w-3xl flex-col gap-6 px-6 py-12">
-        <h1 className="text-2xl font-bold">Leaderboard</h1>
+        <h1 className="flex items-center gap-2 text-2xl font-bold">
+          <Trophy size={22} className="text-muted-foreground" />
+          Leaderboard
+        </h1>
         <p className="text-muted-foreground">Pick a level, then a chapter or the combined quiz.</p>
         <div className="grid gap-4 sm:grid-cols-2">
           {levels.map((level) => (
@@ -48,26 +53,21 @@ export default async function LeaderboardPickerPage({
         <h1 className="mt-2 text-2xl font-bold">{level.name}</h1>
       </div>
 
-      <Link
+      <QuizLinkCard
         href={`/leaderboard/${quizKeyFor({ levelSlug })}`}
-        className="rounded-xl border border-border bg-surface p-6 transition-colors hover:border-border-strong hover:bg-surface-raised"
-      >
-        <p className="text-xs uppercase tracking-wide text-muted-foreground">Full level</p>
-        <p className="text-lg font-semibold">Combined</p>
-      </Link>
+        eyebrow="Full level"
+        title="Combined"
+        icon={Trophy}
+      />
 
       <div className="grid gap-3 sm:grid-cols-2">
         {level.chapters.map((chapter) => (
-          <Link
+          <QuizLinkCard
             key={chapter.id}
             href={`/leaderboard/${quizKeyFor({ levelSlug, chapterNumber: chapter.number })}`}
-            className="rounded-xl border border-border bg-surface p-5 transition-colors hover:border-border-strong hover:bg-surface-raised"
-          >
-            <p className="text-xs uppercase tracking-wide text-muted-foreground">
-              Chapter {chapter.number}
-            </p>
-            <p className="font-semibold">{chapter.title}</p>
-          </Link>
+            eyebrow={`Chapter ${chapter.number}`}
+            title={chapter.title}
+          />
         ))}
       </div>
     </main>

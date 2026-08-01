@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { ChevronLeft, ChevronRight, Flag, Pause, Play, Shuffle } from "lucide-react";
+import { ArrowRight, ChevronLeft, ChevronRight, Flag, Pause, Play, Shuffle } from "lucide-react";
 import { matchesPinyin } from "@/quiz/pinyin-match";
 import { formatDuration } from "@/quiz/format-time";
 import type { QuizNavTarget } from "@/quiz/quiz-navigation";
@@ -249,13 +249,19 @@ function QuizRunnerInner({
         {(nextQuiz || anotherQuiz) && (
           <div className="grid gap-4 sm:grid-cols-2">
             {nextQuiz && (
-              <QuizLinkCard href={nextQuiz.href} eyebrow={nextQuiz.eyebrow} title={nextQuiz.title} />
+              <QuizLinkCard
+                href={nextQuiz.href}
+                eyebrow={nextQuiz.eyebrow}
+                title={nextQuiz.title}
+                icon={ArrowRight}
+              />
             )}
             {anotherQuiz && (
               <QuizLinkCard
                 href={anotherQuiz.href}
                 eyebrow={anotherQuiz.eyebrow}
                 title={anotherQuiz.title}
+                icon={Shuffle}
               />
             )}
           </div>

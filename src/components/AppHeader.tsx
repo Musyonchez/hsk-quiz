@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Trophy, Users } from "lucide-react";
 import { getSessionUser } from "@/lib/auth";
 import { getLevelsOverview } from "@/lib/queries";
 import { pillClasses } from "./pill-classes";
@@ -30,10 +31,18 @@ export async function AppHeader() {
       </div>
       {user ? (
         <div className="flex items-center gap-4">
-          <Link href="/leaderboard" className="text-sm text-muted-foreground hover:text-foreground">
+          <Link
+            href="/leaderboard"
+            className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"
+          >
+            <Trophy size={16} />
             Leaderboard
           </Link>
-          <Link href="/friends" className="text-sm text-muted-foreground hover:text-foreground">
+          <Link
+            href="/friends"
+            className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"
+          >
+            <Users size={16} />
             Friends
           </Link>
           <UserBadge displayName={user.displayName} />

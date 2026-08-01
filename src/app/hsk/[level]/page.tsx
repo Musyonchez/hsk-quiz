@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { Layers } from "lucide-react";
 import { requireSession } from "@/lib/require-session";
 import { getCombinedWordCount, getLevelWithChapters } from "@/lib/queries";
 import { isLevelSlug } from "@/lib/hsk-level";
@@ -33,6 +34,7 @@ export default async function LevelHubPage({
         href={`/hsk/${levelSlug}/combined`}
         eyebrow="Full level"
         title={`Combined — ${combinedCount} words`}
+        icon={Layers}
       />
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
