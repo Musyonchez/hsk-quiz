@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { ChevronLeft, ChevronRight, Flag, Pause, Play } from "lucide-react";
+import { ChevronLeft, ChevronRight, Flag, Pause, Play, Shuffle } from "lucide-react";
 import { matchesPinyin } from "@/quiz/pinyin-match";
 import { formatDuration } from "@/quiz/format-time";
 import { pillClasses } from "@/components/pill-classes";
@@ -14,6 +14,15 @@ export type QuizWord = {
 };
 
 const QUIZ_DURATION_SECONDS = 600;
+
+function shuffle<T>(items: T[]): T[] {
+  const copy = [...items];
+  for (let i = copy.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [copy[i], copy[j]] = [copy[j], copy[i]];
+  }
+  return copy;
+}
 
 export function QuizRunner({ words, backHref }: { words: QuizWord[]; backHref: string }) {
   const [runId, setRunId] = useState(0);
@@ -37,6 +46,7 @@ function QuizRunnerInner({
   backHref: string;
   onReplay: () => void;
 }) {
+  const [order, setOrder] = useState(words);
   const [started, setStarted] = useState(false);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [input, setInput] = useState("");
@@ -46,9 +56,9 @@ function QuizRunnerInner({
   const [finished, setFinished] = useState<"completed" | "timeup" | "gaveup" | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  const currentWord = words[currentIndex];
+  const currentWord = order[currentIndex];
   const score = correctIds.size;
-  const total = words.length;
+  const total = order.length;
 
   useEffect(() => {
     if (!started || finished || paused) return;
@@ -83,7 +93,7 @@ function QuizRunnerInner({
         return next;
       });
       setInput("");
-      const nextUnanswered = words.findIndex(
+      const nextUnanswered = order.findIndex(
         (w, i) => i !== currentIndex && !correctIds.has(w.id)
       );
       if (nextUnanswered !== -1) goTo(nextUnanswered);
@@ -127,13 +137,13 @@ function QuizRunnerInner({
               <ChevronLeft size={16} />
               Prev
             </ToolbarButton>
-            <ToolbarButton onClick={() => goTo(currentIndex + 1)} disabled={!started} label="Next">
-              Next
-              <ChevronRight size={16} />
-            </ToolbarButton>
             <ToolbarButton onClick={() => setPaused((p) => !p)} disabled={!started} label="Pause">
               {paused ? <Play size={16} /> : <Pause size={16} />}
               {paused ? "Resume" : "Pause"}
+            </ToolbarButton>
+            <ToolbarButton onClick={() => goTo(currentIndex + 1)} disabled={!started} label="Next">
+              Next
+              <ChevronRight size={16} />
             </ToolbarButton>
             <ToolbarButton
               onClick={() => setFinished("gaveup")}
@@ -152,9 +162,19 @@ function QuizRunnerInner({
             <p className="text-muted-foreground">
               {total} words · {formatDuration(QUIZ_DURATION_SECONDS)} on the clock
             </p>
-            <button type="button" onClick={() => setStarted(true)} className={pillClasses("primary")}>
-              Start quiz
-            </button>
+            <div className="flex items-center gap-3">
+              <button type="button" onClick={() => setStarted(true)} className={pillClasses("primary")}>
+                Start quiz
+              </button>
+              <ToolbarButton
+                onClick={() => setOrder((prev) => shuffle(prev))}
+                disabled={false}
+                label="Shuffle word order"
+              >
+                <Shuffle size={16} />
+                Shuffle
+              </ToolbarButton>
+            </div>
           </div>
         ) : paused ? (
           <div className="rounded-xl border border-border bg-surface p-10 text-center text-muted-foreground shadow-lg shadow-background/50">
@@ -187,7 +207,7 @@ function QuizRunnerInner({
           </tr>
         </thead>
         <tbody>
-          {words.map((word, index) => {
+          {order.map((word, index) => {
             const isCorrect = correctIds.has(word.id);
             const isCurrent = index === currentIndex;
             return (
