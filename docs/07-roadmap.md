@@ -32,6 +32,15 @@ Phased so each phase produces something runnable/checkable before moving on.
   proper noun in 4 chapters that the curated markdown never captured (王方/谢朋 ch.10, 北京
   ch.11, 大卫 ch.13, 张 ch.14) — deliberately not added; see
   [03-content-extraction-rules.md](03-content-extraction-rules.md)'s proper-noun exclusion rule.
+- **HSK2 chapters checked too** (per-lesson transcription of all 15 lessons): every chapter
+  matches the textbook exactly with one exception — `hsk2/chapter1` still had a `花花` (a cat's
+  name) row left over from *before* the proper-noun-exclusion rule existed. This surfaced a
+  real gap in `prisma/seed.ts`: it only ever created/updated rows, never deleted ones a previous
+  seed run had written that the current extraction no longer produces. Fixed `seed.ts` itself
+  (not just this one row) to delete any DB row for a chapter/level not present in that run's
+  fresh extraction output, so future corrections (word swaps, exclusion rules, anything) can't
+  leave stale rows behind again. Verified zero orphans across every chapter and both combined
+  lists after the fix.
 
 ## Phase 2 — Chapter data extraction ✅
 

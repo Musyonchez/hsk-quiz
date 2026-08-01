@@ -43,6 +43,26 @@ async function seedCombinedLevels(levelIds: Record<1 | 2, number>) {
       }
     }
 
+    // Delete rows a previous seed run created that the current extraction no
+    // longer produces (e.g. a word corrected/renamed in
+    // combined-vocab-corrections.ts, or a category of word — like proper
+    // nouns — dropped from extraction entirely). Without this, stale rows
+    // silently accumulate across reseeds instead of the DB reflecting
+    // exactly what extraction currently outputs.
+    // Guard against wiping every row for a level if extraction ever returns
+    // nothing (Prisma's `notIn: []` excludes nothing, matching every row).
+    if (words.length > 0) {
+      const currentChinese = words.map((w) => w.chinese);
+      await prisma.word.deleteMany({
+        where: {
+          levelId: levelIds[level],
+          chapterId: null,
+          source: "combined",
+          chinese: { notIn: currentChinese },
+        },
+      });
+    }
+
     console.log(`Seeded HSK ${level}: ${words.length} combined words`);
   }
 }
@@ -90,6 +110,19 @@ async function seedChapters(levelIds: Record<1 | 2, number>) {
           pinyin: word.pinyin,
           wordType: word.wordType,
           meaning: word.meaning,
+        },
+      });
+    }
+
+    // Same stale-row cleanup as seedCombinedLevels — a word dropped from a
+    // chapter's markdown (or a whole category, like proper nouns) shouldn't
+    // linger in the DB from a previous seed run.
+    if (chapterData.words.length > 0) {
+      const currentChinese = chapterData.words.map((w) => w.chinese);
+      await prisma.word.deleteMany({
+        where: {
+          chapterId: chapterRow.id,
+          chinese: { notIn: currentChinese },
         },
       });
     }
