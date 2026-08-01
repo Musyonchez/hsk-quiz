@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { requireSession } from "@/lib/require-session";
 import { getChapterWithWords } from "@/lib/queries";
 import { isLevelSlug } from "@/lib/hsk-level";
@@ -15,6 +15,10 @@ export default async function ChapterLearnPage({
   const { level: levelSlug, chapter: chapterParam } = await params;
   const chapterNumber = Number(chapterParam);
   if (!isLevelSlug(levelSlug) || !Number.isInteger(chapterNumber)) notFound();
+  // Canonicalize e.g. "05" -> "5" so a chapter never has two live URLs.
+  if (String(chapterNumber) !== chapterParam) {
+    redirect(`/hsk/${levelSlug}/chapter/${chapterNumber}`);
+  }
 
   const chapter = await getChapterWithWords(levelSlug, chapterNumber);
   if (!chapter) notFound();

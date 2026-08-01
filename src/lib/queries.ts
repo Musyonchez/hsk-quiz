@@ -7,6 +7,20 @@ export function getLevelsOverview() {
   });
 }
 
+// Like getLevelsOverview, but also includes each level's combined-word count
+// in the same query — for the landing page's stats strip, which used to
+// issue one extra COUNT query per level.
+export function getLevelsOverviewWithCombinedCount() {
+  return prisma.level.findMany({
+    orderBy: [{ number: "asc" }, { part: "asc" }],
+    include: {
+      _count: {
+        select: { chapters: true, words: { where: { source: "combined" } } },
+      },
+    },
+  });
+}
+
 export function getMostRecentAttempt(userId: number) {
   return prisma.attempt.findFirst({
     where: { userId },

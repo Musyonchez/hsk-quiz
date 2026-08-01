@@ -53,7 +53,13 @@ function QuizRunnerInner({
   const [correctIds, setCorrectIds] = useState<Set<number>>(new Set());
   const [secondsLeft, setSecondsLeft] = useState(QUIZ_DURATION_SECONDS);
   const [paused, setPaused] = useState(false);
-  const [finished, setFinished] = useState<"completed" | "timeup" | "gaveup" | null>(null);
+  // Only the two user-triggered end states are stored — "timeup" is derived
+  // below from secondsLeft during render instead, since React's guidance is
+  // to compute derivable state at render time rather than mirror it into
+  // state via an effect (which causes an extra render and, if you're not
+  // careful with the dependency array, a setState-in-effect lint error).
+  const [finishedState, setFinishedState] = useState<"completed" | "gaveup" | null>(null);
+  const finished = finishedState ?? (started && secondsLeft === 0 ? "timeup" : null);
   const inputRef = useRef<HTMLInputElement>(null);
 
   const currentWord = order[currentIndex];
@@ -63,13 +69,7 @@ function QuizRunnerInner({
   useEffect(() => {
     if (!started || finished || paused) return;
     const timer = setInterval(() => {
-      setSecondsLeft((s) => {
-        if (s <= 1) {
-          setFinished("timeup");
-          return 0;
-        }
-        return s - 1;
-      });
+      setSecondsLeft((s) => Math.max(0, s - 1));
     }, 1000);
     return () => clearInterval(timer);
   }, [started, paused, finished]);
@@ -89,7 +89,7 @@ function QuizRunnerInner({
     if (currentWord && matchesPinyin(value, currentWord.pinyin)) {
       setCorrectIds((prev) => {
         const next = new Set(prev).add(currentWord.id);
-        if (next.size === total) setFinished("completed");
+        if (next.size === total) setFinishedState("completed");
         return next;
       });
       setInput("");
@@ -146,7 +146,7 @@ function QuizRunnerInner({
               <ChevronRight size={16} />
             </ToolbarButton>
             <ToolbarButton
-              onClick={() => setFinished("gaveup")}
+              onClick={() => setFinishedState("gaveup")}
               disabled={!started}
               label="Give up"
               variant="danger"

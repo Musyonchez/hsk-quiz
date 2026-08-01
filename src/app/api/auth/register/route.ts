@@ -5,6 +5,9 @@ import { Prisma } from "@/generated/prisma/client";
 import { createSession, hashPassword, SESSION_COOKIE_NAME } from "@/lib/auth";
 
 const MIN_PASSWORD_LENGTH = 8;
+// Letters, numbers, underscore, hyphen — matches how usernames are typed/shared elsewhere
+// (URLs, future friend-by-username lookup) without needing to think about Unicode look-alikes.
+const USERNAME_PATTERN = /^[a-zA-Z0-9_-]{3,20}$/;
 
 export async function POST(request: Request) {
   const body = await request.json().catch(() => null);
@@ -18,6 +21,15 @@ export async function POST(request: Request) {
   if (!username || !password) {
     return NextResponse.json(
       { error: "Username and password are required." },
+      { status: 400 }
+    );
+  }
+  if (!USERNAME_PATTERN.test(username)) {
+    return NextResponse.json(
+      {
+        error:
+          "Username must be 3-20 characters: letters, numbers, underscores, or hyphens only.",
+      },
       { status: 400 }
     );
   }

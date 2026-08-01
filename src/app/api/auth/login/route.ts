@@ -7,6 +7,7 @@ import {
   SESSION_COOKIE_NAME,
   UNREACHABLE_PASSWORD_HASH,
 } from "@/lib/auth";
+import { isLoginLocked, recordLoginFailure, clearLoginFailures } from "@/lib/login-rate-limit";
 
 export async function POST(request: Request) {
   const body = await request.json().catch(() => null);
@@ -20,12 +21,21 @@ export async function POST(request: Request) {
     );
   }
 
+  if (isLoginLocked(username)) {
+    return NextResponse.json(
+      { error: "Too many failed attempts. Try again later." },
+      { status: 429 }
+    );
+  }
+
   const user = await prisma.user.findUnique({ where: { username } });
   const valid = await verifyPassword(password, user?.passwordHash ?? UNREACHABLE_PASSWORD_HASH);
 
   if (!user || !valid) {
+    recordLoginFailure(username);
     return NextResponse.json({ error: "Invalid username or password." }, { status: 401 });
   }
+  clearLoginFailures(username);
 
   const { token, expiresAt } = await createSession(user.id);
   const cookieStore = await cookies();

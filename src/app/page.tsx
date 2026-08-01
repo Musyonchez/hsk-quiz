@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { Keyboard, Layers, Timer } from "lucide-react";
 import { getSessionUser } from "@/lib/auth";
-import { getLevelsOverview, getCombinedWordCount } from "@/lib/queries";
+import { getLevelsOverviewWithCombinedCount } from "@/lib/queries";
 import { pillClasses } from "@/components/pill-classes";
 import { VocabTableGroup } from "@/components/VocabTable";
 
@@ -33,11 +33,11 @@ const PREVIEW_ROWS = [
 ] as const;
 
 export default async function LandingPage() {
-  const [user, levels] = await Promise.all([getSessionUser(), getLevelsOverview()]);
-  const combinedCounts = await Promise.all(
-    levels.map((level) => getCombinedWordCount(level.slug))
-  );
-  const totalWords = combinedCounts.reduce((sum, count) => sum + count, 0);
+  const [user, levels] = await Promise.all([
+    getSessionUser(),
+    getLevelsOverviewWithCombinedCount(),
+  ]);
+  const totalWords = levels.reduce((sum, level) => sum + level._count.words, 0);
   const totalChapters = levels.reduce((sum, level) => sum + level._count.chapters, 0);
 
   const primaryCta = user ? (
