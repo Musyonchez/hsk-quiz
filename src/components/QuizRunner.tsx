@@ -4,7 +4,9 @@ import { useEffect, useRef, useState } from "react";
 import { ChevronLeft, ChevronRight, Flag, Pause, Play, Shuffle } from "lucide-react";
 import { matchesPinyin } from "@/quiz/pinyin-match";
 import { formatDuration } from "@/quiz/format-time";
+import type { QuizNavTarget } from "@/quiz/quiz-navigation";
 import { pillClasses } from "@/components/pill-classes";
+import { QuizLinkCard } from "@/components/QuizLinkCard";
 
 export type QuizWord = {
   id: number;
@@ -37,10 +39,14 @@ export function QuizRunner({
   words,
   backHref,
   quizKey,
+  nextQuiz = null,
+  anotherQuiz,
 }: {
   words: QuizWord[];
   backHref: string;
   quizKey: string;
+  nextQuiz?: QuizNavTarget | null;
+  anotherQuiz?: QuizNavTarget;
 }) {
   const [runId, setRunId] = useState(0);
 
@@ -50,6 +56,8 @@ export function QuizRunner({
       words={words}
       backHref={backHref}
       quizKey={quizKey}
+      nextQuiz={nextQuiz}
+      anotherQuiz={anotherQuiz}
       onReplay={() => setRunId((n) => n + 1)}
     />
   );
@@ -59,11 +67,15 @@ function QuizRunnerInner({
   words,
   backHref,
   quizKey,
+  nextQuiz,
+  anotherQuiz,
   onReplay,
 }: {
   words: QuizWord[];
   backHref: string;
   quizKey: string;
+  nextQuiz: QuizNavTarget | null;
+  anotherQuiz?: QuizNavTarget;
   onReplay: () => void;
 }) {
   const [order, setOrder] = useState(words);
@@ -83,6 +95,7 @@ function QuizRunnerInner({
   const [bestPercent, setBestPercent] = useState<number | null>(null);
   const [avgGlobalPercent, setAvgGlobalPercent] = useState<number | null>(null);
   const [avgFriendPercent, setAvgFriendPercent] = useState<number | null>(null);
+  const [showStats, setShowStats] = useState(false);
   const submittedRef = useRef(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -170,37 +183,83 @@ function QuizRunnerInner({
     const percent = total > 0 ? Math.round((score / total) * 100) : 0;
     const heading =
       finished === "timeup" ? "Time's up!" : finished === "gaveup" ? "Quiz ended" : "Quiz complete!";
+    // The stats breakdown is derived from correctIds, the same state already
+    // submitted via POST /api/attempts — no extra API call needed, per
+    // docs/09-pages.md §6.
+    const correctWords = order.filter((word) => correctIds.has(word.id));
+    const missedWords = order.filter((word) => !correctIds.has(word.id));
 
     return (
-      <div className="flex flex-col items-center gap-6 rounded-xl border border-border bg-surface p-10 text-center">
-        <h2 className="text-2xl font-bold">{heading}</h2>
-        <p className="text-5xl font-bold tabular-nums text-accent">{percent}%</p>
-        <p className="text-muted-foreground">
-          {score} / {total} correct
-        </p>
-        {bestPercent !== null && (
-          <p className="text-sm text-muted-foreground">your best: {bestPercent}%</p>
-        )}
-        {(avgGlobalPercent !== null || avgFriendPercent !== null) && (
-          <p className="text-sm text-muted-foreground">
-            {avgGlobalPercent !== null && <>avg score: {avgGlobalPercent}% </>}
-            {avgFriendPercent !== null && <>· avg friend score: {avgFriendPercent}%</>}
+      <div className="flex flex-col gap-6">
+        <div className="flex flex-col items-center gap-6 rounded-xl border border-border bg-surface p-10 text-center">
+          <h2 className="text-2xl font-bold">{heading}</h2>
+          <p className="text-5xl font-bold tabular-nums text-accent">{percent}%</p>
+          <p className="text-muted-foreground">
+            {score} / {total} correct
           </p>
-        )}
-        <div className="flex gap-3">
-          <button type="button" onClick={onReplay} className={pillClasses("primary")}>
-            Replay
-          </button>
-          <a href={backHref} className={pillClasses("secondary")}>
-            Back
+          {bestPercent !== null && (
+            <p className="text-sm text-muted-foreground">your best: {bestPercent}%</p>
+          )}
+          {(avgGlobalPercent !== null || avgFriendPercent !== null) && (
+            <p className="text-sm text-muted-foreground">
+              {avgGlobalPercent !== null && <>avg score: {avgGlobalPercent}% </>}
+              {avgFriendPercent !== null && <>· avg friend score: {avgFriendPercent}%</>}
+            </p>
+          )}
+          <div className="flex gap-3">
+            <button type="button" onClick={onReplay} className={pillClasses("primary")}>
+              Replay
+            </button>
+            <button
+              type="button"
+              onClick={() => setShowStats((v) => !v)}
+              className={pillClasses("secondary")}
+            >
+              {showStats ? "Hide stats" : "Stats"}
+            </button>
+            <a href={backHref} className={pillClasses("secondary")}>
+              Back
+            </a>
+          </div>
+          <a
+            href={`/leaderboard/${encodeURIComponent(quizKey)}`}
+            className="text-sm text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
+          >
+            View leaderboard
           </a>
+
+          {showStats && (
+            <div className="grid w-full gap-6 text-left sm:grid-cols-2">
+              <div>
+                <h3 className="mb-2 text-sm font-semibold text-success">
+                  Correct ({correctWords.length})
+                </h3>
+                <StatsWordList words={correctWords} />
+              </div>
+              <div>
+                <h3 className="mb-2 text-sm font-semibold text-danger">
+                  Missed ({missedWords.length})
+                </h3>
+                <StatsWordList words={missedWords} />
+              </div>
+            </div>
+          )}
         </div>
-        <a
-          href={`/leaderboard/${encodeURIComponent(quizKey)}`}
-          className="text-sm text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
-        >
-          View leaderboard
-        </a>
+
+        {(nextQuiz || anotherQuiz) && (
+          <div className="grid gap-4 sm:grid-cols-2">
+            {nextQuiz && (
+              <QuizLinkCard href={nextQuiz.href} eyebrow={nextQuiz.eyebrow} title={nextQuiz.title} />
+            )}
+            {anotherQuiz && (
+              <QuizLinkCard
+                href={anotherQuiz.href}
+                eyebrow={anotherQuiz.eyebrow}
+                title={anotherQuiz.title}
+              />
+            )}
+          </div>
+        )}
       </div>
     );
   }
@@ -313,6 +372,22 @@ function QuizRunnerInner({
         </tbody>
       </table>
     </div>
+  );
+}
+
+function StatsWordList({ words }: { words: QuizWord[] }) {
+  if (words.length === 0) {
+    return <p className="text-sm text-muted-foreground">None.</p>;
+  }
+  return (
+    <ul className="flex flex-col gap-1 text-sm">
+      {words.map((word) => (
+        <li key={word.id} className="flex items-center justify-between gap-3">
+          <span className="font-medium">{word.chinese}</span>
+          <span className="text-muted-foreground">{word.pinyin}</span>
+        </li>
+      ))}
+    </ul>
   );
 }
 

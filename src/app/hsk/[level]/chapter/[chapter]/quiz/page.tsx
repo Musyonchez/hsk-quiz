@@ -1,9 +1,10 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { requireSession } from "@/lib/require-session";
-import { getChapterWithWords } from "@/lib/queries";
+import { getChapterWithWords, getLevelsOverview } from "@/lib/queries";
 import { isLevelSlug } from "@/lib/hsk-level";
 import { quizKeyFor } from "@/quiz/quiz-key";
+import { getQuizNavigation } from "@/quiz/quiz-navigation";
 import { QuizRunner } from "@/components/QuizRunner";
 
 export default async function ChapterQuizPage({
@@ -20,11 +21,22 @@ export default async function ChapterQuizPage({
     redirect(`/hsk/${levelSlug}/chapter/${chapterNumber}/quiz`);
   }
 
-  const chapter = await getChapterWithWords(levelSlug, chapterNumber);
+  const [chapter, levels] = await Promise.all([
+    getChapterWithWords(levelSlug, chapterNumber),
+    getLevelsOverview(),
+  ]);
   if (!chapter || chapter.words.length === 0) notFound();
 
   const backHref = `/hsk/${levelSlug}/chapter/${chapterNumber}`;
   const quizKey = quizKeyFor({ levelSlug, chapterNumber });
+  const { next, another } = getQuizNavigation(
+    { levelSlug, chapterNumber },
+    levels.map((level) => ({
+      slug: level.slug,
+      name: level.name,
+      chapterCount: level._count.chapters,
+    }))
+  );
 
   return (
     <main className="mx-auto flex w-full max-w-3xl flex-col gap-6 px-6 py-12">
@@ -37,7 +49,13 @@ export default async function ChapterQuizPage({
         </h1>
       </div>
 
-      <QuizRunner words={chapter.words} backHref={backHref} quizKey={quizKey} />
+      <QuizRunner
+        words={chapter.words}
+        backHref={backHref}
+        quizKey={quizKey}
+        nextQuiz={next}
+        anotherQuiz={another}
+      />
     </main>
   );
 }
