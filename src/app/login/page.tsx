@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { pillClasses } from "@/components/pill-classes";
+import { PasswordField } from "@/components/PasswordField";
 
 export default function LoginPage() {
   const [username, setUsername] = useState("");
@@ -68,16 +69,7 @@ export default function LoginPage() {
             className="rounded border border-border bg-transparent px-3 py-2 outline-none focus:border-border-strong"
           />
         </label>
-        <label className="flex flex-col gap-1">
-          <span className="text-sm">Password</span>
-          <input
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-            className="rounded border border-border bg-transparent px-3 py-2 outline-none focus:border-border-strong"
-          />
-        </label>
+        <PasswordField label="Password" value={password} onChange={setPassword} />
         {error && <p className="text-sm text-danger">{error}</p>}
         <button
           type="submit"

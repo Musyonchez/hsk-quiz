@@ -3,16 +3,24 @@
 import { useState } from "react";
 import Link from "next/link";
 import { pillClasses } from "@/components/pill-classes";
+import { PasswordField } from "@/components/PasswordField";
 
 export default function RegisterPage() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
+
+    if (password !== confirmPassword) {
+      setError("Passwords don't match.");
+      return;
+    }
+
     setSubmitting(true);
 
     const res = await fetch("/api/auth/register", {
@@ -65,18 +73,19 @@ export default function RegisterPage() {
             className="rounded border border-border bg-transparent px-3 py-2 outline-none focus:border-border-strong"
           />
         </label>
-        <label className="flex flex-col gap-1">
-          <span className="text-sm">Password</span>
-          <input
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-            minLength={8}
-            className="rounded border border-border bg-transparent px-3 py-2 outline-none focus:border-border-strong"
-          />
-          <span className="text-xs text-muted-foreground">At least 8 characters.</span>
-        </label>
+        <PasswordField
+          label="Password"
+          value={password}
+          onChange={setPassword}
+          minLength={8}
+          hint="At least 8 characters."
+        />
+        <PasswordField
+          label="Confirm password"
+          value={confirmPassword}
+          onChange={setConfirmPassword}
+          minLength={8}
+        />
         {error && <p className="text-sm text-danger">{error}</p>}
         <button
           type="submit"

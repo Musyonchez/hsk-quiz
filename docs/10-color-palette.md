@@ -11,8 +11,9 @@ component gets styled against it.
 The site teaches Chinese vocabulary, so the palette borrows from Chinese writing culture instead
 of generic dark-mode conventions:
 
-- **Ink** — the background isn't neutral slate/black, it's a dark warm-graphite tone the way sumi
-  ink reads on paper: near-black with a faint warmth, not a blue-tinted "tech" dark.
+- **Ink** — a true neutral charcoal, not a blue-tinted "tech" dark and not a warm/brown one
+  either (an earlier warm-graphite draft of this token read as muddy/brown in practice — fixed
+  to a genuinely neutral gray instead).
 - **Paper** — text isn't stark white; it's a warm off-white the temperature of aged rice paper.
 - **Seal** — the one accent color is cinnabar/vermilion, the red of a calligrapher's seal stamp —
   used exactly the same way a seal is used on a piece of work: once, deliberately, small. Never a
@@ -27,11 +28,11 @@ This gives every color on the site a reason to be there beyond "dark mode needs 
 
 | Token | Hex | Role |
 |---|---|---|
-| `--background` | `#161310` | Page background — warm near-black ("ink"), not blue-black |
-| `--surface` | `#1f1b17` | Cards, table rows, the header bar |
-| `--surface-raised` | `#2a2420` | Hover/active state on cards, modals, the "current row" container background before the gold highlight is applied |
+| `--background` | `#18181a` | Page background — neutral charcoal ("ink"), not blue- or brown-tinted |
+| `--surface` | `#212124` | Cards, table rows, the header bar |
+| `--surface-raised` | `#2b2b2f` | Hover/active state on cards, modals, the "current row" container background before the gold highlight is applied |
 | `--foreground` | `#efe7da` | Primary text ("rice paper") |
-| `--muted-foreground` | `#a89984` | Secondary text — labels, chapter counts, timestamps |
+| `--muted-foreground` | `#9d9a97` | Secondary text — labels, chapter counts, timestamps |
 | `--border` | `rgba(239, 231, 218, 0.10)` | Default hairline borders on cards/inputs |
 | `--border-strong` | `rgba(239, 231, 218, 0.22)` | Hover border, focus ring base |
 
@@ -80,11 +81,11 @@ pattern already used for spacing/typography — no `tailwind.config.js`, CSS var
 
 ```css
 :root {
-  --background: #161310;
-  --surface: #1f1b17;
-  --surface-raised: #2a2420;
+  --background: #18181a;
+  --surface: #212124;
+  --surface-raised: #2b2b2f;
   --foreground: #efe7da;
-  --muted-foreground: #a89984;
+  --muted-foreground: #9d9a97;
   --border: rgba(239, 231, 218, 0.10);
   --border-strong: rgba(239, 231, 218, 0.22);
 
