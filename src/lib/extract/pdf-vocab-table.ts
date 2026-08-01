@@ -5,7 +5,7 @@ export interface CombinedVocabRow {
   chinese: string;
   pinyin: string;
   english: string | null;
-  category: string;
+  category: string | null;
 }
 
 interface Cell {
@@ -32,7 +32,10 @@ export async function extractCombinedVocab(
 
   const rows: CombinedVocabRow[] = [];
   let chineseColumnX: number | null = null;
-  let currentCategory = "";
+  // Some levels' PDFs (HSK 3) have no single-cell category header rows at
+  // all, unlike HSK 1/2's "Personal Pron." style headers — category stays
+  // null throughout for those rather than an empty string.
+  let currentCategory: string | null = null;
   let started = false;
 
   for (let pageNum = 1; pageNum <= doc.numPages; pageNum++) {
@@ -54,10 +57,13 @@ export async function extractCombinedVocab(
       const cells = byY.get(y)!.sort((a, b) => a.x - b.x);
 
       if (!started) {
+        // Header text isn't perfectly consistent across levels — HSK 3's PDF
+        // has a "Pinying" typo (extra "g") instead of "Pinyin" — so match on
+        // prefix rather than an exact string.
         if (
           cells.length === 3 &&
           cells[0].text === "Chinese" &&
-          cells[1].text === "Pinyin"
+          cells[1].text.startsWith("Piny")
         ) {
           chineseColumnX = cells[0].x;
           started = true;

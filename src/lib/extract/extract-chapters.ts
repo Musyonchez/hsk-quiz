@@ -17,7 +17,7 @@ export interface ChapterWordRow {
 }
 
 export interface ChapterData {
-  level: 1 | 2;
+  level: 1 | 2 | 3;
   chapterNumber: number;
   title: string;
   words: ChapterWordRow[];
@@ -73,7 +73,7 @@ function parseVocabTableRows(tableRows: string[][]): ChapterWordRow[] {
 }
 
 async function extractOneChapter(
-  level: 1 | 2,
+  level: 1 | 2 | 3,
   chapterNumber: number,
   filePath: string
 ): Promise<ChapterData> {
@@ -110,7 +110,7 @@ async function extractOneChapter(
 }
 
 export async function extractChaptersForLevel(
-  level: 1 | 2
+  level: 1 | 2 | 3
 ): Promise<ChapterData[]> {
   const levelDir = path.join(wordsRoot, `hsk${level}`);
   const entries = await readdir(levelDir, { withFileTypes: true });
@@ -132,9 +132,10 @@ export async function extractChaptersForLevel(
 }
 
 export async function extractAllChapters(): Promise<ChapterData[]> {
-  const [hsk1, hsk2] = await Promise.all([
+  const [hsk1, hsk2, hsk3] = await Promise.all([
     extractChaptersForLevel(1),
     extractChaptersForLevel(2),
+    extractChaptersForLevel(3),
   ]);
-  return [...hsk1, ...hsk2];
+  return [...hsk1, ...hsk2, ...hsk3];
 }

@@ -4,10 +4,10 @@ import type { CombinedVocabRow } from "./pdf-vocab-table";
 // raw/HSK-All-Levels-Vocabulary, a third-party digmandarin.com word list)
 // against the official "生词 New Words" appendix in the HSK Standard Course
 // textbooks themselves (raw/hsk1/HSK 1 standard course.pdf pages 120-127,
-// raw/hsk2/HSK 2 standard course.pdf pages 128-135), transcribed page-by-page
-// via an LLM since the raw scanned PDFs have no text layer for direct
-// extraction or reliable OCR. See the git log around this file for both
-// transcriptions this was checked against.
+// raw/hsk2/HSK 2 standard course.pdf pages 128-135, HSK Standard Course 3
+// pages 178-190), transcribed page-by-page via an LLM since the raw scanned
+// PDFs have no text layer for direct extraction or reliable OCR. See the git
+// log around this file for each transcription this was checked against.
 //
 // Each level's combined list is a fully independent, cumulative word list
 // (HSK2's ~300 words include a second copy of all of HSK1's ~150), sourced
@@ -71,8 +71,52 @@ const HSK2_ADDITIONS: CombinedVocabRow[] = [
   },
 ];
 
+// HSK3's PDF has no category-header rows at all (see pdf-vocab-table.ts),
+// and doesn't repeat the earlier levels' 饭馆/没/男人/女人/玩 mistakes — those
+// four words simply don't reappear as mistakes a third time in this PDF.
+// One new formatting bug here instead: the source PDF baked a parenthetical
+// part-of-speech annotation directly into the Chinese-column text itself
+// ("花 （动）" instead of "花"), rather than a separate column — this also
+// conveniently merges 花's two senses (flower / to spend) that the PDF
+// otherwise splits into a bare verb row and a missing noun row, so folding
+// both into one row's meaning avoids needing a second same-pinyin row that
+// chinese+pinyin-keyed upsert matching (see prisma/seed.ts) can't
+// distinguish from the first.
+const HSK3_REPLACEMENTS: Record<string, CombinedVocabRow> = {
+  "花 （动）": { chinese: "花", pinyin: "huā", english: "flower; to spend", category: null },
+};
+
+const HSK3_ADDITIONS: CombinedVocabRow[] = [
+  { chinese: "词典", pinyin: "cídiǎn", english: "dictionary", category: "Noun" },
+  { chinese: "笔记本（电脑）", pinyin: "bǐjìběn (diànnǎo)", english: "notebook, laptop", category: "Noun" },
+  { chinese: "感兴趣", pinyin: "gǎn xìngqù", english: "to be interested in", category: null },
+  { chinese: "个子", pinyin: "gèzi", english: "height, stature", category: "Noun" },
+  { chinese: "后来", pinyin: "hòulái", english: "later, afterwards", category: "Noun" },
+  { chinese: "聊天（儿）", pinyin: "liáotiān(r)", english: "to chat", category: "Verb" },
+  { chinese: "留学", pinyin: "liú xué", english: "to study abroad", category: "Verb" },
+  { chinese: "皮鞋", pinyin: "píxié", english: "leather shoes", category: "Noun" },
+  { chinese: "瓶子", pinyin: "píngzi", english: "bottle", category: "Noun" },
+  { chinese: "起飞", pinyin: "qǐfēi", english: "(of an aircraft) to take off", category: "Verb" },
+  { chinese: "起来", pinyin: "qǐlai", english: "(indicating an upward movement) to rise", category: "Verb" },
+  { chinese: "请假", pinyin: "qǐng jià", english: "to ask for leave", category: "Verb" },
+  { chinese: "试", pinyin: "shì", english: "to try", category: "Verb" },
+  { chinese: "信用卡", pinyin: "xìnyòngkǎ", english: "credit card", category: "Noun" },
+  { chinese: "饮料", pinyin: "yǐnliào", english: "drink, beverage", category: "Noun" },
+  { chinese: "嘴", pinyin: "zuǐ", english: "mouth", category: "Noun" },
+  { chinese: "最后", pinyin: "zuìhòu", english: "the last one", category: "Noun" },
+  // A second reading of an already-present character, not a replacement —
+  // 只 (zhǐ, "only") already exists; this is 只 (zhī, a measure word for
+  // certain animals), distinguished from the first by pinyin.
+  { chinese: "只", pinyin: "zhī", english: "used for certain animals", category: "Quantifier" },
+  // "不但……而且……" and "只有……才……" (both in the official appendix) are
+  // paired grammar-pattern skeletons, not standalone typable vocabulary —
+  // deliberately excluded here the same way "太……了" was excluded from
+  // HSK1/2, consistent with 06-quiz-mechanics.md's separate "grammar
+  // pattern" quiz-item concept (not yet built) rather than combined vocab.
+];
+
 export function applyCombinedVocabCorrections(
-  level: 1 | 2,
+  level: 1 | 2 | 3,
   words: CombinedVocabRow[]
 ): CombinedVocabRow[] {
   if (level === 1) {
@@ -80,6 +124,11 @@ export function applyCombinedVocabCorrections(
     return [...corrected, ...HSK1_ADDITIONS];
   }
 
-  const corrected = words.map((word) => HSK2_REPLACEMENTS[word.chinese] ?? word);
-  return [...corrected, ...HSK2_ADDITIONS];
+  if (level === 2) {
+    const corrected = words.map((word) => HSK2_REPLACEMENTS[word.chinese] ?? word);
+    return [...corrected, ...HSK2_ADDITIONS];
+  }
+
+  const corrected = words.map((word) => HSK3_REPLACEMENTS[word.chinese] ?? word);
+  return [...corrected, ...HSK3_ADDITIONS];
 }

@@ -41,7 +41,7 @@ vocabulary content itself is still sourced from the PDFs/markdown in this repo, 
 ## Database schema (outline)
 
 ```
-Level        { id, number (1|2), name }
+Level        { id, number (1|2|3, more as data becomes available), name }
 Chapter      { id, levelId, number, title }
 Word         { id, chapterId? (null for combined-only words), levelId,
                chinese, pinyin, wordType, meaning, category (nullable, PDF word-class),

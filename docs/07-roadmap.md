@@ -41,6 +41,30 @@ Phased so each phase produces something runnable/checkable before moving on.
   fresh extraction output, so future corrections (word swaps, exclusion rules, anything) can't
   leave stale rows behind again. Verified zero orphans across every chapter and both combined
   lists after the fix.
+- **HSK3 combined level stood up** (chapters still to come, one at a time): unlike HSK1/2,
+  `raw/HSK-All-Levels-Vocabulary` already had a
+  working `HSK 3 Vocabulary list.pdf` with a real text layer, just with a header typo
+  ("Pinying" instead of "Pinyin") that silently produced zero rows until
+  `pdf-vocab-table.ts`'s header match was loosened to a prefix check. Diffed the resulting
+  600-word cumulative extraction against the official textbook appendix (pages 178-190,
+  transcribed the same way as HSK1/2): one formatting bug (a POS annotation baked into the
+  Chinese-column text itself, "花 （动）", folded into a single clean 花 row covering both its
+  senses) and 18 genuinely missing words added, including a second reading of 只 (zhī, distinct
+  from the already-present zhǐ).
+  - That last one exposed a real limitation in `prisma/seed.ts`'s upsert matching: it keyed on
+    `chinese` alone, so a word taught twice with two different readings (还 hái/huán, 长
+    cháng/zhǎng, 只 zhǐ/zhī...) would have the second reading silently overwrite the first
+    instead of creating a second row. Re-keyed both the upsert and the stale-row cleanup on
+    `chinese`+`pinyin` together. This was latent risk for HSK1/2 too, not just new HSK3 data —
+    reseeding after the fix didn't change their counts, since neither level happened to teach a
+    second reading of the same character, but it would have silently eaten one the moment they
+    did.
+  - `isLevelNumber`, `extractAllCombinedLevels`/`extractAllChapters`, and `AppHeader`'s level
+    nav all widened from a hardcoded 1/2 to include 3 (`AppHeader` now maps over
+    `getLevelsOverview()` instead of hardcoding two links, so a future HSK4+ needs no header
+    change at all).
+  - HSK3 has no chapters yet — `characters/words/hsk3/` is still just the `.keep` placeholder —
+    so the dashboard's HSK3 card correctly shows "0 chapters" until per-chapter content exists.
 
 ## Phase 2 — Chapter data extraction ✅
 

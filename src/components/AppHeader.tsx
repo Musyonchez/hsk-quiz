@@ -1,11 +1,13 @@
 import Link from "next/link";
 import { getSessionUser } from "@/lib/auth";
+import { getLevelsOverview } from "@/lib/queries";
 import { pillClasses } from "./pill-classes";
 import { LogoutButton } from "./LogoutButton";
 import { UserBadge } from "./UserBadge";
 
 export async function AppHeader() {
   const user = await getSessionUser();
+  const levels = user ? await getLevelsOverview() : [];
 
   return (
     <header className="sticky top-0 z-10 flex items-center justify-between border-b border-border bg-surface/80 px-6 py-4 backdrop-blur">
@@ -18,12 +20,11 @@ export async function AppHeader() {
             <Link href="/dashboard" className="hover:text-foreground">
               Dashboard
             </Link>
-            <Link href="/hsk/1" className="hover:text-foreground">
-              HSK 1
-            </Link>
-            <Link href="/hsk/2" className="hover:text-foreground">
-              HSK 2
-            </Link>
+            {levels.map((level) => (
+              <Link key={level.id} href={`/hsk/${level.number}`} className="hover:text-foreground">
+                HSK {level.number}
+              </Link>
+            ))}
           </nav>
         )}
       </div>

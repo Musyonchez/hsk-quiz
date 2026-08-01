@@ -15,12 +15,12 @@ const combinedVocabDir = path.join(
 );
 
 export interface CombinedLevelData {
-  level: 1 | 2;
+  level: 1 | 2 | 3;
   words: CombinedVocabRow[];
 }
 
 export async function extractCombinedLevel(
-  level: 1 | 2
+  level: 1 | 2 | 3
 ): Promise<CombinedLevelData> {
   const pdfPath = path.join(combinedVocabDir, `HSK ${level} Vocabulary list.pdf`);
   const words = applyCombinedVocabCorrections(level, await extractCombinedVocab(pdfPath));
@@ -28,5 +28,5 @@ export async function extractCombinedLevel(
 }
 
 export async function extractAllCombinedLevels(): Promise<CombinedLevelData[]> {
-  return Promise.all([extractCombinedLevel(1), extractCombinedLevel(2)]);
+  return Promise.all([extractCombinedLevel(1), extractCombinedLevel(2), extractCombinedLevel(3)]);
 }
