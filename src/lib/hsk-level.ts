@@ -17,16 +17,18 @@ export interface LevelDefinition {
   name: string;
 }
 
-// Only levels with actual seed data belong here — 4b/5a/5b/6a/6b are added
-// one at a time as their textbook appendix/chapter data is transcribed.
+// Only levels actually live on the website belong here. HSK4A/4B/5A/5B are
+// fully transcribed in this codebase (hsk4a-combined-data.ts and friends)
+// but deliberately left out of this list for now — official-textbook
+// transcription for the remaining books (5B's appendix, 6A, 6B) is slow to
+// do by hand, and the plan is to use a different tool (DeepSeek) to convert
+// the raw PDFs before resuming HSK4+ on the site. Re-add a slug here once
+// its data is ready to go live; the extraction/seed code for 4a/4b already
+// exists and needs no further changes.
 export const ALL_LEVELS: readonly LevelDefinition[] = [
   { slug: "1", number: 1, part: null, name: "HSK 1" },
   { slug: "2", number: 2, part: null, name: "HSK 2" },
   { slug: "3", number: 3, part: null, name: "HSK 3" },
-  { slug: "4a", number: 4, part: "A", name: "HSK 4A" },
-  { slug: "4b", number: 4, part: "B", name: "HSK 4B" },
-  { slug: "5a", number: 5, part: "A", name: "HSK 5A" },
-  { slug: "5b", number: 5, part: "B", name: "HSK 5B" },
 ];
 
 export function isLevelSlug(value: string): value is LevelSlug {

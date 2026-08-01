@@ -119,6 +119,22 @@ Phased so each phase produces something runnable/checkable before moving on.
   combined words (matches the transcribed appendix row count exactly, confirming the 省 merge
   didn't drop data) + 311 chapter words across the 10 chapters, `tsc --noEmit` and `eslint`
   clean.
+- **HSK4+ paused, scoped back to HSK1-3 live on the site (explicit decision)**: HSK5A's and
+  HSK5B's chapter data (18+18 lessons, `hsk5a-chapters-data.ts`/`hsk5b-chapters-data.ts` +
+  matching `extract-hsk5*-chapters.ts` adapters) got fully transcribed, but both books'
+  end-of-book combined-word appendix pastes repeatedly hit a message-length limit partway
+  through transcription, and re-pastes kept landing at the same cutoff instead of continuing
+  from it. Rather than keep fighting that, the decision was made to pause HSK4+ entirely:
+  hand-transcribing PDF appendixes one message at a time doesn't scale past HSK4, and a
+  different tool (DeepSeek) is planned to convert the raw PDFs going forward instead. `
+  ALL_LEVELS` in `hsk-level.ts` was trimmed back to just `1`/`2`/`3`, and `extract-chapters.ts`'s
+  `extractAllChapters()` no longer appends the HSK4A/4B/5A/5B adapters — so the live site (nav,
+  dashboard, DB) only ever sees HSK1-3 again. The already-written HSK4A/4B combined+chapter data
+  and HSK5A/5B chapter data are **not deleted** — they stay in `src/lib/extract/` unreferenced,
+  ready to be wired back in (just re-add the slug to `ALL_LEVELS` and the adapter call to
+  `extractAllChapters()`) once their remaining data arrives and HSK4+ resumes. The dev DB's
+  stale HSK4A/4B `Level` rows (and their words/chapters) were deleted and the DB reseeded;
+  confirmed only `1`/`2`/`3` remain, `tsc --noEmit` and `eslint` both clean.
 
 ## Phase 2 — Chapter data extraction ✅
 

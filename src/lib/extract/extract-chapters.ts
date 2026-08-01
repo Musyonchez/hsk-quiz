@@ -4,10 +4,6 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { parseAllTables } from "./markdown-table";
 import { extractHsk3Chapters } from "./extract-hsk3-chapters";
-import { extractHsk4aChapters } from "./extract-hsk4a-chapters";
-import { extractHsk4bChapters } from "./extract-hsk4b-chapters";
-import { extractHsk5aChapters } from "./extract-hsk5a-chapters";
-import { extractHsk5bChapters } from "./extract-hsk5b-chapters";
 import { ALL_LEVELS, type LevelSlug } from "@/lib/hsk-level";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -150,19 +146,13 @@ export async function extractAllChapters(): Promise<ChapterData[]> {
   const fromMarkdown = await Promise.all(
     ALL_LEVELS.map((level) => extractChaptersForLevel(level.slug))
   );
-  // HSK3, HSK4A, HSK4B, HSK5A, and HSK5B have no vocabulary.md files — their
-  // chapters come from in-repo data instead (extract-hsk3-chapters.ts,
-  // extract-hsk4a-chapters.ts, extract-hsk4b-chapters.ts,
-  // extract-hsk5a-chapters.ts, extract-hsk5b-chapters.ts). Their
-  // markdown-based entries above will always be [] until/if that changes.
-  // HSK6 has neither a markdown folder nor in-repo chapter data yet, so it
-  // simply contributes no chapters for now.
-  return [
-    ...fromMarkdown.flat(),
-    ...extractHsk3Chapters(),
-    ...extractHsk4aChapters(),
-    ...extractHsk4bChapters(),
-    ...extractHsk5aChapters(),
-    ...extractHsk5bChapters(),
-  ];
+  // HSK3 has no vocabulary.md files — its chapters come from in-repo data
+  // instead (extract-hsk3-chapters.ts). Its markdown-based entry above will
+  // always be [] until/if that changes.
+  //
+  // HSK4A/4B/5A/5B are fully transcribed (extract-hsk4a-chapters.ts and
+  // friends) but deliberately not included here — see the comment on
+  // ALL_LEVELS in hsk-level.ts for why. Re-add them to the array below (and
+  // their slugs to ALL_LEVELS) once HSK4+ goes live on the site again.
+  return [...fromMarkdown.flat(), ...extractHsk3Chapters()];
 }
