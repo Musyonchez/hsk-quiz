@@ -35,13 +35,18 @@ Phased so each phase produces something runnable/checkable before moving on.
   `GrammarPattern` rows for now, and the per-chapter quiz's "Patterns" row group from
   [06-quiz-mechanics.md](06-quiz-mechanics.md) simply doesn't render until some exist.
 
-## Phase 3 — Auth + accounts
+## Phase 3 — Auth + accounts ✅
 
 - Session cookie helpers, `/login` and `/register` pages, and `/api/auth/*` routes (login,
   register, logout, me) per [05-architecture.md](05-architecture.md).
 - Pulled forward ahead of any content pages because attempts/leaderboard/friends all depend on
   a real logged-in user existing — building those first would mean faking auth and then
   redoing them.
+- Public self-service registration, not provisioned accounts — `POST /api/auth/register`
+  hashes the password and logs the new user in immediately. Verified end-to-end: register
+  (success/duplicate/short-password), login (wrong/right password), session persistence via
+  `/api/auth/me`, logout invalidating the session. Both pages styled against
+  [10-color-palette.md](10-color-palette.md) from the start.
 
 ## Phase 4 — Answer-key table view (Home, Level hub, Learn pages)
 
