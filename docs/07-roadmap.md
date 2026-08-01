@@ -206,11 +206,39 @@ Phased so each phase produces something runnable/checkable before moving on.
   pause/resume, prev/next, give-up (partial score reported correctly), and the combined-quiz
   route.
 
-## Phase 6 — Results, leaderboard, friends
+## Phase 6 — Results, leaderboard, friends ✅
 
-- Results screen (`POST /api/attempts`, best-score fetch), play-next/play-another linking.
-- Leaderboard page (global + friends tabs) and Friends page (requests, accept flow) from
-  [09-pages.md](09-pages.md).
+Sequenced and specced in [14-phase6-plan.md](14-phase6-plan.md) before any code, then built in
+three shippable sub-phases:
+
+- **Attempt persistence**: `quizKeyFor`/`parseQuizKey`/`describeQuizKey` (`src/quiz/quiz-key.ts`)
+  fix the `quizKey` format concretely (`hsk{slug}-chapter{n}` / `hsk{slug}-combined`) so it's
+  never hand-typed inconsistently in two places. `POST /api/attempts` validates and records a
+  finished run (completed, gave-up, or timed-out all count); `GET /api/attempts/best` backs the
+  results screen's "your best: X%"; the dashboard's `getMostRecentAttempt()` call — previously
+  dead since nothing ever wrote an `Attempt` row — now has real data and a friendly label instead
+  of a raw `quizKey` string.
+- **Leaderboard**: `GET /api/leaderboard?quizKey=&scope=global|friends` ranks one row per user
+  (their best attempt, tie-broken by earliest `createdAt`), deduped in application code rather
+  than a DB `groupBy` (SQLite/Prisma can't cleanly express "best row per user, with that row's
+  other columns" in one query — fine at this app's scale). `/leaderboard/[quizKey]` (Global/
+  Friends tabs, current user's row pinned) and a bare `/leaderboard` level-then-chapter picker.
+  The quiz results screen also gained `avg score` / `avg friend score` (client-side average over
+  the same unpaginated endpoint, per [06-quiz-mechanics.md](06-quiz-mechanics.md)) and a link
+  into the full leaderboard.
+- **Friends**: `POST /api/friends/requests` handles every edge case from the plan doc — already-
+  accepted and already-ignored are silent no-ops, a same-direction repeat is a no-op, and a
+  reverse-direction pending request gets accepted instead of creating a redundant second row.
+  `POST /api/friends/requests/:id/accept|ignore` check the acting user is the request's receiver
+  (403 otherwise). `/friends` page (add-a-friend field, incoming requests with Accept/Ignore,
+  outgoing shown as "waiting", accepted friends list) and header nav links for both Leaderboard
+  and Friends (added once their pages existed, not preemptively, to avoid shipping dead links).
+- Verified end-to-end via Playwright for every sub-phase with real throwaway accounts: attempt
+  submission + best-score display, two-user leaderboard ranking (correct sort order, friends-
+  scope correctly excluding non-friends), and the full friend-request → accept → friends-scope-
+  now-includes-them flow, plus the already-accepted/nonexistent-username edge cases. `tsc
+  --noEmit` and `eslint` clean throughout; `PLAY NEXT`/`PLAY ANOTHER` linking and the per-word
+  stats breakdown remain open — see "Explicitly deferred" below.
 
 ## Phase 7 — Polish pass
 
@@ -223,3 +251,6 @@ Phased so each phase produces something runnable/checkable before moving on.
 - Listening or audio-based quiz modes.
 - Cross-quiz progress/history page and friend search/directory (see
   [09-pages.md](09-pages.md)'s "Explicitly not building").
+- `PLAY NEXT`/`PLAY ANOTHER` result-screen linking and the per-word right/wrong stats breakdown
+  from [09-pages.md](09-pages.md)'s §5/§6 — Phase 6 shipped attempt persistence, the leaderboard,
+  and friends, but not these two results-screen extras; revisit alongside Phase 7's polish pass.

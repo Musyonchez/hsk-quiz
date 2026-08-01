@@ -33,6 +33,9 @@ export async function AppHeader() {
           <Link href="/leaderboard" className="text-sm text-muted-foreground hover:text-foreground">
             Leaderboard
           </Link>
+          <Link href="/friends" className="text-sm text-muted-foreground hover:text-foreground">
+            Friends
+          </Link>
           <UserBadge displayName={user.displayName} />
           <LogoutButton />
         </div>

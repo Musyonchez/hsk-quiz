@@ -91,6 +91,44 @@ export async function getAcceptedFriendUserIds(userId: number): Promise<number[]
   return rows.map((row) => (row.userId === userId ? row.friendId : row.userId));
 }
 
+export type FriendsData = {
+  friends: { id: number; displayName: string }[];
+  incoming: { requestId: number; user: { id: number; displayName: string } }[];
+  outgoing: { requestId: number; user: { id: number; displayName: string } }[];
+};
+
+// Friendship is one directional row per request (userId sent it to
+// friendId) — see docs/05-architecture.md. Reading "my friends page" needs
+// four different slices of that one table for the current user: accepted
+// rows they sent, accepted rows they received, pending rows waiting on
+// their decision, and pending rows waiting on someone else's.
+export async function getFriendsData(userId: number): Promise<FriendsData> {
+  const [acceptedSent, acceptedReceived, incoming, outgoing] = await Promise.all([
+    prisma.friendship.findMany({
+      where: { userId, status: "accepted" },
+      include: { friend: { select: { id: true, displayName: true } } },
+    }),
+    prisma.friendship.findMany({
+      where: { friendId: userId, status: "accepted" },
+      include: { user: { select: { id: true, displayName: true } } },
+    }),
+    prisma.friendship.findMany({
+      where: { friendId: userId, status: "pending" },
+      include: { user: { select: { id: true, displayName: true } } },
+    }),
+    prisma.friendship.findMany({
+      where: { userId, status: "pending" },
+      include: { friend: { select: { id: true, displayName: true } } },
+    }),
+  ]);
+
+  return {
+    friends: [...acceptedSent.map((f) => f.friend), ...acceptedReceived.map((f) => f.user)],
+    incoming: incoming.map((f) => ({ requestId: f.id, user: f.user })),
+    outgoing: outgoing.map((f) => ({ requestId: f.id, user: f.friend })),
+  };
+}
+
 export type LeaderboardRow = {
   userId: number;
   displayName: string;
