@@ -25,9 +25,9 @@ export function VocabTable({
   }
 
   return (
-    <div className="columns-[260px] gap-6">
+    <div className="grid grid-cols-1 items-start gap-6 md:grid-cols-2 xl:grid-cols-3">
       {[...groups.entries()].map(([category, groupWords]) => (
-        <div key={category} className="mb-6 break-inside-avoid">
+        <div key={category}>
           <h2 className="mb-2 text-sm font-semibold text-muted-foreground">{category}</h2>
           <VocabTableGroup words={groupWords} />
         </div>
