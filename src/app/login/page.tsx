@@ -30,12 +30,12 @@ export default function LoginPage() {
       return;
     }
 
-    // A full navigation, not router.push(): the header's "/" link can get
-    // prefetched while still logged out, which bakes in a redirect-to-/login
-    // response from that state. A client-side push after login can replay
-    // that stale cached redirect. A real navigation always hits the server
-    // fresh with the new session cookie.
-    window.location.href = "/";
+    // A full navigation, not router.push(): the header's dashboard link can
+    // get prefetched while still logged out, which bakes in a
+    // redirect-to-/login response from that state. A client-side push after
+    // login can replay that stale cached redirect. A real navigation always
+    // hits the server fresh with the new session cookie.
+    window.location.href = "/dashboard";
   }
 
   return (

@@ -16,7 +16,7 @@ spec, not against whatever a first draft happened to look like.
   background (secondary action, e.g. `STATS` next to `REPLAY`). No third button style.
 - **Cards, not modals.** "Play Next" / "Play Another" are dark cards with a thumbnail-style
   icon/flag and two lines of text (category, then title) — reuse this card as the standard
-  "link to another quiz" pattern anywhere it's needed (home page, results page, level hub).
+  "link to another quiz" pattern anywhere it's needed (dashboard, results page, level hub).
 - **Tables are the content, not decoration.** The answer-key table (Chinese / Pinyin / English
   columns, dark rows with a slightly lighter stripe for the header, black cells for the "not
   yet visible" character/definition columns during a quiz) is the dominant visual element on

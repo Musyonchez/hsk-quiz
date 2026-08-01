@@ -24,7 +24,7 @@ handlers.
 - Username + password form, single `Log in` button, plus a link to `/register` for a new
   visitor. No "forgot password" flow (see [01-overview.md](01-overview.md)'s non-goals — no
   email is collected at all, so there's no address to send a reset link to).
-- On success, redirect to `/` (home) or back to whatever page triggered the redirect.
+- On success, redirect to `/dashboard` or back to whatever page triggered the redirect.
 
 ## 0.5. Register — `/register`
 
@@ -32,17 +32,28 @@ handlers.
   treatment as Login — same card, same branding block above it — since they're one flow a
   visitor bounces between, not two different-feeling pages.
 - On success, the account is created *and* logged in immediately (no separate "now go log in"
-  step) — same redirect-to-`/` behavior as Login.
+  step) — same redirect-to-`/dashboard` behavior as Login.
 - No email field, no verification step — see [01-overview.md](01-overview.md)'s non-goals.
 
-## 1. Home — `/`
+## 1. Landing — `/` (public, no session required)
 
-- Short intro line (what this site is).
-- Two large cards: **HSK 1** and **HSK 2**, each showing chapter count and, once a player has
-  played anything, their most recent activity (e.g. "Last played: Chapter 5 — 82%") pulled
-  from `GET /api/attempts/recent` — a light personal touch, not a full dashboard.
-- No settings — this page's only job is picking a level (login is enforced by the layout, not
-  by this page itself).
+- The one page anyone can reach without an account — a short intro (what this site is) plus
+  `Log in` / `Register` calls to action. Vocabulary read routes are already
+  public/unauthenticated (see [05-architecture.md](05-architecture.md)), so the landing page is
+  the natural public front door instead of bouncing a first-time visitor straight to `/login`.
+- If a valid session already exists, swap the `Log in` / `Register` CTAs for a single `Go to
+  dashboard` link into `/dashboard` — the page itself still renders (no server redirect), it
+  just changes which CTA it shows.
+
+## 1.5. Dashboard — `/dashboard`
+
+- Everything the old "Home" page was: two large cards, **HSK 1** and **HSK 2**, each showing
+  chapter count and, once a player has played anything, their most recent activity (e.g. "Last
+  played: Chapter 5 — 82%") pulled from `GET /api/attempts/recent` — a light personal touch, not
+  a full analytics dashboard.
+- Requires a session — redirects to `/login` if none (per the auth rule at the top of this
+  doc). This is the actual "pick a level" starting point once logged in; `/` is just the public
+  door in front of it.
 
 ## 2. Level hub — `/hsk/[level]`
 

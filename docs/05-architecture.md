@@ -93,7 +93,8 @@ website/
   src/
     app/
       layout.tsx             # <AppHeader> + Tailwind globals
-      page.tsx                # Home (§1 in 09-pages.md)
+      page.tsx                # Public landing (§1 in 09-pages.md)
+      dashboard/page.tsx      # Dashboard, session-protected (§1.5 in 09-pages.md)
       login/page.tsx
       register/page.tsx
       hsk/[level]/page.tsx                       # Level hub
@@ -149,7 +150,7 @@ website/
 | `GET /api/levels/:n/combined` | — | full-level word list |
 | `POST /api/attempts` | session | records a finished quiz attempt `{ quizKey, score, total, durationSeconds }` |
 | `GET /api/attempts/best?quizKey=` | session | current user's best score for one quiz, for the results page |
-| `GET /api/attempts/recent` | session | current user's single most recent attempt (any quiz), for the home page |
+| `GET /api/attempts/recent` | session | current user's single most recent attempt (any quiz), for the dashboard page |
 | `GET /api/leaderboard?quizKey=&scope=global\|friends` | session | ranked `[{ displayName, score, total, createdAt }]` |
 | `GET /api/friends` | session | accepted friends + pending incoming/outgoing requests |
 | `POST /api/friends/requests` | session | send a friend request `{ username }` |
