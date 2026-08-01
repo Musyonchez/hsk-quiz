@@ -30,6 +30,9 @@ export async function AppHeader() {
       </div>
       {user ? (
         <div className="flex items-center gap-4">
+          <Link href="/leaderboard" className="text-sm text-muted-foreground hover:text-foreground">
+            Leaderboard
+          </Link>
           <UserBadge displayName={user.displayName} />
           <LogoutButton />
         </div>

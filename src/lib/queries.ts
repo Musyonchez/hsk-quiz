@@ -78,3 +78,59 @@ export function getCombinedWords(slug: string) {
     orderBy: { id: "asc" },
   });
 }
+
+// The other party's userId for every accepted friendship, either direction
+// (Friendship is stored as one directional row per request — see
+// 05-architecture.md — so "friends of X" means rows where X sent *or*
+// received the now-accepted request).
+export async function getAcceptedFriendUserIds(userId: number): Promise<number[]> {
+  const rows = await prisma.friendship.findMany({
+    where: { status: "accepted", OR: [{ userId }, { friendId: userId }] },
+    select: { userId: true, friendId: true },
+  });
+  return rows.map((row) => (row.userId === userId ? row.friendId : row.userId));
+}
+
+export type LeaderboardRow = {
+  userId: number;
+  displayName: string;
+  score: number;
+  total: number;
+  createdAt: Date;
+};
+
+// One row per user — their single best attempt for this quizKey — ranked
+// highest score first, earliest createdAt breaking a tie. `participantIds`
+// scopes to a friends-tab lookup; omit it for the global leaderboard.
+// Dedupe happens in application code rather than a DB groupBy, since
+// SQLite/Prisma can't cleanly express "best row per user, with that row's
+// other columns" in one groupBy query — fine at this app's scale (see
+// docs/14-phase6-plan.md).
+export async function getLeaderboard(
+  quizKey: string,
+  participantIds?: number[]
+): Promise<LeaderboardRow[]> {
+  const attempts = await prisma.attempt.findMany({
+    where: {
+      quizKey,
+      ...(participantIds ? { userId: { in: participantIds } } : {}),
+    },
+    orderBy: [{ score: "desc" }, { createdAt: "asc" }],
+    include: { user: { select: { displayName: true } } },
+  });
+
+  const seen = new Set<number>();
+  const ranked: LeaderboardRow[] = [];
+  for (const attempt of attempts) {
+    if (seen.has(attempt.userId)) continue;
+    seen.add(attempt.userId);
+    ranked.push({
+      userId: attempt.userId,
+      displayName: attempt.user.displayName,
+      score: attempt.score,
+      total: attempt.total,
+      createdAt: attempt.createdAt,
+    });
+  }
+  return ranked;
+}

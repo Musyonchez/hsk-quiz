@@ -15,6 +15,15 @@ export type QuizWord = {
 
 const QUIZ_DURATION_SECONDS = 600;
 
+// Client-side average since GET /api/leaderboard returns every ranked row
+// unpaginated — no separate aggregate endpoint needed at this app's scale
+// (see docs/06-quiz-mechanics.md).
+function averagePercent(rows: { score: number; total: number }[]): number | null {
+  if (rows.length === 0) return null;
+  const percents = rows.map((row) => (row.total > 0 ? (row.score / row.total) * 100 : 0));
+  return Math.round(percents.reduce((sum, p) => sum + p, 0) / percents.length);
+}
+
 function shuffle<T>(items: T[]): T[] {
   const copy = [...items];
   for (let i = copy.length - 1; i > 0; i--) {
@@ -72,6 +81,8 @@ function QuizRunnerInner({
   const [finishedState, setFinishedState] = useState<"completed" | "gaveup" | null>(null);
   const finished = finishedState ?? (started && secondsLeft === 0 ? "timeup" : null);
   const [bestPercent, setBestPercent] = useState<number | null>(null);
+  const [avgGlobalPercent, setAvgGlobalPercent] = useState<number | null>(null);
+  const [avgFriendPercent, setAvgFriendPercent] = useState<number | null>(null);
   const submittedRef = useRef(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -87,16 +98,37 @@ function QuizRunnerInner({
     if (!finished || submittedRef.current) return;
     submittedRef.current = true;
     const durationSeconds = QUIZ_DURATION_SECONDS - secondsLeft;
+    const encodedKey = encodeURIComponent(quizKey);
+
     fetch("/api/attempts", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ quizKey, score, total, durationSeconds }),
     })
-      .then(() => fetch(`/api/attempts/best?quizKey=${encodeURIComponent(quizKey)}`))
-      .then((res) => (res.ok ? res.json() : null))
-      .then((best: { score: number; total: number } | null) => {
-        if (best && best.total > 0) setBestPercent(Math.round((best.score / best.total) * 100));
-      })
+      .then(() =>
+        Promise.all([
+          fetch(`/api/attempts/best?quizKey=${encodedKey}`).then((res) =>
+            res.ok ? res.json() : null
+          ),
+          fetch(`/api/leaderboard?quizKey=${encodedKey}&scope=global`).then((res) =>
+            res.ok ? res.json() : []
+          ),
+          fetch(`/api/leaderboard?quizKey=${encodedKey}&scope=friends`).then((res) =>
+            res.ok ? res.json() : []
+          ),
+        ])
+      )
+      .then(
+        ([best, globalRows, friendRows]: [
+          { score: number; total: number } | null,
+          { score: number; total: number }[],
+          { score: number; total: number }[],
+        ]) => {
+          if (best && best.total > 0) setBestPercent(Math.round((best.score / best.total) * 100));
+          setAvgGlobalPercent(averagePercent(globalRows));
+          setAvgFriendPercent(averagePercent(friendRows));
+        }
+      )
       .catch((err) => console.error("Failed to record quiz attempt", err));
   }, [finished, quizKey, score, total, secondsLeft]);
 
@@ -149,6 +181,12 @@ function QuizRunnerInner({
         {bestPercent !== null && (
           <p className="text-sm text-muted-foreground">your best: {bestPercent}%</p>
         )}
+        {(avgGlobalPercent !== null || avgFriendPercent !== null) && (
+          <p className="text-sm text-muted-foreground">
+            {avgGlobalPercent !== null && <>avg score: {avgGlobalPercent}% </>}
+            {avgFriendPercent !== null && <>· avg friend score: {avgFriendPercent}%</>}
+          </p>
+        )}
         <div className="flex gap-3">
           <button type="button" onClick={onReplay} className={pillClasses("primary")}>
             Replay
@@ -157,6 +195,12 @@ function QuizRunnerInner({
             Back
           </a>
         </div>
+        <a
+          href={`/leaderboard/${encodeURIComponent(quizKey)}`}
+          className="text-sm text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
+        >
+          View leaderboard
+        </a>
       </div>
     );
   }
