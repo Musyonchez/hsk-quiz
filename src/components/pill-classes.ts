@@ -1,6 +1,10 @@
-export function pillClasses(variant: "primary" | "secondary", disabled = false): string {
-  const base =
-    "inline-flex items-center justify-center rounded-full px-5 py-2.5 text-sm font-semibold transition-colors";
+export function pillClasses(
+  variant: "primary" | "secondary",
+  disabled = false,
+  size: "md" | "sm" = "md"
+): string {
+  const sizeClasses = size === "sm" ? "px-4 py-1.5 text-sm" : "px-5 py-2.5 text-sm";
+  const base = `inline-flex items-center justify-center rounded-full font-semibold transition-colors ${sizeClasses}`;
   const disabledClasses = disabled ? "cursor-not-allowed opacity-60" : "cursor-pointer";
 
   if (variant === "primary") {

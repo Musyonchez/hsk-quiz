@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { getSessionUser } from "@/lib/auth";
+import { pillClasses } from "./pill-classes";
 import { LogoutButton } from "./LogoutButton";
 import { UserBadge } from "./UserBadge";
 
@@ -32,11 +33,11 @@ export async function AppHeader() {
           <LogoutButton />
         </div>
       ) : (
-        <div className="flex items-center gap-4 text-sm">
-          <Link href="/login" className="text-muted-foreground hover:text-foreground">
+        <div className="flex items-center gap-3">
+          <Link href="/login" className={pillClasses("primary", false, "sm")}>
             Log in
           </Link>
-          <Link href="/register" className="text-muted-foreground hover:text-foreground">
+          <Link href="/register" className={pillClasses("secondary", false, "sm")}>
             Register
           </Link>
         </div>
