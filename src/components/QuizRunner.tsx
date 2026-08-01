@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { ChevronLeft, ChevronRight, Flag, Pause, Play } from "lucide-react";
 import { matchesPinyin } from "@/quiz/pinyin-match";
 import { formatDuration } from "@/quiz/format-time";
 import { pillClasses } from "@/components/pill-classes";
@@ -17,7 +18,14 @@ const QUIZ_DURATION_SECONDS = 600;
 export function QuizRunner({ words, backHref }: { words: QuizWord[]; backHref: string }) {
   const [runId, setRunId] = useState(0);
 
-  return <QuizRunnerInner key={runId} words={words} backHref={backHref} onReplay={() => setRunId((n) => n + 1)} />;
+  return (
+    <QuizRunnerInner
+      key={runId}
+      words={words}
+      backHref={backHref}
+      onReplay={() => setRunId((n) => n + 1)}
+    />
+  );
 }
 
 function QuizRunnerInner({
@@ -29,6 +37,7 @@ function QuizRunnerInner({
   backHref: string;
   onReplay: () => void;
 }) {
+  const [started, setStarted] = useState(false);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [input, setInput] = useState("");
   const [correctIds, setCorrectIds] = useState<Set<number>>(new Set());
@@ -42,7 +51,7 @@ function QuizRunnerInner({
   const total = words.length;
 
   useEffect(() => {
-    if (finished || paused) return;
+    if (!started || finished || paused) return;
     const timer = setInterval(() => {
       setSecondsLeft((s) => {
         if (s <= 1) {
@@ -53,11 +62,11 @@ function QuizRunnerInner({
       });
     }, 1000);
     return () => clearInterval(timer);
-  }, [paused, finished]);
+  }, [started, paused, finished]);
 
   useEffect(() => {
-    if (!finished) inputRef.current?.focus();
-  }, [currentIndex, finished]);
+    if (started && !finished && !paused) inputRef.current?.focus();
+  }, [currentIndex, started, finished, paused]);
 
   function goTo(index: number) {
     const next = ((index % total) + total) % total;
@@ -107,44 +116,46 @@ function QuizRunnerInner({
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex flex-wrap items-center justify-between gap-4 rounded-xl border border-border bg-surface px-5 py-4">
+      <div className="sticky top-18.25 z-5 flex flex-wrap items-center justify-between gap-4 rounded-xl border border-border bg-surface px-5 py-4 shadow-lg shadow-background/50">
         <span className="text-sm font-semibold tabular-nums">
           SCORE {score}/{total}
         </span>
         <span className="text-sm font-semibold tabular-nums">{formatDuration(secondsLeft)}</span>
-        <div className="flex items-center gap-3 text-sm">
-          <button
-            type="button"
-            onClick={() => goTo(currentIndex - 1)}
-            className="text-muted-foreground hover:text-foreground"
-          >
+        <div className="flex items-center gap-2">
+          <ToolbarButton onClick={() => goTo(currentIndex - 1)} disabled={!started} label="Prev">
+            <ChevronLeft size={16} />
             Prev
-          </button>
-          <button
-            type="button"
-            onClick={() => goTo(currentIndex + 1)}
-            className="text-muted-foreground hover:text-foreground"
-          >
+          </ToolbarButton>
+          <ToolbarButton onClick={() => goTo(currentIndex + 1)} disabled={!started} label="Next">
             Next
-          </button>
-          <button
-            type="button"
-            onClick={() => setPaused((p) => !p)}
-            className="text-muted-foreground hover:text-foreground"
-          >
+            <ChevronRight size={16} />
+          </ToolbarButton>
+          <ToolbarButton onClick={() => setPaused((p) => !p)} disabled={!started} label="Pause">
+            {paused ? <Play size={16} /> : <Pause size={16} />}
             {paused ? "Resume" : "Pause"}
-          </button>
-          <button
-            type="button"
+          </ToolbarButton>
+          <ToolbarButton
             onClick={() => setFinished("gaveup")}
-            className="text-danger hover:opacity-80"
+            disabled={!started}
+            label="Give up"
+            variant="danger"
           >
+            <Flag size={16} />
             Give up
-          </button>
+          </ToolbarButton>
         </div>
       </div>
 
-      {paused ? (
+      {!started ? (
+        <div className="flex flex-col items-center gap-4 rounded-xl border border-border bg-surface p-10 text-center">
+          <p className="text-muted-foreground">
+            {total} words · {formatDuration(QUIZ_DURATION_SECONDS)} on the clock
+          </p>
+          <button type="button" onClick={() => setStarted(true)} className={pillClasses("primary")}>
+            Start quiz
+          </button>
+        </div>
+      ) : paused ? (
         <div className="rounded-xl border border-border bg-surface p-10 text-center text-muted-foreground">
           Paused
         </div>
@@ -180,12 +191,14 @@ function QuizRunnerInner({
             return (
               <tr
                 key={word.id}
+                onClick={() => started && goTo(index)}
                 className={
-                  isCurrent
+                  (started ? "cursor-pointer " : "") +
+                  (isCurrent
                     ? "border-l-4 border-l-current-row bg-current-row-surface"
                     : isCorrect
-                      ? "border-l-4 border-l-success bg-success-surface"
-                      : "border-l-4 border-l-transparent border-t border-border"
+                      ? "border-l-4 border-l-success bg-success-surface hover:bg-surface-raised"
+                      : "border-l-4 border-l-transparent border-t border-border hover:bg-surface-raised")
                 }
               >
                 <td className="px-3 py-2 font-medium">{word.chinese}</td>
@@ -197,5 +210,35 @@ function QuizRunnerInner({
         </tbody>
       </table>
     </div>
+  );
+}
+
+function ToolbarButton({
+  onClick,
+  disabled,
+  label,
+  variant = "default",
+  children,
+}: {
+  onClick: () => void;
+  disabled: boolean;
+  label: string;
+  variant?: "default" | "danger";
+  children: React.ReactNode;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={disabled}
+      aria-label={label}
+      className={`flex items-center gap-1.5 rounded-full border border-border-strong px-3 py-1.5 text-sm font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-40 ${
+        variant === "danger"
+          ? "text-danger hover:bg-danger/10"
+          : "text-foreground hover:bg-surface-raised"
+      }`}
+    >
+      {children}
+    </button>
   );
 }
