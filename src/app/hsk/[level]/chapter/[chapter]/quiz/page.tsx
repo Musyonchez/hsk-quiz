@@ -3,6 +3,7 @@ import { notFound, redirect } from "next/navigation";
 import { requireSession } from "@/lib/require-session";
 import { getChapterWithWords } from "@/lib/queries";
 import { isLevelSlug } from "@/lib/hsk-level";
+import { quizKeyFor } from "@/quiz/quiz-key";
 import { QuizRunner } from "@/components/QuizRunner";
 
 export default async function ChapterQuizPage({
@@ -23,6 +24,7 @@ export default async function ChapterQuizPage({
   if (!chapter || chapter.words.length === 0) notFound();
 
   const backHref = `/hsk/${levelSlug}/chapter/${chapterNumber}`;
+  const quizKey = quizKeyFor({ levelSlug, chapterNumber });
 
   return (
     <main className="mx-auto flex w-full max-w-3xl flex-col gap-6 px-6 py-12">
@@ -35,7 +37,7 @@ export default async function ChapterQuizPage({
         </h1>
       </div>
 
-      <QuizRunner words={chapter.words} backHref={backHref} />
+      <QuizRunner words={chapter.words} backHref={backHref} quizKey={quizKey} />
     </main>
   );
 }

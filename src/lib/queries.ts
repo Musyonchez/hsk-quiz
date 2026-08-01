@@ -28,6 +28,15 @@ export function getMostRecentAttempt(userId: number) {
   });
 }
 
+// Highest score wins; earlier createdAt breaks a tie (rewards setting the
+// bar, not just matching it later) — same rule the leaderboard uses.
+export function getBestAttempt(userId: number, quizKey: string) {
+  return prisma.attempt.findFirst({
+    where: { userId, quizKey },
+    orderBy: [{ score: "desc" }, { createdAt: "asc" }],
+  });
+}
+
 export function getLevelWithChapters(slug: string) {
   return prisma.level.findUnique({
     where: { slug },

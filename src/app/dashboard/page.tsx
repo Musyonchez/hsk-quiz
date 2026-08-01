@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { requireSession } from "@/lib/require-session";
 import { getLevelsOverview, getMostRecentAttempt } from "@/lib/queries";
+import { describeQuizKey } from "@/quiz/quiz-key";
 
 export default async function DashboardPage() {
   const user = await requireSession();
@@ -20,8 +21,8 @@ export default async function DashboardPage() {
 
       {recentAttempt && (
         <p className="text-sm text-muted-foreground">
-          Last played: {recentAttempt.quizKey} — {recentAttempt.score}/
-          {recentAttempt.total}
+          Last played: {describeQuizKey(recentAttempt.quizKey, levels)} —{" "}
+          {recentAttempt.score}/{recentAttempt.total}
         </p>
       )}
 

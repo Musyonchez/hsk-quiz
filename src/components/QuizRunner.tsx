@@ -24,7 +24,15 @@ function shuffle<T>(items: T[]): T[] {
   return copy;
 }
 
-export function QuizRunner({ words, backHref }: { words: QuizWord[]; backHref: string }) {
+export function QuizRunner({
+  words,
+  backHref,
+  quizKey,
+}: {
+  words: QuizWord[];
+  backHref: string;
+  quizKey: string;
+}) {
   const [runId, setRunId] = useState(0);
 
   return (
@@ -32,6 +40,7 @@ export function QuizRunner({ words, backHref }: { words: QuizWord[]; backHref: s
       key={runId}
       words={words}
       backHref={backHref}
+      quizKey={quizKey}
       onReplay={() => setRunId((n) => n + 1)}
     />
   );
@@ -40,10 +49,12 @@ export function QuizRunner({ words, backHref }: { words: QuizWord[]; backHref: s
 function QuizRunnerInner({
   words,
   backHref,
+  quizKey,
   onReplay,
 }: {
   words: QuizWord[];
   backHref: string;
+  quizKey: string;
   onReplay: () => void;
 }) {
   const [order, setOrder] = useState(words);
@@ -60,11 +71,34 @@ function QuizRunnerInner({
   // careful with the dependency array, a setState-in-effect lint error).
   const [finishedState, setFinishedState] = useState<"completed" | "gaveup" | null>(null);
   const finished = finishedState ?? (started && secondsLeft === 0 ? "timeup" : null);
+  const [bestPercent, setBestPercent] = useState<number | null>(null);
+  const submittedRef = useRef(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
   const currentWord = order[currentIndex];
   const score = correctIds.size;
   const total = order.length;
+
+  // Record the finished attempt exactly once per run (submittedRef survives
+  // re-renders but not a Replay, since QuizRunner remounts this component
+  // with a fresh key). Fire-and-forget: a failed write shouldn't surface as
+  // a failed quiz to the player.
+  useEffect(() => {
+    if (!finished || submittedRef.current) return;
+    submittedRef.current = true;
+    const durationSeconds = QUIZ_DURATION_SECONDS - secondsLeft;
+    fetch("/api/attempts", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ quizKey, score, total, durationSeconds }),
+    })
+      .then(() => fetch(`/api/attempts/best?quizKey=${encodeURIComponent(quizKey)}`))
+      .then((res) => (res.ok ? res.json() : null))
+      .then((best: { score: number; total: number } | null) => {
+        if (best && best.total > 0) setBestPercent(Math.round((best.score / best.total) * 100));
+      })
+      .catch((err) => console.error("Failed to record quiz attempt", err));
+  }, [finished, quizKey, score, total, secondsLeft]);
 
   useEffect(() => {
     if (!started || finished || paused) return;
@@ -112,6 +146,9 @@ function QuizRunnerInner({
         <p className="text-muted-foreground">
           {score} / {total} correct
         </p>
+        {bestPercent !== null && (
+          <p className="text-sm text-muted-foreground">your best: {bestPercent}%</p>
+        )}
         <div className="flex gap-3">
           <button type="button" onClick={onReplay} className={pillClasses("primary")}>
             Replay
