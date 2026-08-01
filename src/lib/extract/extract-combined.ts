@@ -1,6 +1,7 @@
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { extractCombinedVocab, type CombinedVocabRow } from "./pdf-vocab-table";
+import { applyCombinedVocabCorrections } from "./combined-vocab-corrections";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -22,7 +23,7 @@ export async function extractCombinedLevel(
   level: 1 | 2
 ): Promise<CombinedLevelData> {
   const pdfPath = path.join(combinedVocabDir, `HSK ${level} Vocabulary list.pdf`);
-  const words = await extractCombinedVocab(pdfPath);
+  const words = applyCombinedVocabCorrections(level, await extractCombinedVocab(pdfPath));
   return { level, words };
 }
 

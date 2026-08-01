@@ -10,6 +10,16 @@ Phased so each phase produces something runnable/checkable before moving on.
   via `prisma/seed.ts`, verify by spot-checking a handful of rows across categories (Pronouns,
   Numerals, Nouns, Verbs) with `prisma studio` or a throwaway script.
 - No UI yet — just prove the data pipeline produces correct, complete word lists in the DB.
+- **Post-launch correction** (found much later, after Phase 5): diffed the HSK1 combined list
+  against the official "生词 New Words" appendix in the actual HSK Standard Course 1 textbook
+  (transcribed page-by-page via an LLM, since the scanned raw PDFs have no text layer — OCR via
+  tesseract.js was tried first and rejected, see the git log around
+  `combined-vocab-corrections.ts` for why). Found two words missing entirely (说, 一点儿) and
+  three rows where the source PDF's pinyin belonged to a different character than the one it
+  was paired with (饭馆 relabeled to 饭店 — the pinyin "fàndiàn" was already correct, just
+  attached to the wrong character; 日→号; 没→没有). Fixed via a small, documented corrections
+  step applied after extraction rather than editing the seeded DB by hand, so it survives a
+  reseed. HSK2 hasn't been checked the same way yet.
 
 ## Phase 2 — Chapter data extraction ✅
 
