@@ -1,4 +1,4 @@
-import type { CombinedVocabRow } from "./pdf-vocab-table";
+import type { CombinedVocabRow } from "./vocab-row";
 
 // HSK4A's combined word list, unlike HSK1-3, is not parsed from a PDF — it's
 // transcribed directly from the "生词 New Words" appendix (pages 131-144) of

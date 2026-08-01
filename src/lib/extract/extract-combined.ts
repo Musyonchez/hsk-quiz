@@ -1,41 +1,33 @@
-import path from "node:path";
-import { fileURLToPath } from "node:url";
-import { extractCombinedVocab, type CombinedVocabRow } from "./pdf-vocab-table";
-import { applyCombinedVocabCorrections } from "./combined-vocab-corrections";
+import type { CombinedVocabRow } from "./vocab-row";
+import { HSK1_COMBINED_WORDS } from "./hsk1-combined-data";
+import { HSK2_COMBINED_WORDS } from "./hsk2-combined-data";
+import { HSK3_COMBINED_WORDS } from "./hsk3-combined-data";
 import { HSK4A_COMBINED_WORDS } from "./hsk4a-combined-data";
 import { HSK4B_COMBINED_WORDS } from "./hsk4b-combined-data";
 import { ALL_LEVELS, type LevelSlug } from "@/lib/hsk-level";
-
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
-
-// website/src/lib/extract -> repo root (chinese/), four levels up.
-const repoRoot = path.resolve(__dirname, "../../../..");
-const combinedVocabDir = path.join(
-  repoRoot,
-  "raw",
-  "HSK-All-Levels-Vocabulary",
-  "HSK All Levels Vocabulary"
-);
 
 export interface CombinedLevelData {
   slug: LevelSlug;
   words: CombinedVocabRow[];
 }
 
-// Levels 1-3 are single-volume and still sourced from the cumulative
-// third-party PDF, corrected against the official textbook appendix (see
-// combined-vocab-corrections.ts). HSK4A (and future 4B/5A/5B/6A/6B) are
-// split-book levels sourced directly from that book's own transcribed
-// appendix instead — no PDF, no corrections needed.
-async function extractPdfBackedLevel(slug: "1" | "2" | "3"): Promise<CombinedLevelData> {
-  const pdfPath = path.join(combinedVocabDir, `HSK ${slug} Vocabulary list.pdf`);
-  const words = applyCombinedVocabCorrections(Number(slug) as 1 | 2 | 3, await extractCombinedVocab(pdfPath));
-  return { slug, words };
-}
-
+// Every level's combined (full-level) word list lives entirely inside
+// website/ as an in-repo data file, so this repo is self-contained on its
+// own. Levels 1-3 used to be parsed at build/seed time from a third-party
+// PDF in the main chinese/ repo's raw/ folder, corrected against the
+// official textbook appendix — that one-time extraction has already been
+// run and its output baked into hsk1/2/3-combined-data.ts (see the comment
+// atop hsk1-combined-data.ts), the same way HSK4A/4B were always sourced
+// directly from their own transcribed appendix.
 export async function extractCombinedLevel(slug: LevelSlug): Promise<CombinedLevelData> {
-  if (slug === "1" || slug === "2" || slug === "3") {
-    return extractPdfBackedLevel(slug);
+  if (slug === "1") {
+    return { slug, words: HSK1_COMBINED_WORDS };
+  }
+  if (slug === "2") {
+    return { slug, words: HSK2_COMBINED_WORDS };
+  }
+  if (slug === "3") {
+    return { slug, words: HSK3_COMBINED_WORDS };
   }
   if (slug === "4a") {
     return { slug, words: HSK4A_COMBINED_WORDS };

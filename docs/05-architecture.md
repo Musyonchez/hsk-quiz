@@ -34,7 +34,7 @@ JSON and no server, then a separate Vite frontend + Express backend. The require
 self-sufficient app with its own database (SQLite for dev, an external DB in prod) plus real
 accounts — Next.js's Route Handlers give a server process to own the database connection and
 sessions without maintaining a second HTTP server/build config alongside the frontend one. The
-vocabulary content itself is still sourced from the PDFs/markdown in this repo, but it's
+vocabulary content lives as in-repo TypeScript data (`src/lib/extract/hsk*-data.ts`), but it's
 *seeded into the database* rather than shipped as static JSON — see
 [04-data-pipeline.md](04-data-pipeline.md).
 
@@ -126,16 +126,15 @@ website/
                                # PillButton, PercentBadge, LeaderboardTable,
                                # FriendRequestRow, UserBadge — see 08-ui-ux.md
     lib/
-      extract/                # extract-combined.ts, extract-chapters.ts (pure parsers);
-                               # hsk3-chapters-data.ts holds HSK3's chapter word lists
-                               # in-repo (no vocabulary.md source exists for HSK3 yet);
-                               # hsk4a-combined-data.ts / hsk4a-chapters-data.ts and
-                               # hsk4b-combined-data.ts / hsk4b-chapters-data.ts hold
+      extract/                # extract-combined.ts, extract-chapters.ts (dispatch by level
+                               # slug to the right in-repo data file — no PDF/markdown I/O);
+                               # hsk{1,2,3}-chapters-data.ts / hsk{1,2,3}-combined-data.ts
+                               # hold each level's word lists as plain TS data, fully
+                               # self-contained inside website/; hsk4a/4b-*-data.ts hold
                                # HSK4A's and HSK4B's word lists the same way — HSK4/5/6
                                # are split into independent per-book Level rows (see
                                # hsk-level.ts), each sourced from that book's own
-                               # textbook appendix rather than the cumulative
-                               # all-levels PDF used for 1-3
+                               # textbook appendix
       db.ts                   # Prisma client singleton
       auth.ts                 # password hashing + session create/lookup
       require-session.ts      # Server Component guard: redirects to /login if unauthenticated
@@ -170,8 +169,8 @@ website/
 ## Local dev flow
 
 1. `npm run db:migrate` — applies Prisma migrations to `dev.db`.
-2. `npm run db:seed` — runs the extraction scripts against `raw/` and
-   `characters/words/`, writes rows into the (SQLite) database.
+2. `npm run db:seed` — runs the extraction scripts against the in-repo `src/lib/extract/`
+   data files, writes rows into the (SQLite) database.
 3. `npm run dev` — `next dev`. One process, one port — pages and `/api/*` routes are served
    together, no proxy config needed.
 

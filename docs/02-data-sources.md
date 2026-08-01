@@ -1,5 +1,14 @@
 # Data Sources
 
+> **Historical.** This describes the one-time extraction that originally produced the site's
+> vocabulary. As of the self-containment pass, `website/` no longer reads the PDF or markdown
+> sources below at runtime or seed time — their output is baked into
+> `src/lib/extract/hsk{1,2,3}-chapters-data.ts` and `hsk{1,2,3}-combined-data.ts` as plain TS
+> data, the same way HSK4A/4B always worked. The original PDFs and markdown files still live in
+> the main `chinese/` repo (outside `website/`) for reference/history, but editing them no
+> longer affects the site — corrections now go directly into the `*-data.ts` files. Kept below
+> for context on where the data came from and the extraction rules that shaped it.
+
 ## 1. Combined level lists (raw PDF)
 
 Path: `raw/HSK-All-Levels-Vocabulary/HSK All Levels Vocabulary/HSK {N} Vocabulary list.pdf`

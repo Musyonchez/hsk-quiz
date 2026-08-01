@@ -1,6 +1,6 @@
 # HSK Quiz Site
 
-A Sporcle-style typing quiz for the HSK 1-3 vocabulary in this repo. See
+A Sporcle-style typing quiz for HSK 1-3 vocabulary, fully self-contained in this repo. See
 [`docs/`](docs/01-overview.md) for the full spec — start at
 [`docs/01-overview.md`](docs/01-overview.md).
 
@@ -9,7 +9,7 @@ A Sporcle-style typing quiz for the HSK 1-3 vocabulary in this repo. See
 ```bash
 npm install          # also runs `prisma generate` via postinstall
 npm run db:migrate    # apply Prisma migrations to dev.db (SQLite)
-npm run db:seed       # parse raw/HSK-All-Levels-Vocabulary + characters/words, seed the DB
+npm run db:seed       # seed the DB from the in-repo src/lib/extract/hsk*-data.ts files
 npm run dev            # http://localhost:3000
 ```
 

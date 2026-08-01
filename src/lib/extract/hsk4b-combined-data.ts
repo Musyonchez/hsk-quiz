@@ -1,4 +1,4 @@
-import type { CombinedVocabRow } from "./pdf-vocab-table";
+import type { CombinedVocabRow } from "./vocab-row";
 
 // HSK4B's combined word list, transcribed directly from the "生词 New Words"
 // appendix (pages 143-157) of the HSK 4 (下册) Standard Course textbook, the
