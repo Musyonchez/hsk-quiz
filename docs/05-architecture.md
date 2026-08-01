@@ -125,7 +125,9 @@ website/
                                # PillButton, PercentBadge, LeaderboardTable,
                                # FriendRequestRow, UserBadge — see 08-ui-ux.md
     lib/
-      extract/                # extract-combined.ts, extract-chapters.ts (pure parsers)
+      extract/                # extract-combined.ts, extract-chapters.ts (pure parsers);
+                               # hsk3-chapters-data.ts holds HSK3's chapter word lists
+                               # in-repo (no vocabulary.md source exists for HSK3 yet)
       db.ts                   # Prisma client singleton
       auth.ts                 # password hashing + session create/lookup
       require-session.ts      # Server Component guard: redirects to /login if unauthenticated

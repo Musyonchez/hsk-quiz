@@ -2,6 +2,7 @@ import { readFile, readdir } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { parseAllTables } from "./markdown-table";
+import { extractHsk3Chapters } from "./extract-hsk3-chapters";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -132,10 +133,13 @@ export async function extractChaptersForLevel(
 }
 
 export async function extractAllChapters(): Promise<ChapterData[]> {
-  const [hsk1, hsk2, hsk3] = await Promise.all([
+  const [hsk1, hsk2, hsk3FromMarkdown] = await Promise.all([
     extractChaptersForLevel(1),
     extractChaptersForLevel(2),
     extractChaptersForLevel(3),
   ]);
-  return [...hsk1, ...hsk2, ...hsk3];
+  // HSK3 has no vocabulary.md files yet — its chapters come from
+  // extract-hsk3-chapters.ts's in-repo data instead (see that file's
+  // comment). hsk3FromMarkdown will always be [] until/if that changes.
+  return [...hsk1, ...hsk2, ...hsk3FromMarkdown, ...extractHsk3Chapters()];
 }

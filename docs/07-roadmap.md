@@ -65,6 +65,19 @@ Phased so each phase produces something runnable/checkable before moving on.
     change at all).
   - HSK3 has no chapters yet — `characters/words/hsk3/` is still just the `.keep` placeholder —
     so the dashboard's HSK3 card correctly shows "0 chapters" until per-chapter content exists.
+- **All 20 HSK3 chapters added** (per-lesson vocab, transcribed the same way as the combined
+  appendix), but explicitly **not** as `characters/words/hsk3/chapterN/vocabulary.md` files —
+  kept entirely inside `website/` instead
+  (`src/lib/extract/hsk3-chapters-data.ts` + `extract-hsk3-chapters.ts`), per direct
+  instruction not to add new content under `characters/words/`. `extractAllChapters()` merges
+  this in alongside the markdown-based HSK1/2 chapters. No lesson titles exist in this source
+  (unlike HSK1/2's "你好 Hello" style) — chapters are titled just "Lesson N" for now. Proper
+  nouns and the appendix's "旧字新词" compound-word-from-known-characters sections are excluded
+  from each lesson's word list, matching how HSK1/2 chapters work; two paired grammar-pattern
+  skeletons (不但……而且…… in ch.18, 只有……才…… in ch.20) are excluded the same way `太……了`
+  and `只有……才……` were excluded from the combined list. Verified via Playwright: all 20
+  chapters render on the level hub, chapter 18's learn page matches the transcription exactly,
+  and the chapter 1 quiz plays correctly against this new data source.
 
 ## Phase 2 — Chapter data extraction ✅
 
