@@ -233,12 +233,18 @@ three shippable sub-phases:
   (403 otherwise). `/friends` page (add-a-friend field, incoming requests with Accept/Ignore,
   outgoing shown as "waiting", accepted friends list) and header nav links for both Leaderboard
   and Friends (added once their pages existed, not preemptively, to avoid shipping dead links).
+- **Results-screen extras**: `quiz-navigation.ts` computes `PLAY NEXT` (chapter N+1 -> that
+  level's combined quiz -> the next level's chapter 1, omitted once there's no next live level)
+  and `PLAY ANOTHER` (a different level's combined quiz, deterministically — "suggest something
+  else," not a recommendation engine) as `<QuizLinkCard>`s. A `Stats` toggle shows the per-word
+  correct/missed breakdown, read straight from the same client state already submitted via
+  `POST /api/attempts` — no extra API call, per [09-pages.md](09-pages.md) §6.
 - Verified end-to-end via Playwright for every sub-phase with real throwaway accounts: attempt
   submission + best-score display, two-user leaderboard ranking (correct sort order, friends-
-  scope correctly excluding non-friends), and the full friend-request → accept → friends-scope-
-  now-includes-them flow, plus the already-accepted/nonexistent-username edge cases. `tsc
-  --noEmit` and `eslint` clean throughout; `PLAY NEXT`/`PLAY ANOTHER` linking and the per-word
-  stats breakdown remain open — see "Explicitly deferred" below.
+  scope correctly excluding non-friends), the full friend-request → accept → friends-scope-
+  now-includes-them flow (plus the already-accepted/nonexistent-username edge cases), and the
+  Play Next/Play Another targets at both the middle and last live level. `tsc --noEmit` and
+  `eslint` clean throughout.
 
 ## Phase 7 — Polish pass
 
@@ -251,6 +257,3 @@ three shippable sub-phases:
 - Listening or audio-based quiz modes.
 - Cross-quiz progress/history page and friend search/directory (see
   [09-pages.md](09-pages.md)'s "Explicitly not building").
-- `PLAY NEXT`/`PLAY ANOTHER` result-screen linking and the per-word right/wrong stats breakdown
-  from [09-pages.md](09-pages.md)'s §5/§6 — Phase 6 shipped attempt persistence, the leaderboard,
-  and friends, but not these two results-screen extras; revisit alongside Phase 7's polish pass.
