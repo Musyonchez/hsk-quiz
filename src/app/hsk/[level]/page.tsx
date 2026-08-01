@@ -1,7 +1,8 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { requireSession } from "@/lib/require-session";
-import { getCombinedWordCount, getLevelWithChapters, isLevelNumber } from "@/lib/queries";
+import { getCombinedWordCount, getLevelWithChapters } from "@/lib/queries";
+import { isLevelSlug } from "@/lib/hsk-level";
 import { QuizLinkCard } from "@/components/QuizLinkCard";
 
 export default async function LevelHubPage({
@@ -10,13 +11,12 @@ export default async function LevelHubPage({
   params: Promise<{ level: string }>;
 }) {
   await requireSession();
-  const { level: levelParam } = await params;
-  const levelNumber = Number(levelParam);
-  if (!isLevelNumber(levelNumber)) notFound();
+  const { level: levelSlug } = await params;
+  if (!isLevelSlug(levelSlug)) notFound();
 
   const [level, combinedCount] = await Promise.all([
-    getLevelWithChapters(levelNumber),
-    getCombinedWordCount(levelNumber),
+    getLevelWithChapters(levelSlug),
+    getCombinedWordCount(levelSlug),
   ]);
   if (!level) notFound();
 
@@ -30,7 +30,7 @@ export default async function LevelHubPage({
       </div>
 
       <QuizLinkCard
-        href={`/hsk/${levelNumber}/combined`}
+        href={`/hsk/${levelSlug}/combined`}
         eyebrow="Full level"
         title={`Combined — ${combinedCount} words`}
       />
@@ -39,7 +39,7 @@ export default async function LevelHubPage({
         {level.chapters.map((chapter) => (
           <Link
             key={chapter.id}
-            href={`/hsk/${levelNumber}/chapter/${chapter.number}`}
+            href={`/hsk/${levelSlug}/chapter/${chapter.number}`}
             className="rounded-xl border border-border bg-surface p-5 transition-colors hover:border-border-strong hover:bg-surface-raised"
           >
             <span className="text-xs font-medium uppercase tracking-wide text-muted-foreground">

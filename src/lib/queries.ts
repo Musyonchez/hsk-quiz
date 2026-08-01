@@ -1,11 +1,11 @@
 import { prisma } from "@/lib/db";
-import { isHskLevel } from "@/lib/hsk-level";
+import { isLevelSlug } from "@/lib/hsk-level";
 
-export const isLevelNumber = isHskLevel;
+export const isLevelSlugParam = isLevelSlug;
 
 export function getLevelsOverview() {
   return prisma.level.findMany({
-    orderBy: { number: "asc" },
+    orderBy: [{ number: "asc" }, { part: "asc" }],
     include: { _count: { select: { chapters: true } } },
   });
 }
@@ -17,9 +17,9 @@ export function getMostRecentAttempt(userId: number) {
   });
 }
 
-export function getLevelWithChapters(levelNumber: number) {
+export function getLevelWithChapters(slug: string) {
   return prisma.level.findUnique({
-    where: { number: levelNumber },
+    where: { slug },
     include: {
       chapters: {
         orderBy: { number: "asc" },
@@ -29,22 +29,22 @@ export function getLevelWithChapters(levelNumber: number) {
   });
 }
 
-export function getCombinedWordCount(levelNumber: number) {
+export function getCombinedWordCount(slug: string) {
   return prisma.word.count({
-    where: { level: { number: levelNumber }, source: "combined" },
+    where: { level: { slug }, source: "combined" },
   });
 }
 
-export function getChapterWithWords(levelNumber: number, chapterNumber: number) {
+export function getChapterWithWords(slug: string, chapterNumber: number) {
   return prisma.chapter.findFirst({
-    where: { number: chapterNumber, level: { number: levelNumber } },
+    where: { number: chapterNumber, level: { slug } },
     include: { words: { orderBy: { id: "asc" } } },
   });
 }
 
-export function getCombinedWords(levelNumber: number) {
+export function getCombinedWords(slug: string) {
   return prisma.word.findMany({
-    where: { level: { number: levelNumber }, source: "combined" },
+    where: { level: { slug }, source: "combined" },
     orderBy: { id: "asc" },
   });
 }

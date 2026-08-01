@@ -78,20 +78,33 @@ Phased so each phase produces something runnable/checkable before moving on.
   and `只有……才……` were excluded from the combined list. Verified via Playwright: all 20
   chapters render on the level hub, chapter 18's learn page matches the transcription exactly,
   and the chapter 1 quiz plays correctly against this new data source.
-- **HSK4/5/6 combined levels stood up (backend/DB only, no frontend changes yet — explicit
-  instruction to batch all the frontend work for these levels into one later pass instead of
-  doing it per-level)**: all three levels' `HSK-All-Levels-Vocabulary` PDFs already had a real
-  text layer and parse cleanly with the same header-typo fix HSK3 needed. Seeded counts (1200 /
-  2500 / 5008 cumulative words) line up with the official HSK vocabulary sizes, a good sign the
-  extraction is sound. Introduced `src/lib/hsk-level.ts` (`HskLevel = 1|2|3|4|5|6`) as a single
-  source of truth instead of hunting down every inlined `1 | 2 | 3` union, and fixed a real bug
-  the widening would have caused: `combined-vocab-corrections.ts`'s fallback branch would have
-  silently applied HSK3-specific corrections to HSK4/5/6 data — split into an explicit no-op
-  branch for levels with no corrections yet instead. `extract-chapters.ts` now tolerates a
-  level with no `characters/words/hsk{N}/` folder at all (HSK4-6 have none) instead of crashing
-  on `readdir`. No corrections or chapters for HSK4-6 yet — waiting on official-textbook
-  transcriptions the same way HSK1-3 got theirs. Verified zero orphans across every level/
-  chapter after reseeding.
+- **HSK4/5/6 architecture pivot: split into independent per-book `Level` rows (backend/DB only,
+  no frontend changes yet — explicit instruction to batch frontend work for these levels into
+  one later pass)**. An initial pass stood up HSK4/5/6 as three cumulative levels sourced from
+  the `HSK-All-Levels-Vocabulary` PDFs (1200/2500/5008 words), the same pipeline as HSK1-3 —
+  but each of HSK4/5/6 is actually published as two textbook volumes (上/下, "Book A"/"Book B"),
+  and the cumulative-PDF list doesn't match either book's own vocabulary. That approach was
+  **superseded**, not merely supplemented: `Level.number` (previously `@unique`) became a plain
+  `Int` shared by a book pair, with a new `Level.slug` (`"1"|"2"|"3"|"4a"|"4b"|"5a"|"5b"|"6a"|
+  "6b"`) as the actual unique key and a nullable `Level.part` (`"A"|"B"`) for display — HSK4A is
+  now exactly as independent a `Level` entity as HSK1/HSK2 are, not a chapter grouping under one
+  HSK4 row. `src/lib/hsk-level.ts`'s `HskLevel = 1|2|3|4|5|6` union was replaced with a
+  `LevelSlug` type + `ALL_LEVELS: LevelDefinition[]` list (one entry per book actually seeded —
+  only `1`/`2`/`3`/`4a` exist so far; `4b`/`5a`/`5b`/`6a`/`6b` get added one at a time as their
+  textbook transcriptions arrive). HSK4A's combined word list (276 words) and its 10 chapters'
+  per-lesson word lists come from the user's own clean transcription of the HSK4 (上册) textbook
+  appendix and lesson vocab, transcribed the same way HSK3's chapters are
+  (`hsk4a-combined-data.ts` + `hsk4a-chapters-data.ts`, plus `extract-hsk4a-chapters.ts` mirroring
+  `extract-hsk3-chapters.ts`) — not parsed from any PDF, so no `combined-vocab-corrections.ts`
+  entries were needed. `extract-combined.ts` now dispatches by slug: `1`/`2`/`3` still go through
+  the cumulative-PDF + corrections pipeline, `4a` reads the in-repo data file directly, and any
+  other slug throws (nothing else is wired up yet). `queries.ts`'s level lookups moved from a raw
+  `number` parameter to `slug`, which required a minimal, purely mechanical fix to the existing
+  HSK1/2/3 page files (passing the slug string through instead of `Number(param)`) — parameter
+  marshaling to keep those pages working against the new schema, not new frontend functionality.
+  The dev SQLite database was reset (not migrated) to add the new required `slug` column, since
+  every row in it is reseedable from source data with no hand-entered content at risk. Verified
+  zero orphans across every level/chapter after reseeding, `tsc --noEmit` and `eslint` both clean.
 
 ## Phase 2 — Chapter data extraction ✅
 

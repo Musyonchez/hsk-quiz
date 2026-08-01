@@ -34,7 +34,7 @@ const PREVIEW_ROWS = [
 export default async function LandingPage() {
   const [user, levels] = await Promise.all([getSessionUser(), getLevelsOverview()]);
   const combinedCounts = await Promise.all(
-    levels.map((level) => getCombinedWordCount(level.number))
+    levels.map((level) => getCombinedWordCount(level.slug))
   );
   const totalWords = combinedCounts.reduce((sum, count) => sum + count, 0);
   const totalChapters = levels.reduce((sum, level) => sum + level._count.chapters, 0);

@@ -2,25 +2,25 @@ import "dotenv/config";
 import { prisma } from "@/lib/db";
 import { extractAllCombinedLevels } from "@/lib/extract/extract-combined";
 import { extractAllChapters } from "@/lib/extract/extract-chapters";
-import { ALL_HSK_LEVELS, type HskLevel } from "@/lib/hsk-level";
+import { ALL_LEVELS, type LevelSlug } from "@/lib/hsk-level";
 
-async function ensureLevels(): Promise<Record<HskLevel, number>> {
-  const ids = {} as Record<HskLevel, number>;
-  for (const level of ALL_HSK_LEVELS) {
+async function ensureLevels(): Promise<Record<LevelSlug, number>> {
+  const ids = {} as Record<LevelSlug, number>;
+  for (const level of ALL_LEVELS) {
     const row = await prisma.level.upsert({
-      where: { number: level },
-      create: { number: level, name: `HSK ${level}` },
-      update: { name: `HSK ${level}` },
+      where: { slug: level.slug },
+      create: { slug: level.slug, number: level.number, part: level.part, name: level.name },
+      update: { number: level.number, part: level.part, name: level.name },
     });
-    ids[level] = row.id;
+    ids[level.slug] = row.id;
   }
   return ids;
 }
 
-async function seedCombinedLevels(levelIds: Record<HskLevel, number>) {
+async function seedCombinedLevels(levelIds: Record<LevelSlug, number>) {
   const levels = await extractAllCombinedLevels();
 
-  for (const { level, words } of levels) {
+  for (const { slug, words } of levels) {
     // Matched on chinese+pinyin together, not chinese alone: several
     // characters are legitimately taught twice with different readings
     // (还 hái/huán, 长 cháng/zhǎng, 只 zhǐ/zhī...) as two distinct combined
@@ -29,7 +29,7 @@ async function seedCombinedLevels(levelIds: Record<HskLevel, number>) {
     for (const word of words) {
       const existing = await prisma.word.findFirst({
         where: {
-          levelId: levelIds[level],
+          levelId: levelIds[slug],
           chapterId: null,
           chinese: word.chinese,
           pinyin: word.pinyin,
@@ -37,7 +37,7 @@ async function seedCombinedLevels(levelIds: Record<HskLevel, number>) {
       });
 
       const data = {
-        levelId: levelIds[level],
+        levelId: levelIds[slug],
         chapterId: null,
         chinese: word.chinese,
         pinyin: word.pinyin,
@@ -64,7 +64,7 @@ async function seedCombinedLevels(levelIds: Record<HskLevel, number>) {
     if (words.length > 0) {
       const currentKeys = new Set(words.map((w) => `${w.chinese}|${w.pinyin}`));
       const existingRows = await prisma.word.findMany({
-        where: { levelId: levelIds[level], chapterId: null, source: "combined" },
+        where: { levelId: levelIds[slug], chapterId: null, source: "combined" },
         select: { id: true, chinese: true, pinyin: true },
       });
       const staleIds = existingRows
@@ -75,11 +75,11 @@ async function seedCombinedLevels(levelIds: Record<HskLevel, number>) {
       }
     }
 
-    console.log(`Seeded HSK ${level}: ${words.length} combined words`);
+    console.log(`Seeded HSK ${slug}: ${words.length} combined words`);
   }
 }
 
-async function seedChapters(levelIds: Record<HskLevel, number>) {
+async function seedChapters(levelIds: Record<LevelSlug, number>) {
   const chapters = await extractAllChapters();
 
   for (const chapterData of chapters) {

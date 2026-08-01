@@ -1,7 +1,8 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { requireSession } from "@/lib/require-session";
-import { getCombinedWords, isLevelNumber } from "@/lib/queries";
+import { getCombinedWords } from "@/lib/queries";
+import { isLevelSlug } from "@/lib/hsk-level";
 import { QuizRunner } from "@/components/QuizRunner";
 
 export default async function CombinedQuizPage({
@@ -10,22 +11,21 @@ export default async function CombinedQuizPage({
   params: Promise<{ level: string }>;
 }) {
   await requireSession();
-  const { level: levelParam } = await params;
-  const levelNumber = Number(levelParam);
-  if (!isLevelNumber(levelNumber)) notFound();
+  const { level: levelSlug } = await params;
+  if (!isLevelSlug(levelSlug)) notFound();
 
-  const words = await getCombinedWords(levelNumber);
+  const words = await getCombinedWords(levelSlug);
   if (words.length === 0) notFound();
 
-  const backHref = `/hsk/${levelNumber}/combined`;
+  const backHref = `/hsk/${levelSlug}/combined`;
 
   return (
     <main className="mx-auto flex w-full max-w-3xl flex-col gap-6 px-6 py-12">
       <div>
         <Link href={backHref} className="text-sm text-muted-foreground hover:text-foreground">
-          ← HSK {levelNumber} Combined
+          ← HSK {levelSlug} Combined
         </Link>
-        <h1 className="mt-2 text-2xl font-bold">HSK {levelNumber} — Combined Quiz</h1>
+        <h1 className="mt-2 text-2xl font-bold">HSK {levelSlug} — Combined Quiz</h1>
       </div>
 
       <QuizRunner words={words} backHref={backHref} />

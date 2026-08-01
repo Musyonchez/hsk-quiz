@@ -12,8 +12,10 @@ datasource db {
 
 model Level {
   id       Int       @id @default(autoincrement())
-  number   Int       @unique // 1 | 2
-  name     String // "HSK 1" | "HSK 2"
+  slug     String    @unique // "1" | "2" | "3" | "4a" | "4b" | "5a" | "5b" | "6a" | "6b"
+  number   Int // 1 | 2 | 3 | 4 | 5 | 6 — shared by a level's A/B book pair, no longer unique
+  part     String? // "A" | "B" | null (levels 1-3 have no book split)
+  name     String // "HSK 1" | "HSK 4A"
   chapters Chapter[]
   words    Word[]
 }

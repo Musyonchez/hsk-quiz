@@ -21,8 +21,8 @@ export async function AppHeader() {
               Dashboard
             </Link>
             {levels.map((level) => (
-              <Link key={level.id} href={`/hsk/${level.number}`} className="hover:text-foreground">
-                HSK {level.number}
+              <Link key={level.id} href={`/hsk/${level.slug}`} className="hover:text-foreground">
+                {level.name}
               </Link>
             ))}
           </nav>

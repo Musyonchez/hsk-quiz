@@ -9,7 +9,7 @@ import { HSK3_CHAPTERS } from "./hsk3-chapters-data";
 // HSK1/2 from the seeding side, despite the different underlying source.
 export function extractHsk3Chapters(): ChapterData[] {
   return HSK3_CHAPTERS.map((chapter) => ({
-    level: 3 as const,
+    level: "3" as const,
     chapterNumber: chapter.chapterNumber,
     title: `Lesson ${chapter.chapterNumber}`,
     words: chapter.words,

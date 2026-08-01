@@ -30,7 +30,7 @@ export default async function DashboardPage() {
         {levels.map((level) => (
           <Link
             key={level.id}
-            href={`/hsk/${level.number}`}
+            href={`/hsk/${level.slug}`}
             className="rounded-xl border border-border bg-surface p-6 transition-colors hover:border-border-strong hover:bg-surface-raised"
           >
             <h2 className="text-xl font-semibold">{level.name}</h2>

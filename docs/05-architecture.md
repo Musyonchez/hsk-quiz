@@ -41,7 +41,8 @@ vocabulary content itself is still sourced from the PDFs/markdown in this repo, 
 ## Database schema (outline)
 
 ```
-Level        { id, number (1|2|3, more as data becomes available), name }
+Level        { id, slug (unique — "1"|"2"|"3"|"4a"|"4b"|"5a"|"5b"|"6a"|"6b"),
+               number (1-6, shared by a level's A/B book pair), part ("A"|"B"|null), name }
 Chapter      { id, levelId, number, title }
 Word         { id, chapterId? (null for combined-only words), levelId,
                chinese, pinyin, wordType, meaning, category (nullable, PDF word-class),
@@ -127,7 +128,12 @@ website/
     lib/
       extract/                # extract-combined.ts, extract-chapters.ts (pure parsers);
                                # hsk3-chapters-data.ts holds HSK3's chapter word lists
-                               # in-repo (no vocabulary.md source exists for HSK3 yet)
+                               # in-repo (no vocabulary.md source exists for HSK3 yet);
+                               # hsk4a-combined-data.ts / hsk4a-chapters-data.ts hold
+                               # HSK4A's word lists the same way — HSK4/5/6 are split
+                               # into independent per-book Level rows (see hsk-level.ts),
+                               # each sourced from that book's own textbook appendix
+                               # rather than the cumulative all-levels PDF used for 1-3
       db.ts                   # Prisma client singleton
       auth.ts                 # password hashing + session create/lookup
       require-session.ts      # Server Component guard: redirects to /login if unauthenticated

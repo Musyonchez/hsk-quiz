@@ -1,5 +1,4 @@
 import type { CombinedVocabRow } from "./pdf-vocab-table";
-import type { HskLevel } from "@/lib/hsk-level";
 
 // Corrections found by diffing our combined-word extraction (sourced from
 // raw/HSK-All-Levels-Vocabulary, a third-party digmandarin.com word list)
@@ -116,8 +115,15 @@ const HSK3_ADDITIONS: CombinedVocabRow[] = [
   // pattern" quiz-item concept (not yet built) rather than combined vocab.
 ];
 
+// HSK4/5/6 no longer go through this cumulative-PDF pipeline at all — each
+// is split into two textbook volumes (上/下), and per-book combined word
+// lists are sourced directly from that book's own transcribed appendix
+// instead (see hsk4a-combined-data.ts and friends), the same way HSK3's
+// chapters are in-repo data rather than parsed markdown. This function only
+// still applies to HSK1-3, which remain single-volume, cumulative-PDF-backed
+// levels.
 export function applyCombinedVocabCorrections(
-  level: HskLevel,
+  level: 1 | 2 | 3,
   words: CombinedVocabRow[]
 ): CombinedVocabRow[] {
   if (level === 1) {
@@ -130,13 +136,6 @@ export function applyCombinedVocabCorrections(
     return [...corrected, ...HSK2_ADDITIONS];
   }
 
-  if (level === 3) {
-    const corrected = words.map((word) => HSK3_REPLACEMENTS[word.chinese] ?? word);
-    return [...corrected, ...HSK3_ADDITIONS];
-  }
-
-  // HSK4/5/6: no official-textbook diff done yet (no transcription supplied
-  // yet, unlike 1/2/3 — see the git log for that process). Raw PDF
-  // extraction only, until corrections are supplied the same way.
-  return words;
+  const corrected = words.map((word) => HSK3_REPLACEMENTS[word.chinese] ?? word);
+  return [...corrected, ...HSK3_ADDITIONS];
 }
