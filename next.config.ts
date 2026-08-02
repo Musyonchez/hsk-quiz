@@ -4,6 +4,7 @@ import type { NextConfig } from "next";
 // defenses (httpOnly, Secure in prod, SameSite=Lax) — these are cheap defense-in-depth
 // on top of that, not a substitute for it.
 const nextConfig: NextConfig = {
+  serverExternalPackages: ["better-sqlite3", "@prisma/adapter-better-sqlite3"],
   async headers() {
     return [
       {
