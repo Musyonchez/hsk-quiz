@@ -65,7 +65,7 @@ const HSK2_OWN_WORDS: CombinedVocabRow[] = [
   { chinese: "哥哥", pinyin: "gēge", english: "elder brother", category: "Noun" },
   { chinese: "公共汽车", pinyin: "gōnggòng qìchē", english: "bus", category: null },
   { chinese: "公司", pinyin: "gōngsī", english: "company, firm", category: "Noun" },
-  { chinese: "贵", pinyin: "guì", english: "expensive", category: "Adjective" },
+  { chinese: "贵", pinyin: "guì", english: "expensive; (honorific term) your", category: "Adjective" },
   { chinese: "还", pinyin: "hái", english: "passably, fairly, rather", category: "Adverb" },
   { chinese: "孩子", pinyin: "háizi", english: "child, kid", category: "Noun" },
   { chinese: "黑", pinyin: "hēi", english: "black", category: "Adjective" },

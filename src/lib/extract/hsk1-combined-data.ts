@@ -29,12 +29,20 @@ import type { CombinedVocabRow } from "./vocab-row";
 //   "不但……而且……", not a single typable word (太 itself is already a
 //   separate word in the main list).
 //
-// One homograph merge: 下 (xià) appears twice — as a noun ("under, below",
-// main list) and as a verb ("to fall", of rain/snow, supplementary list).
-// Same character, same pinyin, so seed.ts's chinese+pinyin dedup key can't
-// tell the two rows apart (the same problem as 花 "flower; to spend" in
-// HSK3) — merged into one row's meaning instead of adding a second row that
-// would silently overwrite the first.
+// One homograph merge within this file: 下 (xià) appears twice — as a noun
+// ("under, below", main list) and as a verb ("to fall", of rain/snow,
+// supplementary list). Same character, same pinyin, so seed.ts's
+// chinese+pinyin dedup key can't tell the two rows apart (the same problem
+// as 花 "flower; to spend" in HSK3) — merged into one row's meaning instead
+// of adding a second row that would silently overwrite the first.
+//
+// More merges added later, from processing HSK3's own appendix (which
+// introduces new senses for characters HSK1 already teaches): 开 gained "to
+// open out, to unfold" alongside "to drive"; 上 gained "to go up, to
+// ascend" alongside "up, above"; 口 gained "mouth; mouthful (measure word)"
+// alongside "a measure word for family members"; 分 gained "a unit of
+// money (1/10 jiao); to distinguish" alongside "minute". See the comment
+// atop hsk3-combined-data.ts.
 export const HSK1_COMBINED_WORDS: CombinedVocabRow[] = [
   // 生词 New Words
   { chinese: "爱", pinyin: "ài", english: "to like, to love", category: "Verb" },
@@ -84,7 +92,7 @@ export const HSK1_COMBINED_WORDS: CombinedVocabRow[] = [
   { chinese: "叫", pinyin: "jiào", english: "to call, to be called", category: "Verb" },
   { chinese: "今天", pinyin: "jīntiān", english: "today", category: "Noun" },
   { chinese: "九", pinyin: "jiǔ", english: "nine", category: "Numeral" },
-  { chinese: "开", pinyin: "kāi", english: "to drive", category: "Verb" },
+  { chinese: "开", pinyin: "kāi", english: "to drive; to open out, to unfold", category: "Verb" },
   { chinese: "看", pinyin: "kàn", english: "to look at, to watch, to read", category: "Verb" },
   { chinese: "看见", pinyin: "kànjiàn", english: "to see", category: "Verb" },
   { chinese: "块", pinyin: "kuài", english: "a unit of money, same as \"yuan\"", category: "Quantifier" },
@@ -129,7 +137,7 @@ export const HSK1_COMBINED_WORDS: CombinedVocabRow[] = [
   { chinese: "认识", pinyin: "rènshi", english: "to meet, to know", category: "Verb" },
   { chinese: "三", pinyin: "sān", english: "three", category: "Numeral" },
   { chinese: "商店", pinyin: "shāngdiàn", english: "shop, store", category: "Noun" },
-  { chinese: "上", pinyin: "shàng", english: "up, above", category: "Noun" },
+  { chinese: "上", pinyin: "shàng", english: "up, above; to go up, to ascend", category: null },
   { chinese: "上午", pinyin: "shàngwǔ", english: "morning, before noon", category: "Noun" },
   { chinese: "少", pinyin: "shǎo", english: "little, few", category: "Adjective" },
   { chinese: "谁", pinyin: "shéi", english: "who, whom", category: "Pronoun" },
@@ -213,7 +221,12 @@ export const HSK1_COMBINED_WORDS: CombinedVocabRow[] = [
   },
   { chinese: "给", pinyin: "gěi", english: "to", category: "Preposition" },
   { chinese: "好吃", pinyin: "hǎochī", english: "delicious, tasty", category: "Adjective" },
-  { chinese: "口", pinyin: "kǒu", english: "a measure word for members of families, etc.", category: "Quantifier" },
+  {
+    chinese: "口",
+    pinyin: "kǒu",
+    english: "a measure word for members of families, etc.; mouth; mouthful (measure word)",
+    category: null,
+  },
   { chinese: "您", pinyin: "nín", english: "(polite) you", category: "Pronoun" },
   { chinese: "身体", pinyin: "shēntǐ", english: "body", category: "Noun" },
   { chinese: "问", pinyin: "wèn", english: "to ask, to inquire", category: "Verb" },
@@ -225,7 +238,12 @@ export const HSK1_COMBINED_WORDS: CombinedVocabRow[] = [
   { chinese: "车", pinyin: "chē", english: "car, vehicle", category: "Noun" },
   { chinese: "吃饭", pinyin: "chī fàn", english: "to eat a meal", category: "Verb" },
   { chinese: "大学", pinyin: "dàxué", english: "college, university", category: "Noun" },
-  { chinese: "分", pinyin: "fēn", english: "minute", category: "Quantifier" },
+  {
+    chinese: "分",
+    pinyin: "fēn",
+    english: "minute; a unit of money (=1/10 jiao); to distinguish",
+    category: null,
+  },
   { chinese: "国", pinyin: "guó", english: "country, nation", category: "Noun" },
   { chinese: "汉字", pinyin: "Hànzì", english: "Chinese character", category: "Noun" },
   { chinese: "后", pinyin: "hòu", english: "after, afterwards, later", category: "Noun" },
