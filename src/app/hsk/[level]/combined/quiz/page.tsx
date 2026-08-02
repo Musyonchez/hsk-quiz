@@ -29,6 +29,13 @@ export default async function CombinedQuizPage({
     { levelSlug, chapterNumber: null },
     levels.map((l) => ({ slug: l.slug, name: l.name, chapterCount: l._count.chapters }))
   );
+  // Combined quizzes cover the level's entire cumulative word list (177 for
+  // HSK1, 335 for HSK2, 661 for HSK3), far more than a single chapter's
+  // handful of words — the default 10-minute chapter-quiz clock isn't
+  // enough time to type that many words, so each level gets a longer,
+  // roughly count-scaled allowance instead.
+  const combinedDurationMinutes: Record<string, number> = { "1": 20, "2": 30, "3": 40 };
+  const durationSeconds = (combinedDurationMinutes[levelSlug] ?? 10) * 60;
 
   return (
     <main className="mx-auto flex w-full max-w-3xl flex-col gap-6 px-6 py-12">
@@ -45,6 +52,7 @@ export default async function CombinedQuizPage({
         quizKey={quizKey}
         nextQuiz={next}
         anotherQuiz={another}
+        durationSeconds={durationSeconds}
       />
     </main>
   );

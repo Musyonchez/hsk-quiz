@@ -24,7 +24,7 @@ export type QuizWord = {
   meaning: string | null;
 };
 
-const QUIZ_DURATION_SECONDS = 600;
+const DEFAULT_QUIZ_DURATION_SECONDS = 600;
 
 // Client-side average since GET /api/leaderboard returns every ranked row
 // unpaginated — no separate aggregate endpoint needed at this app's scale
@@ -54,12 +54,14 @@ export function QuizRunner({
   quizKey,
   nextQuiz = null,
   anotherQuiz,
+  durationSeconds = DEFAULT_QUIZ_DURATION_SECONDS,
 }: {
   words: QuizWord[];
   backHref: string;
   quizKey: string;
   nextQuiz?: QuizNavTarget | null;
   anotherQuiz?: QuizNavTarget;
+  durationSeconds?: number;
 }) {
   const [runId, setRunId] = useState(0);
 
@@ -71,6 +73,7 @@ export function QuizRunner({
       quizKey={quizKey}
       nextQuiz={nextQuiz}
       anotherQuiz={anotherQuiz}
+      durationSeconds={durationSeconds}
       onReplay={() => setRunId((n) => n + 1)}
     />
   );
@@ -82,6 +85,7 @@ function QuizRunnerInner({
   quizKey,
   nextQuiz,
   anotherQuiz,
+  durationSeconds,
   onReplay,
 }: {
   words: QuizWord[];
@@ -89,6 +93,7 @@ function QuizRunnerInner({
   quizKey: string;
   nextQuiz: QuizNavTarget | null;
   anotherQuiz?: QuizNavTarget;
+  durationSeconds: number;
   onReplay: () => void;
 }) {
   const [order, setOrder] = useState(words);
@@ -96,7 +101,7 @@ function QuizRunnerInner({
   const [currentIndex, setCurrentIndex] = useState(0);
   const [input, setInput] = useState("");
   const [correctIds, setCorrectIds] = useState<Set<number>>(new Set());
-  const [secondsLeft, setSecondsLeft] = useState(QUIZ_DURATION_SECONDS);
+  const [secondsLeft, setSecondsLeft] = useState(durationSeconds);
   const [paused, setPaused] = useState(false);
   // Only the two user-triggered end states are stored — "timeup" is derived
   // below from secondsLeft during render instead, since React's guidance is
@@ -127,13 +132,13 @@ function QuizRunnerInner({
   useEffect(() => {
     if (!finished || submittedRef.current) return;
     submittedRef.current = true;
-    const durationSeconds = QUIZ_DURATION_SECONDS - secondsLeft;
+    const elapsedSeconds = durationSeconds - secondsLeft;
     const encodedKey = encodeURIComponent(quizKey);
 
     fetch("/api/attempts", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ quizKey, score, total, durationSeconds }),
+      body: JSON.stringify({ quizKey, score, total, durationSeconds: elapsedSeconds }),
     })
       .then(() =>
         Promise.all([
@@ -161,7 +166,7 @@ function QuizRunnerInner({
         },
       )
       .catch((err) => console.error("Failed to record quiz attempt", err));
-  }, [finished, quizKey, score, total, secondsLeft]);
+  }, [finished, quizKey, score, total, secondsLeft, durationSeconds]);
 
   // Default Stats to open if anything was missed, closed on a perfect run —
   // set once when the quiz finishes, not re-derived on every render, so a
@@ -370,7 +375,7 @@ function QuizRunnerInner({
         {!started ? (
           <div className="flex flex-col items-center gap-4 rounded-xl border border-border bg-surface p-10 text-center shadow-lg shadow-background/50">
             <p className="text-muted-foreground">
-              {total} words · {formatDuration(QUIZ_DURATION_SECONDS)} on the
+              {total} words · {formatDuration(durationSeconds)} on the
               clock
             </p>
             <div className="flex items-center gap-3">
