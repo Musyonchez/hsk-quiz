@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { ChevronDown, ChevronUp } from "lucide-react";
+import { Check, ChevronDown, ChevronUp } from "lucide-react";
 import { pillClasses } from "@/components/pill-classes";
 
 type LevelWithChapters = {
@@ -145,7 +145,7 @@ function LevelAccordionItem({
         <span className="flex items-center gap-3">
           <span className="text-lg font-semibold">{level.name}</span>
           {summary && !open && (
-            <span className="rounded-full bg-accent/10 px-2.5 py-0.5 text-xs font-medium text-accent">
+            <span className="rounded-full bg-success-surface px-2.5 py-0.5 text-xs font-medium text-success">
               {summary}
             </span>
           )}
@@ -155,31 +155,70 @@ function LevelAccordionItem({
 
       {open && (
         <div className="flex flex-col gap-4 border-t border-border px-6 py-5">
-          <label className="flex items-center gap-2 text-sm font-medium">
-            <input type="checkbox" checked={combined} onChange={onToggleCombined} />
+          <Checkbox checked={combined} onChange={onToggleCombined}>
             Combined (all {level.chapters.length} chapters)
-          </label>
+          </Checkbox>
 
           <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
             {level.chapters.map((chapter) => (
-              <label
+              <Checkbox
                 key={chapter.number}
-                className={`flex items-center gap-2 text-sm ${
-                  combined ? "cursor-not-allowed opacity-40" : ""
-                }`}
+                checked={chapters.has(chapter.number)}
+                disabled={combined}
+                onChange={() => onToggleChapter(chapter.number)}
               >
-                <input
-                  type="checkbox"
-                  disabled={combined}
-                  checked={chapters.has(chapter.number)}
-                  onChange={() => onToggleChapter(chapter.number)}
-                />
                 Chapter {chapter.number} — {chapter.title}
-              </label>
+              </Checkbox>
             ))}
           </div>
         </div>
       )}
     </div>
+  );
+}
+
+// Custom-styled checkbox matching the app's ink/paper/seal system instead of
+// the browser's native control. The real <input> stays in the DOM (visually
+// hidden, not display:none) so focus/keyboard/screen-reader behavior is
+// untouched — only the visible box is custom-drawn, driven directly by the
+// `checked` prop rather than a CSS peer-checked selector, since the
+// checkmark icon is nested inside that box rather than a direct sibling of
+// the input (peer-* only matches siblings, not descendants of one).
+function Checkbox({
+  checked,
+  disabled = false,
+  onChange,
+  children,
+}: {
+  checked: boolean;
+  disabled?: boolean;
+  onChange: () => void;
+  children: React.ReactNode;
+}) {
+  return (
+    <label
+      className={`flex items-center gap-2 text-sm ${
+        disabled ? "cursor-not-allowed opacity-40" : "cursor-pointer"
+      }`}
+    >
+      <span className="relative inline-flex h-4.5 w-4.5 shrink-0 items-center justify-center">
+        <input
+          type="checkbox"
+          checked={checked}
+          disabled={disabled}
+          onChange={onChange}
+          className="peer absolute inset-0 h-full w-full cursor-pointer opacity-0 disabled:cursor-not-allowed"
+        />
+        <span
+          aria-hidden
+          className={`flex h-4.5 w-4.5 items-center justify-center rounded border transition-colors ${
+            checked ? "border-success bg-success" : "border-border-strong bg-transparent"
+          } peer-focus-visible:ring-2 peer-focus-visible:ring-border-strong peer-focus-visible:ring-offset-2 peer-focus-visible:ring-offset-surface`}
+        >
+          {checked && <Check size={12} strokeWidth={3} className="text-foreground" />}
+        </span>
+      </span>
+      {children}
+    </label>
   );
 }
