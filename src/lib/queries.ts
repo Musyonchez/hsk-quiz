@@ -37,6 +37,17 @@ export function getBestAttempt(userId: number, quizKey: string) {
   });
 }
 
+// Levels with each chapter's number/title (not just a count) — for the
+// custom-quiz picker page, which needs to render a checkbox per chapter.
+export function getLevelsOverviewWithChapters() {
+  return prisma.level.findMany({
+    orderBy: [{ number: "asc" }, { part: "asc" }],
+    include: {
+      chapters: { select: { number: true, title: true }, orderBy: { number: "asc" } },
+    },
+  });
+}
+
 export function getLevelWithChapters(slug: string) {
   return prisma.level.findUnique({
     where: { slug },
@@ -76,6 +87,17 @@ export function getCombinedWords(slug: string) {
   return prisma.word.findMany({
     where: { level: { slug }, source: "combined" },
     orderBy: { id: "asc" },
+  });
+}
+
+// Words from an arbitrary subset of a level's chapters — for the custom
+// multi-chapter quiz (docs/17-custom-chapter-quiz-plan.md). Filters on the
+// chapter's own `number` (not `chapterId`) since the picker page works in
+// chapter numbers, not internal ids.
+export function getWordsForChapters(slug: string, chapterNumbers: number[]) {
+  return prisma.word.findMany({
+    where: { source: "chapter", level: { slug }, chapter: { number: { in: chapterNumbers } } },
+    orderBy: [{ chapterId: "asc" }, { id: "asc" }],
   });
 }
 

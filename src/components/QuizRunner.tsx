@@ -52,13 +52,15 @@ export function QuizRunner({
   words,
   backHref,
   quizKey,
+  trackAttempt = true,
   nextQuiz = null,
   anotherQuiz,
   durationSeconds = DEFAULT_QUIZ_DURATION_SECONDS,
 }: {
   words: QuizWord[];
   backHref: string;
-  quizKey: string;
+  quizKey?: string;
+  trackAttempt?: boolean;
   nextQuiz?: QuizNavTarget | null;
   anotherQuiz?: QuizNavTarget;
   durationSeconds?: number;
@@ -71,6 +73,7 @@ export function QuizRunner({
       words={words}
       backHref={backHref}
       quizKey={quizKey}
+      trackAttempt={trackAttempt}
       nextQuiz={nextQuiz}
       anotherQuiz={anotherQuiz}
       durationSeconds={durationSeconds}
@@ -83,6 +86,7 @@ function QuizRunnerInner({
   words,
   backHref,
   quizKey,
+  trackAttempt,
   nextQuiz,
   anotherQuiz,
   durationSeconds,
@@ -90,7 +94,8 @@ function QuizRunnerInner({
 }: {
   words: QuizWord[];
   backHref: string;
-  quizKey: string;
+  quizKey?: string;
+  trackAttempt: boolean;
   nextQuiz: QuizNavTarget | null;
   anotherQuiz?: QuizNavTarget;
   durationSeconds: number;
@@ -130,7 +135,7 @@ function QuizRunnerInner({
   // with a fresh key). Fire-and-forget: a failed write shouldn't surface as
   // a failed quiz to the player.
   useEffect(() => {
-    if (!finished || submittedRef.current) return;
+    if (!finished || submittedRef.current || !trackAttempt || !quizKey) return;
     submittedRef.current = true;
     const elapsedSeconds = durationSeconds - secondsLeft;
     const encodedKey = encodeURIComponent(quizKey);
@@ -166,7 +171,7 @@ function QuizRunnerInner({
         },
       )
       .catch((err) => console.error("Failed to record quiz attempt", err));
-  }, [finished, quizKey, score, total, secondsLeft, durationSeconds]);
+  }, [finished, trackAttempt, quizKey, score, total, secondsLeft, durationSeconds]);
 
   // Default Stats to open if anything was missed, closed on a perfect run —
   // set once when the quiz finishes, not re-derived on every render, so a
@@ -299,12 +304,14 @@ function QuizRunnerInner({
               Back
             </a>
           </div>
-          <a
-            href={`/leaderboard/${encodeURIComponent(quizKey)}`}
-            className="text-sm text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
-          >
-            View leaderboard
-          </a>
+          {trackAttempt && quizKey && (
+            <a
+              href={`/leaderboard/${encodeURIComponent(quizKey)}`}
+              className="text-sm text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
+            >
+              View leaderboard
+            </a>
+          )}
 
           {showStats && (
             <div className="w-full text-left">
