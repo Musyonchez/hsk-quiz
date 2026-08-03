@@ -53,6 +53,7 @@ export default async function ChapterQuizPage({
         words={chapter.words}
         backHref={backHref}
         quizKey={quizKey}
+        allowDrillMissed
         nextQuiz={next}
         anotherQuiz={another}
         durationSeconds={600}

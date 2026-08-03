@@ -11,14 +11,14 @@ chapter/combined/custom quizzes) and `CustomQuizPicker` (the `/custom-quiz` pick
 ## 1. Drill missed words
 
 After finishing a quiz with missed words, offer a button that starts a new quiz containing
-*only* those missed words — for **large word-pool quizzes only**: the per-level Combined quiz
-and both Custom Quiz routes (single-level and cross-level). Not for per-chapter quizzes, whose
-word count is already small enough that drilling a subset isn't meaningfully different from
-just replaying the whole thing.
+*only* those missed words. Originally scoped to large word-pool quizzes only (per-level
+Combined + both Custom Quiz routes) on the assumption a chapter's handful of words was too
+small for drilling a subset to matter — revised after the fact: the user wants it everywhere,
+so the per-chapter quiz page now passes it too.
 
-- New `QuizRunner` prop, `allowDrillMissed?: boolean` (default `false`). Only
-  `/hsk/[level]/combined/quiz`, `/hsk/[level]/custom/quiz`, and `/custom-quiz/quiz` pass `true`;
-  the per-chapter quiz page leaves it unset.
+- New `QuizRunner` prop, `allowDrillMissed?: boolean` (default `false`). All quiz pages —
+  `/hsk/[level]/chapter/[chapter]/quiz`, `/hsk/[level]/combined/quiz`,
+  `/hsk/[level]/custom/quiz`, and `/custom-quiz/quiz` — pass `true`.
 - Results screen: when `allowDrillMissed && missedWords.length > 0`, a "Drill missed words"
   button next to Replay. Entirely client-side — `QuizRunner` already has the missed words in
   memory (same array the Stats panel already renders), so no new route, no server round-trip,
@@ -97,7 +97,6 @@ annoying. `CustomQuizPicker`'s `selections` state persists to `localStorage` (ke
 
 ## Explicitly out of scope
 
-- Drill-missed-words for per-chapter quizzes (small word pools already, per §1).
 - Persisting anything beyond the checkbox selections (e.g. which accordion is open) to
   localStorage.
 - A visible elapsed-time stopwatch in untimed mode — "remove the time" is read literally: no
