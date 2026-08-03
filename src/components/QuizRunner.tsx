@@ -241,6 +241,20 @@ function QuizRunnerInner({
     setInput("");
   }
 
+  // Walks from `from` in `step` direction (1 = forward, -1 = backward),
+  // wrapping around, skipping any already-correct word — there's no reason
+  // to land Next/Prev on one you've already answered. Falls back to `from`
+  // itself if every other word is already done (finishing the quiz makes
+  // that moot in practice). Shared by the auto-advance-on-correct-answer
+  // path and the Prev/Next toolbar buttons so both skip the same way.
+  function nextIncompleteIndex(from: number, step: 1 | -1, ids: Set<number>): number {
+    for (let i = 1; i <= total; i++) {
+      const index = (((from + step * i) % total) + total) % total;
+      if (!ids.has(order[index].id)) return index;
+    }
+    return from;
+  }
+
   function handleInputChange(value: string) {
     setInput(value);
     if (!currentWord || !matchesPinyin(value, currentWord.pinyin)) return;
@@ -254,17 +268,7 @@ function QuizRunnerInner({
       return;
     }
 
-    // Walk forward from the current position (wrapping around) rather than
-    // always restarting the search from index 0 — otherwise answering out
-    // of order (e.g. skip to word 3 with Next, answer it) jumps back to an
-    // earlier word you deliberately skipped past instead of continuing on.
-    for (let step = 1; step <= total; step++) {
-      const index = (currentIndex + step) % total;
-      if (!updatedCorrectIds.has(order[index].id)) {
-        goTo(index);
-        break;
-      }
-    }
+    goTo(nextIncompleteIndex(currentIndex, 1, updatedCorrectIds));
   }
 
   if (finished) {
@@ -303,29 +307,27 @@ function QuizRunnerInner({
           </div>
         )}
 
-        <div className="flex flex-col items-center gap-6 rounded-xl border border-border bg-surface p-10 text-center">
-          <h2 className="text-2xl font-bold">{heading}</h2>
-          <p className="text-5xl font-bold tabular-nums text-accent">
-            {percent}%
-          </p>
-          <p className="text-muted-foreground">
-            {score} / {total} correct
-          </p>
-          {bestPercent !== null && (
-            <p className="text-sm text-muted-foreground">
-              your best: {bestPercent}%
+        <div className="flex flex-col items-center gap-5 rounded-xl border border-border bg-surface p-6 text-center">
+          <div className="flex flex-col items-center gap-1">
+            <h2 className="text-lg font-bold">{heading}</h2>
+            <p className="text-4xl font-bold tabular-nums text-accent">
+              {percent}%
             </p>
-          )}
-          {(avgGlobalPercent !== null || avgFriendPercent !== null) && (
             <p className="text-sm text-muted-foreground">
-              {avgGlobalPercent !== null && (
-                <>avg score: {avgGlobalPercent}% </>
-              )}
-              {avgFriendPercent !== null && (
-                <>· avg friend score: {avgFriendPercent}%</>
-              )}
+              {score} / {total} correct
+              {bestPercent !== null && <> · your best: {bestPercent}%</>}
             </p>
-          )}
+            {(avgGlobalPercent !== null || avgFriendPercent !== null) && (
+              <p className="text-sm text-muted-foreground">
+                {avgGlobalPercent !== null && (
+                  <>avg score: {avgGlobalPercent}% </>
+                )}
+                {avgFriendPercent !== null && (
+                  <>· avg friend score: {avgFriendPercent}%</>
+                )}
+              </p>
+            )}
+          </div>
           <div className="flex flex-wrap justify-center gap-3">
             <button
               type="button"
@@ -396,7 +398,7 @@ function QuizRunnerInner({
           )}
           <div className="flex items-center gap-2">
             <ToolbarButton
-              onClick={() => goTo(currentIndex - 1)}
+              onClick={() => goTo(nextIncompleteIndex(currentIndex, -1, correctIds))}
               disabled={!started}
               label="Prev"
             >
@@ -414,7 +416,7 @@ function QuizRunnerInner({
               </ToolbarButton>
             )}
             <ToolbarButton
-              onClick={() => goTo(currentIndex + 1)}
+              onClick={() => goTo(nextIncompleteIndex(currentIndex, 1, correctIds))}
               disabled={!started}
               label="Next"
             >
