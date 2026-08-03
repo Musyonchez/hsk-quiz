@@ -2,6 +2,10 @@
 
 Written before any code, per the same discipline as [14-phase6-plan.md](14-phase6-plan.md).
 
+**Status: implemented**, including a cross-level extension added after the first pass shipped
+(see "Cross-level selection" below) — picking chapters from more than one HSK level into a
+single quiz, not just multiple chapters within one level.
+
 ## Problem
 
 Each level's per-chapter quizzes only cover that chapter's own handful of words, and the
@@ -25,6 +29,35 @@ mix a few chapters for review without redoing the entire level.
 - **Mutually exclusive with the level's "Combined" quiz in the picker UI**: selecting "Combined"
   disables/clears the individual chapter checkboxes and vice versa, since combined already
   means "all of them" — picking both doesn't mean anything additional.
+
+## Cross-level selection (added after first pass)
+
+The user asked for one further extension: pick chapters across *different* levels into one
+quiz (e.g. HSK1 chapter 1 + HSK2 chapter 3), not just multiple chapters within a single level.
+
+- **Selection state lives in the picker page, not per-accordion.** Each level's accordion is a
+  controlled child (`selection`/`onToggleCombined`/`onToggleChapter` props) instead of owning
+  its own `useState` — the parent (`CustomQuizPicker`) needs the full picture across every level
+  to build one combined quiz href.
+- **Collapsing an accordion keeps its selection** (this was already implicit once state moved up
+  a level) **and shows a small summary badge next to the level name while collapsed** — e.g.
+  "Chapters 1, 2 selected" — so switching between levels (which auto-closes the previous one,
+  by design — only one open at a time) doesn't hide what's already picked elsewhere.
+- **One global "Start quiz" button**, not one per accordion, since a single quiz run can now
+  span every level's selections combined.
+- **The single-level minimum-2 rule only applies when exactly one level is touched.** Once a
+  second level contributes anything, even one chapter from each is a genuinely new combination
+  (not redundant with any existing single-chapter page), so the rule relaxes: any level with
+  `combined` or 1+ chapters is usable as soon as 2+ levels participate.
+- **Routing**: picking exactly one level still reuses the existing single-level routes
+  unchanged (`/hsk/[slug]/combined/quiz` for Combined-only, `/hsk/[slug]/custom/quiz?chapters=`
+  for 2+ chapters in that one level). Picking 2+ levels goes to a new **level-agnostic** route,
+  `/custom-quiz/quiz?picks=1:1-2,2:combined,3:5-7` — one `levelSlug:spec` segment per level,
+  comma-separated, where `spec` is either the literal `combined` or `-`-joined chapter numbers.
+  New query `getWordsForSelections()` (`src/lib/queries.ts`) fans out to the existing
+  `getCombinedWords`/`getWordsForChapters` per level and concatenates the results — `Word.id` is
+  a single autoincrement sequence across all levels, so no cross-level id collisions to worry
+  about in `QuizRunner`'s `correctIds` tracking.
 
 ## Data layer
 

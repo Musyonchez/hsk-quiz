@@ -101,6 +101,28 @@ export function getWordsForChapters(slug: string, chapterNumbers: number[]) {
   });
 }
 
+export type CustomQuizSelection = {
+  levelSlug: string;
+  combined: boolean;
+  chapterNumbers: number[];
+};
+
+// Same idea as getWordsForChapters/getCombinedWords, but spanning an
+// arbitrary mix of levels — one selection per level, each either "combined"
+// or a chapter-number subset. Each level's words are fetched with its own
+// query (chapter numbers only make sense scoped to one level) and the
+// results concatenated; fine at this app's scale (see docs/17).
+export async function getWordsForSelections(selections: CustomQuizSelection[]) {
+  const results = await Promise.all(
+    selections.map((selection) =>
+      selection.combined
+        ? getCombinedWords(selection.levelSlug)
+        : getWordsForChapters(selection.levelSlug, selection.chapterNumbers)
+    )
+  );
+  return results.flat();
+}
+
 // The other party's userId for every accepted friendship, either direction
 // (Friendship is stored as one directional row per request — see
 // 05-architecture.md — so "friends of X" means rows where X sent *or*
