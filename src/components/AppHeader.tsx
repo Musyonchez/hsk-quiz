@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Trophy, Users } from "lucide-react";
+import { Layers, Trophy, Users } from "lucide-react";
 import { getSessionUser } from "@/lib/auth";
 import { getLevelsOverview } from "@/lib/queries";
 import { pillClasses } from "./pill-classes";
@@ -31,6 +31,13 @@ export async function AppHeader() {
       </div>
       {user ? (
         <div className="flex items-center gap-4">
+          <Link
+            href="/custom-quiz"
+            className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"
+          >
+            <Layers size={16} />
+            Custom Quiz
+          </Link>
           <Link
             href="/leaderboard"
             className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"
