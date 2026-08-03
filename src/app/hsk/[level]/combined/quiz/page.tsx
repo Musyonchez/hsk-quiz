@@ -50,6 +50,7 @@ export default async function CombinedQuizPage({
         words={words}
         backHref={backHref}
         quizKey={quizKey}
+        allowDrillMissed
         nextQuiz={next}
         anotherQuiz={another}
         durationSeconds={durationSeconds}

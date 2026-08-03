@@ -55,6 +55,7 @@ export default async function ChapterQuizPage({
         quizKey={quizKey}
         nextQuiz={next}
         anotherQuiz={another}
+        durationSeconds={600}
       />
     </main>
   );

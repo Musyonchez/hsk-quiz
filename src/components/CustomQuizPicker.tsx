@@ -1,9 +1,39 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Check, ChevronDown, ChevronUp } from "lucide-react";
 import { pillClasses } from "@/components/pill-classes";
+
+const STORAGE_KEY = "hsk-quiz:custom-quiz-selections";
+
+type StoredSelection = { combined: boolean; chapters: number[] };
+
+function toStored(
+  selections: Record<string, Selection>
+): Record<string, StoredSelection> {
+  return Object.fromEntries(
+    Object.entries(selections).map(([slug, s]) => [
+      slug,
+      { combined: s.combined, chapters: [...s.chapters] },
+    ])
+  );
+}
+
+function fromStored(raw: string | null): Record<string, Selection> {
+  if (!raw) return {};
+  try {
+    const parsed: Record<string, StoredSelection> = JSON.parse(raw);
+    return Object.fromEntries(
+      Object.entries(parsed).map(([slug, s]) => [
+        slug,
+        { combined: s.combined, chapters: new Set(s.chapters) },
+      ])
+    );
+  } catch {
+    return {};
+  }
+}
 
 type LevelWithChapters = {
   slug: string;
@@ -60,6 +90,24 @@ export function CustomQuizPicker({ levels }: { levels: LevelWithChapters[] }) {
   const [openSlug, setOpenSlug] = useState<string | null>(null);
   const [selections, setSelections] = useState<Record<string, Selection>>({});
 
+  // Loaded post-mount (not in the useState initializer) so the first render
+  // matches the server's empty output — reading localStorage during the
+  // initializer would mismatch what was actually server-rendered. A true
+  // one-time hydrate-from-storage read, not a case the set-state-in-effect
+  // rule is meant to catch (that rule steers away from effects that
+  // needlessly mirror render-available data; this genuinely can't run until
+  // the browser APIs exist).
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setSelections(fromStored(localStorage.getItem(STORAGE_KEY)));
+  }, []);
+
+  // Re-saves right after the load effect above too (same data written back)
+  // — harmless, not worth a guard to skip.
+  useEffect(() => {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(toStored(selections)));
+  }, [selections]);
+
   function toggleCombined(slug: string) {
     setSelections((prev) => {
       const current = prev[slug] ?? emptySelection();
@@ -80,9 +128,38 @@ export function CustomQuizPicker({ levels }: { levels: LevelWithChapters[] }) {
   const href = buildQuizHref(selections);
   const anySingleChapterOnly =
     Object.values(selections).some((s) => !s.combined && s.chapters.size === 1) && !href;
+  const hasAnySelection = Object.values(selections).some(
+    (s) => s.combined || s.chapters.size > 0
+  );
 
   return (
     <div className="flex flex-col gap-4">
+      <div className="flex flex-col gap-2">
+        {anySingleChapterOnly && (
+          <p className="text-sm text-muted-foreground">
+            Select at least 2 chapters within a level, or add chapters from another level too.
+          </p>
+        )}
+        <div className="flex gap-3">
+          <button
+            type="button"
+            onClick={() => href && router.push(href)}
+            disabled={!href}
+            className={pillClasses("primary", !href)}
+          >
+            Start quiz
+          </button>
+          <button
+            type="button"
+            onClick={() => setSelections({})}
+            disabled={!hasAnySelection}
+            className={pillClasses("secondary", !hasAnySelection)}
+          >
+            Reset
+          </button>
+        </div>
+      </div>
+
       {levels.map((level) => (
         <LevelAccordionItem
           key={level.slug}
@@ -96,22 +173,6 @@ export function CustomQuizPicker({ levels }: { levels: LevelWithChapters[] }) {
           onToggleChapter={(number) => toggleChapter(level.slug, number)}
         />
       ))}
-
-      <div className="flex flex-col gap-2">
-        {anySingleChapterOnly && (
-          <p className="text-sm text-muted-foreground">
-            Select at least 2 chapters within a level, or add chapters from another level too.
-          </p>
-        )}
-        <button
-          type="button"
-          onClick={() => href && router.push(href)}
-          disabled={!href}
-          className={pillClasses("primary", !href) + " self-start"}
-        >
-          Start quiz
-        </button>
-      </div>
     </div>
   );
 }

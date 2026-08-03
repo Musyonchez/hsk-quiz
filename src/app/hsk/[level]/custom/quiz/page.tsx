@@ -5,13 +5,6 @@ import { getLevelName, getWordsForChapters } from "@/lib/queries";
 import { isLevelSlug } from "@/lib/hsk-level";
 import { QuizRunner } from "@/components/QuizRunner";
 
-// Same rough per-word budget the combined quiz's per-level lookup table
-// implies (20-40 min for 177-661 words, ≈4-7s/word) — computed here instead
-// of hardcoded, since a custom chapter subset's word count varies quiz to
-// quiz rather than being fixed per level. See docs/17-custom-chapter-quiz-plan.md.
-const SECONDS_PER_WORD = 6;
-const MIN_DURATION_SECONDS = 600;
-
 function parseChapterNumbers(raw: string | undefined): number[] {
   if (!raw) return [];
   const numbers = raw
@@ -58,8 +51,6 @@ export default async function CustomQuizPage({
   ]);
   if (!level || words.length === 0) notFound();
 
-  const durationSeconds = Math.max(MIN_DURATION_SECONDS, words.length * SECONDS_PER_WORD);
-
   return (
     <main className="mx-auto flex w-full max-w-3xl flex-col gap-6 px-6 py-12">
       <div>
@@ -78,7 +69,7 @@ export default async function CustomQuizPage({
         words={words}
         backHref={backHref}
         trackAttempt={false}
-        durationSeconds={durationSeconds}
+        allowDrillMissed
       />
     </main>
   );

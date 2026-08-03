@@ -5,9 +5,6 @@ import { getLevelName, getWordsForSelections, type CustomQuizSelection } from "@
 import { isLevelSlug } from "@/lib/hsk-level";
 import { QuizRunner } from "@/components/QuizRunner";
 
-const SECONDS_PER_WORD = 6;
-const MIN_DURATION_SECONDS = 600;
-
 function parseSelections(raw: string | undefined): CustomQuizSelection[] {
   if (!raw) return [];
   const selections: CustomQuizSelection[] = [];
@@ -79,7 +76,6 @@ export default async function CrossLevelCustomQuizPage({
   ]);
   if (words.length === 0) notFound();
 
-  const durationSeconds = Math.max(MIN_DURATION_SECONDS, words.length * SECONDS_PER_WORD);
   const summary = selections
     .map((selection, i) => {
       const name = levelNames[i]?.name ?? `HSK ${selection.levelSlug.toUpperCase()}`;
@@ -103,7 +99,7 @@ export default async function CrossLevelCustomQuizPage({
         words={words}
         backHref={backHref}
         trackAttempt={false}
-        durationSeconds={durationSeconds}
+        allowDrillMissed
       />
     </main>
   );

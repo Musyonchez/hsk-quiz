@@ -24,8 +24,6 @@ export type QuizWord = {
   meaning: string | null;
 };
 
-const DEFAULT_QUIZ_DURATION_SECONDS = 600;
-
 // Client-side average since GET /api/leaderboard returns every ranked row
 // unpaginated — no separate aggregate endpoint needed at this app's scale
 // (see docs/06-quiz-mechanics.md).
@@ -53,31 +51,45 @@ export function QuizRunner({
   backHref,
   quizKey,
   trackAttempt = true,
+  allowDrillMissed = false,
   nextQuiz = null,
   anotherQuiz,
-  durationSeconds = DEFAULT_QUIZ_DURATION_SECONDS,
+  durationSeconds,
 }: {
   words: QuizWord[];
   backHref: string;
   quizKey?: string;
   trackAttempt?: boolean;
+  allowDrillMissed?: boolean;
   nextQuiz?: QuizNavTarget | null;
   anotherQuiz?: QuizNavTarget;
   durationSeconds?: number;
 }) {
   const [runId, setRunId] = useState(0);
+  const [activeWords, setActiveWords] = useState(words);
+  const [activeTrackAttempt, setActiveTrackAttempt] = useState(trackAttempt);
+  const [activeDurationSeconds, setActiveDurationSeconds] = useState(durationSeconds);
+
+  function handleDrillMissed(missed: QuizWord[]) {
+    setActiveWords(missed);
+    setActiveTrackAttempt(false);
+    setActiveDurationSeconds(undefined);
+    setRunId((n) => n + 1);
+  }
 
   return (
     <QuizRunnerInner
       key={runId}
-      words={words}
+      words={activeWords}
       backHref={backHref}
       quizKey={quizKey}
-      trackAttempt={trackAttempt}
+      trackAttempt={activeTrackAttempt}
+      allowDrillMissed={allowDrillMissed}
       nextQuiz={nextQuiz}
       anotherQuiz={anotherQuiz}
-      durationSeconds={durationSeconds}
+      durationSeconds={activeDurationSeconds}
       onReplay={() => setRunId((n) => n + 1)}
+      onDrillMissed={handleDrillMissed}
     />
   );
 }
@@ -87,26 +99,31 @@ function QuizRunnerInner({
   backHref,
   quizKey,
   trackAttempt,
+  allowDrillMissed,
   nextQuiz,
   anotherQuiz,
   durationSeconds,
   onReplay,
+  onDrillMissed,
 }: {
   words: QuizWord[];
   backHref: string;
   quizKey?: string;
   trackAttempt: boolean;
+  allowDrillMissed: boolean;
   nextQuiz: QuizNavTarget | null;
   anotherQuiz?: QuizNavTarget;
-  durationSeconds: number;
+  durationSeconds?: number;
   onReplay: () => void;
+  onDrillMissed: (missed: QuizWord[]) => void;
 }) {
+  const timed = durationSeconds !== undefined;
   const [order, setOrder] = useState(words);
   const [started, setStarted] = useState(false);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [input, setInput] = useState("");
   const [correctIds, setCorrectIds] = useState<Set<number>>(new Set());
-  const [secondsLeft, setSecondsLeft] = useState(durationSeconds);
+  const [secondsLeft, setSecondsLeft] = useState(durationSeconds ?? 0);
   const [paused, setPaused] = useState(false);
   // Only the two user-triggered end states are stored — "timeup" is derived
   // below from secondsLeft during render instead, since React's guidance is
@@ -117,7 +134,7 @@ function QuizRunnerInner({
     "completed" | "gaveup" | null
   >(null);
   const finished =
-    finishedState ?? (started && secondsLeft === 0 ? "timeup" : null);
+    finishedState ?? (timed && started && secondsLeft === 0 ? "timeup" : null);
   const [bestPercent, setBestPercent] = useState<number | null>(null);
   const [avgGlobalPercent, setAvgGlobalPercent] = useState<number | null>(null);
   const [avgFriendPercent, setAvgFriendPercent] = useState<number | null>(null);
@@ -125,6 +142,8 @@ function QuizRunnerInner({
   const statsDefaultSetRef = useRef(false);
   const submittedRef = useRef(false);
   const inputRef = useRef<HTMLInputElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const stickyRef = useRef<HTMLDivElement>(null);
 
   const currentWord = order[currentIndex];
   const score = correctIds.size;
@@ -137,7 +156,7 @@ function QuizRunnerInner({
   useEffect(() => {
     if (!finished || submittedRef.current || !trackAttempt || !quizKey) return;
     submittedRef.current = true;
-    const elapsedSeconds = durationSeconds - secondsLeft;
+    const elapsedSeconds = (durationSeconds ?? 0) - secondsLeft;
     const encodedKey = encodeURIComponent(quizKey);
 
     fetch("/api/attempts", {
@@ -183,16 +202,38 @@ function QuizRunnerInner({
   }, [finished, score, total]);
 
   useEffect(() => {
-    if (!started || finished || paused) return;
+    if (!timed || !started || finished || paused) return;
     const timer = setInterval(() => {
       setSecondsLeft((s) => Math.max(0, s - 1));
     }, 1000);
     return () => clearInterval(timer);
-  }, [started, paused, finished]);
+  }, [timed, started, paused, finished]);
 
   useEffect(() => {
     if (started && !finished && !paused) inputRef.current?.focus();
   }, [currentIndex, started, finished, paused]);
+
+  // Center the current row in the space actually visible below the sticky
+  // score/timer/input bar — not the full viewport (scrollIntoView's
+  // block:"center" would tuck the row half-behind that sticky bar instead).
+  // Covers every way currentIndex changes: auto-advance on a correct
+  // answer, Prev/Next, and clicking a row directly (all funnel through
+  // goTo).
+  useEffect(() => {
+    if (!started || finished) return;
+    const container = containerRef.current;
+    const sticky = stickyRef.current;
+    if (!container || !sticky) return;
+    const row = container.querySelector<HTMLElement>(`[data-row-index="${currentIndex}"]`);
+    if (!row) return;
+
+    const stickyBottom = sticky.getBoundingClientRect().bottom;
+    const remainingSpace = window.innerHeight - stickyBottom;
+    const rowRect = row.getBoundingClientRect();
+    const rowCenter = rowRect.top + rowRect.height / 2;
+    const targetCenter = stickyBottom + remainingSpace / 2;
+    window.scrollBy({ top: rowCenter - targetCenter, behavior: "smooth" });
+  }, [currentIndex, started, finished]);
 
   function goTo(index: number) {
     const next = ((index % total) + total) % total;
@@ -285,7 +326,7 @@ function QuizRunnerInner({
               )}
             </p>
           )}
-          <div className="flex gap-3">
+          <div className="flex flex-wrap justify-center gap-3">
             <button
               type="button"
               onClick={onReplay}
@@ -293,6 +334,15 @@ function QuizRunnerInner({
             >
               Replay
             </button>
+            {allowDrillMissed && missedWords.length > 0 && (
+              <button
+                type="button"
+                onClick={() => onDrillMissed(missedWords)}
+                className={pillClasses("secondary")}
+              >
+                Drill missed words
+              </button>
+            )}
             <button
               type="button"
               onClick={() => setShowStats((v) => !v)}
@@ -333,15 +383,17 @@ function QuizRunnerInner({
   }
 
   return (
-    <div className="flex flex-col gap-6">
-      <div className="sticky top-18.25 z-5 flex flex-col gap-4 bg-background pb-4">
+    <div className="flex flex-col gap-6" ref={containerRef}>
+      <div className="sticky top-18.25 z-5 flex flex-col gap-4 bg-background pb-4" ref={stickyRef}>
         <div className="flex flex-wrap items-center justify-between gap-4 rounded-xl border border-border bg-surface px-5 py-4">
           <span className="text-sm font-semibold tabular-nums">
             SCORE {score}/{total}
           </span>
-          <span className="text-sm font-semibold tabular-nums">
-            {formatDuration(secondsLeft)}
-          </span>
+          {timed && (
+            <span className="text-sm font-semibold tabular-nums">
+              {formatDuration(secondsLeft)}
+            </span>
+          )}
           <div className="flex items-center gap-2">
             <ToolbarButton
               onClick={() => goTo(currentIndex - 1)}
@@ -351,14 +403,16 @@ function QuizRunnerInner({
               <ChevronLeft size={16} />
               Prev
             </ToolbarButton>
-            <ToolbarButton
-              onClick={() => setPaused((p) => !p)}
-              disabled={!started}
-              label="Pause"
-            >
-              {paused ? <Play size={16} /> : <Pause size={16} />}
-              {paused ? "Resume" : "Pause"}
-            </ToolbarButton>
+            {timed && (
+              <ToolbarButton
+                onClick={() => setPaused((p) => !p)}
+                disabled={!started}
+                label="Pause"
+              >
+                {paused ? <Play size={16} /> : <Pause size={16} />}
+                {paused ? "Resume" : "Pause"}
+              </ToolbarButton>
+            )}
             <ToolbarButton
               onClick={() => goTo(currentIndex + 1)}
               disabled={!started}
@@ -382,8 +436,8 @@ function QuizRunnerInner({
         {!started ? (
           <div className="flex flex-col items-center gap-4 rounded-xl border border-border bg-surface p-10 text-center shadow-lg shadow-background/50">
             <p className="text-muted-foreground">
-              {total} words · {formatDuration(durationSeconds)} on the
-              clock
+              {total} words
+              {timed && <> · {formatDuration(durationSeconds ?? 0)} on the clock</>}
             </p>
             <div className="flex items-center gap-3">
               <button
@@ -440,6 +494,7 @@ function QuizRunnerInner({
             return (
               <tr
                 key={word.id}
+                data-row-index={index}
                 onClick={() => started && goTo(index)}
                 className={
                   (started ? "cursor-pointer " : "") +
