@@ -5,7 +5,7 @@ import { getChapterWithWords, getLevelsOverview } from "@/lib/queries";
 import { isLevelSlug } from "@/lib/hsk-level";
 import { quizKeyFor } from "@/quiz/quiz-key";
 import { getQuizNavigation } from "@/quiz/quiz-navigation";
-import { QuizRunner } from "@/components/QuizRunner";
+import { QuizModeGate } from "@/components/QuizModeGate";
 
 export default async function ChapterQuizPage({
   params,
@@ -28,7 +28,8 @@ export default async function ChapterQuizPage({
   if (!chapter || chapter.words.length === 0) notFound();
 
   const backHref = `/hsk/${levelSlug}/chapter/${chapterNumber}`;
-  const quizKey = quizKeyFor({ levelSlug, chapterNumber });
+  const typeQuizKey = quizKeyFor({ levelSlug, chapterNumber });
+  const meaningQuizKey = quizKeyFor({ levelSlug, chapterNumber, mode: "meaning" });
   const { next, another } = getQuizNavigation(
     { levelSlug, chapterNumber },
     levels.map((level) => ({
@@ -49,10 +50,12 @@ export default async function ChapterQuizPage({
         </h1>
       </div>
 
-      <QuizRunner
+      <QuizModeGate
         words={chapter.words}
         backHref={backHref}
-        quizKey={quizKey}
+        typeQuizKey={typeQuizKey}
+        meaningQuizKey={meaningQuizKey}
+        meaningVariant="match"
         allowDrillMissed
         nextQuiz={next}
         anotherQuiz={another}

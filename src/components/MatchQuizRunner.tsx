@@ -1,16 +1,7 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-import {
-  ArrowRight,
-  ChevronLeft,
-  ChevronRight,
-  Flag,
-  Pause,
-  Play,
-  Shuffle,
-} from "lucide-react";
-import { matchesPinyin } from "@/quiz/pinyin-match";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { ArrowRight, Flag, Pause, Play, Shuffle } from "lucide-react";
 import { formatDuration } from "@/quiz/format-time";
 import type { QuizNavTarget } from "@/quiz/quiz-navigation";
 import type { QuizWord } from "@/quiz/types";
@@ -20,16 +11,9 @@ import { VocabTableGroup } from "@/components/VocabTable";
 
 export type { QuizWord };
 
-// Client-side average since GET /api/leaderboard returns every ranked row
-// unpaginated — no separate aggregate endpoint needed at this app's scale
-// (see docs/06-quiz-mechanics.md).
-function averagePercent(
-  rows: { score: number; total: number }[],
-): number | null {
+function averagePercent(rows: { score: number; total: number }[]): number | null {
   if (rows.length === 0) return null;
-  const percents = rows.map((row) =>
-    row.total > 0 ? (row.score / row.total) * 100 : 0,
-  );
+  const percents = rows.map((row) => (row.total > 0 ? (row.score / row.total) * 100 : 0));
   return Math.round(percents.reduce((sum, p) => sum + p, 0) / percents.length);
 }
 
@@ -42,7 +26,17 @@ function shuffle<T>(items: T[]): T[] {
   return copy;
 }
 
-export function QuizRunner({
+// Chapter-scale pinyin->meaning matching board (docs/19-meaning-quiz-mode-plan.md).
+// A closed N-to-N pool, not independently-sampled options like
+// ChoiceQuizRunner — click one pinyin+character tile and one meaning tile
+// to make a guess pair. Both tiles clear from the board immediately on any
+// guess, right or wrong, with no color/feedback either way (see docs/19):
+// if only *correct* pairs disappeared, that disappearing-or-not would
+// itself be the exact reveal this mode exists to avoid. A real consequence
+// of that: an early wrong guess can strand another word's correct answer
+// (its true partner is now gone too) — expected, like a physical
+// memory-match game, and Drill missed words is what cleans it up after.
+export function MatchQuizRunner({
   words,
   backHref,
   quizKey,
@@ -74,7 +68,7 @@ export function QuizRunner({
   }
 
   return (
-    <QuizRunnerInner
+    <MatchQuizRunnerInner
       key={runId}
       words={activeWords}
       backHref={backHref}
@@ -90,7 +84,7 @@ export function QuizRunner({
   );
 }
 
-function QuizRunnerInner({
+function MatchQuizRunnerInner({
   words,
   backHref,
   quizKey,
@@ -114,41 +108,33 @@ function QuizRunnerInner({
   onDrillMissed: (missed: QuizWord[]) => void;
 }) {
   const timed = durationSeconds !== undefined;
-  const [order, setOrder] = useState(words);
-  const [started, setStarted] = useState(false);
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const [input, setInput] = useState("");
+  const total = words.length;
+  const byId = useMemo(() => new Map(words.map((w) => [w.id, w])), [words]);
+
+  const [leftBoard, setLeftBoard] = useState(() => shuffle(words.map((w) => w.id)));
+  const [rightBoard, setRightBoard] = useState(() => shuffle(words.map((w) => w.id)));
+  const [selectedLeft, setSelectedLeft] = useState<number | null>(null);
+  const [selectedRight, setSelectedRight] = useState<number | null>(null);
+  // Tracked the whole time, never rendered with any indication until
+  // `finished` — this IS the score, just not shown early.
   const [correctIds, setCorrectIds] = useState<Set<number>>(new Set());
+  const [started, setStarted] = useState(false);
   const [secondsLeft, setSecondsLeft] = useState(durationSeconds ?? 0);
   const [paused, setPaused] = useState(false);
-  // Only the two user-triggered end states are stored — "timeup" is derived
-  // below from secondsLeft during render instead, since React's guidance is
-  // to compute derivable state at render time rather than mirror it into
-  // state via an effect (which causes an extra render and, if you're not
-  // careful with the dependency array, a setState-in-effect lint error).
-  const [finishedState, setFinishedState] = useState<
-    "completed" | "gaveup" | null
-  >(null);
+  const [finishedState, setFinishedState] = useState<"completed" | "gaveup" | null>(null);
   const finished =
-    finishedState ?? (timed && started && secondsLeft === 0 ? "timeup" : null);
+    finishedState ??
+    (leftBoard.length === 0 ? "completed" : timed && started && secondsLeft === 0 ? "timeup" : null);
   const [bestPercent, setBestPercent] = useState<number | null>(null);
   const [avgGlobalPercent, setAvgGlobalPercent] = useState<number | null>(null);
   const [avgFriendPercent, setAvgFriendPercent] = useState<number | null>(null);
   const [showStats, setShowStats] = useState(false);
   const statsDefaultSetRef = useRef(false);
   const submittedRef = useRef(false);
-  const inputRef = useRef<HTMLInputElement>(null);
-  const containerRef = useRef<HTMLDivElement>(null);
-  const stickyRef = useRef<HTMLDivElement>(null);
 
-  const currentWord = order[currentIndex];
+  const attemptedCount = total - leftBoard.length;
   const score = correctIds.size;
-  const total = order.length;
 
-  // Record the finished attempt exactly once per run (submittedRef survives
-  // re-renders but not a Replay, since QuizRunner remounts this component
-  // with a fresh key). Fire-and-forget: a failed write shouldn't surface as
-  // a failed quiz to the player.
   useEffect(() => {
     if (!finished || submittedRef.current || !trackAttempt || !quizKey) return;
     submittedRef.current = true;
@@ -163,15 +149,15 @@ function QuizRunnerInner({
       .then(() =>
         Promise.all([
           fetch(`/api/attempts/best?quizKey=${encodedKey}`).then((res) =>
-            res.ok ? res.json() : null,
+            res.ok ? res.json() : null
           ),
-          fetch(`/api/leaderboard?quizKey=${encodedKey}&scope=global`).then(
-            (res) => (res.ok ? res.json() : []),
+          fetch(`/api/leaderboard?quizKey=${encodedKey}&scope=global`).then((res) =>
+            res.ok ? res.json() : []
           ),
-          fetch(`/api/leaderboard?quizKey=${encodedKey}&scope=friends`).then(
-            (res) => (res.ok ? res.json() : []),
+          fetch(`/api/leaderboard?quizKey=${encodedKey}&scope=friends`).then((res) =>
+            res.ok ? res.json() : []
           ),
-        ]),
+        ])
       )
       .then(
         ([best, globalRows, friendRows]: [
@@ -179,18 +165,14 @@ function QuizRunnerInner({
           { score: number; total: number }[],
           { score: number; total: number }[],
         ]) => {
-          if (best && best.total > 0)
-            setBestPercent(Math.round((best.score / best.total) * 100));
+          if (best && best.total > 0) setBestPercent(Math.round((best.score / best.total) * 100));
           setAvgGlobalPercent(averagePercent(globalRows));
           setAvgFriendPercent(averagePercent(friendRows));
-        },
+        }
       )
       .catch((err) => console.error("Failed to record quiz attempt", err));
   }, [finished, trackAttempt, quizKey, score, total, secondsLeft, durationSeconds]);
 
-  // Default Stats to open if anything was missed, closed on a perfect run —
-  // set once when the quiz finishes, not re-derived on every render, so a
-  // manual toggle afterward (via the Stats/Hide stats button) sticks.
   useEffect(() => {
     if (!finished || statsDefaultSetRef.current) return;
     statsDefaultSetRef.current = true;
@@ -205,80 +187,42 @@ function QuizRunnerInner({
     return () => clearInterval(timer);
   }, [timed, started, paused, finished]);
 
-  useEffect(() => {
-    if (started && !finished && !paused) inputRef.current?.focus();
-  }, [currentIndex, started, finished, paused]);
-
-  // Center the current row in the space actually visible below the sticky
-  // score/timer/input bar — not the full viewport (scrollIntoView's
-  // block:"center" would tuck the row half-behind that sticky bar instead).
-  // Covers every way currentIndex changes: auto-advance on a correct
-  // answer, Prev/Next, and clicking a row directly (all funnel through
-  // goTo).
-  useEffect(() => {
-    if (!started || finished) return;
-    const container = containerRef.current;
-    const sticky = stickyRef.current;
-    if (!container || !sticky) return;
-    const row = container.querySelector<HTMLElement>(`[data-row-index="${currentIndex}"]`);
-    if (!row) return;
-
-    const stickyBottom = sticky.getBoundingClientRect().bottom;
-    const remainingSpace = window.innerHeight - stickyBottom;
-    const rowRect = row.getBoundingClientRect();
-    const rowCenter = rowRect.top + rowRect.height / 2;
-    const targetCenter = stickyBottom + remainingSpace / 2;
-    window.scrollBy({ top: rowCenter - targetCenter, behavior: "smooth" });
-  }, [currentIndex, started, finished]);
-
-  function goTo(index: number) {
-    const next = ((index % total) + total) % total;
-    setCurrentIndex(next);
-    setInput("");
-  }
-
-  // Walks from `from` in `step` direction (1 = forward, -1 = backward),
-  // wrapping around, skipping any already-correct word — there's no reason
-  // to land Next/Prev on one you've already answered. Falls back to `from`
-  // itself if every other word is already done (finishing the quiz makes
-  // that moot in practice). Shared by the auto-advance-on-correct-answer
-  // path and the Prev/Next toolbar buttons so both skip the same way.
-  function nextIncompleteIndex(from: number, step: 1 | -1, ids: Set<number>): number {
-    for (let i = 1; i <= total; i++) {
-      const index = (((from + step * i) % total) + total) % total;
-      if (!ids.has(order[index].id)) return index;
+  // Resolves a guess pair the instant both sides are picked — both tiles
+  // clear immediately, right or wrong, with no color either way (see
+  // docs/19). This is the only place correctIds gets written.
+  function resolvePair(leftId: number, rightId: number) {
+    if (leftId === rightId) {
+      setCorrectIds((prev) => new Set(prev).add(leftId));
     }
-    return from;
+    setLeftBoard((prev) => prev.filter((id) => id !== leftId));
+    setRightBoard((prev) => prev.filter((id) => id !== rightId));
+    setSelectedLeft(null);
+    setSelectedRight(null);
   }
 
-  function handleInputChange(value: string) {
-    setInput(value);
-    if (!currentWord || !matchesPinyin(value, currentWord.pinyin)) return;
-
-    const updatedCorrectIds = new Set(correctIds).add(currentWord.id);
-    setCorrectIds(updatedCorrectIds);
-    setInput("");
-
-    if (updatedCorrectIds.size === total) {
-      setFinishedState("completed");
+  function pickLeft(id: number) {
+    if (!started || paused) return;
+    if (selectedRight !== null) {
+      resolvePair(id, selectedRight);
       return;
     }
+    setSelectedLeft((prev) => (prev === id ? null : id));
+  }
 
-    goTo(nextIncompleteIndex(currentIndex, 1, updatedCorrectIds));
+  function pickRight(id: number) {
+    if (!started || paused) return;
+    if (selectedLeft !== null) {
+      resolvePair(selectedLeft, id);
+      return;
+    }
+    setSelectedRight((prev) => (prev === id ? null : id));
   }
 
   if (finished) {
     const percent = total > 0 ? Math.round((score / total) * 100) : 0;
     const heading =
-      finished === "timeup"
-        ? "Time's up!"
-        : finished === "gaveup"
-          ? "Quiz ended"
-          : "Quiz complete!";
-    // The stats breakdown is derived from correctIds, the same state already
-    // submitted via POST /api/attempts — no extra API call needed, per
-    // docs/09-pages.md §6.
-    const missedWords = order.filter((word) => !correctIds.has(word.id));
+      finished === "timeup" ? "Time's up!" : finished === "gaveup" ? "Quiz ended" : "Quiz complete!";
+    const missedWords = words.filter((word) => !correctIds.has(word.id));
 
     return (
       <div className="flex flex-col gap-6">
@@ -306,30 +250,20 @@ function QuizRunnerInner({
         <div className="flex flex-col items-center gap-5 rounded-xl border border-border bg-surface p-6 text-center">
           <div className="flex flex-col items-center gap-1">
             <h2 className="text-lg font-bold">{heading}</h2>
-            <p className="text-4xl font-bold tabular-nums text-accent">
-              {percent}%
-            </p>
+            <p className="text-4xl font-bold tabular-nums text-accent">{percent}%</p>
             <p className="text-sm text-muted-foreground">
               {score} / {total} correct
               {bestPercent !== null && <> · your best: {bestPercent}%</>}
             </p>
             {(avgGlobalPercent !== null || avgFriendPercent !== null) && (
               <p className="text-sm text-muted-foreground">
-                {avgGlobalPercent !== null && (
-                  <>avg score: {avgGlobalPercent}% </>
-                )}
-                {avgFriendPercent !== null && (
-                  <>· avg friend score: {avgFriendPercent}%</>
-                )}
+                {avgGlobalPercent !== null && <>avg score: {avgGlobalPercent}% </>}
+                {avgFriendPercent !== null && <>· avg friend score: {avgFriendPercent}%</>}
               </p>
             )}
           </div>
           <div className="flex flex-wrap justify-center gap-3">
-            <button
-              type="button"
-              onClick={onReplay}
-              className={pillClasses("primary")}
-            >
+            <button type="button" onClick={onReplay} className={pillClasses("primary")}>
               Replay
             </button>
             {allowDrillMissed && missedWords.length > 0 && (
@@ -367,9 +301,7 @@ function QuizRunnerInner({
                 Missed ({missedWords.length})
               </h3>
               {missedWords.length === 0 ? (
-                <p className="text-sm text-muted-foreground">
-                  None — you got every word.
-                </p>
+                <p className="text-sm text-muted-foreground">None — you got every word.</p>
               ) : (
                 <VocabTableGroup words={missedWords} />
               )}
@@ -381,11 +313,11 @@ function QuizRunnerInner({
   }
 
   return (
-    <div className="flex flex-col gap-6" ref={containerRef}>
-      <div className="sticky top-18.25 z-5 flex flex-col gap-4 bg-background pb-4" ref={stickyRef}>
+    <div className="flex flex-col gap-6">
+      <div className="sticky top-18.25 z-5 flex flex-col gap-4 bg-background pb-4">
         <div className="flex flex-wrap items-center justify-between gap-4 rounded-xl border border-border bg-surface px-5 py-4">
           <span className="text-sm font-semibold tabular-nums">
-            SCORE {score}/{total}
+            MATCHED {attemptedCount}/{total}
           </span>
           {timed && (
             <span className="text-sm font-semibold tabular-nums">
@@ -393,14 +325,6 @@ function QuizRunnerInner({
             </span>
           )}
           <div className="flex items-center gap-2">
-            <ToolbarButton
-              onClick={() => goTo(nextIncompleteIndex(currentIndex, -1, correctIds))}
-              disabled={!started}
-              label="Prev"
-            >
-              <ChevronLeft size={16} />
-              Prev
-            </ToolbarButton>
             {timed && (
               <ToolbarButton
                 onClick={() => setPaused((p) => !p)}
@@ -411,14 +335,6 @@ function QuizRunnerInner({
                 {paused ? "Resume" : "Pause"}
               </ToolbarButton>
             )}
-            <ToolbarButton
-              onClick={() => goTo(nextIncompleteIndex(currentIndex, 1, correctIds))}
-              disabled={!started}
-              label="Next"
-            >
-              Next
-              <ChevronRight size={16} />
-            </ToolbarButton>
             <ToolbarButton
               onClick={() => setFinishedState("gaveup")}
               disabled={!started}
@@ -434,85 +350,71 @@ function QuizRunnerInner({
         {!started ? (
           <div className="flex flex-col items-center gap-4 rounded-xl border border-border bg-surface p-10 text-center shadow-lg shadow-background/50">
             <p className="text-muted-foreground">
-              {total} words
+              {total} words to match
               {timed && <> · {formatDuration(durationSeconds ?? 0)} on the clock</>}
             </p>
-            <div className="flex items-center gap-3">
-              <button
-                type="button"
-                onClick={() => setStarted(true)}
-                className={pillClasses("primary")}
-              >
-                Start quiz
-              </button>
-              <ToolbarButton
-                onClick={() => setOrder((prev) => shuffle(prev))}
-                disabled={false}
-                label="Shuffle word order"
-              >
-                <Shuffle size={16} />
-                Shuffle
-              </ToolbarButton>
-            </div>
+            <button
+              type="button"
+              onClick={() => setStarted(true)}
+              className={pillClasses("primary")}
+            >
+              Start quiz
+            </button>
           </div>
         ) : paused ? (
           <div className="rounded-xl border border-border bg-surface p-10 text-center text-muted-foreground shadow-lg shadow-background/50">
             Paused
           </div>
         ) : (
-          currentWord && (
-            <div className="rounded-xl border border-border bg-surface p-8 shadow-lg shadow-background/50">
-              <p className="text-4xl font-bold">{currentWord.chinese}:</p>
-              <input
-                ref={inputRef}
-                type="text"
-                value={input}
-                onChange={(e) => handleInputChange(e.target.value)}
-                autoFocus
-                placeholder="type the pinyin"
-                className="mt-4 w-full rounded border border-border bg-transparent px-3 py-2 outline-none focus:border-border-strong"
-              />
-            </div>
-          )
+          <p className="text-center text-sm text-muted-foreground">
+            Click a word, then click its meaning.
+          </p>
         )}
       </div>
 
-      <table className="w-full overflow-hidden rounded-lg border border-border text-sm">
-        <thead className="bg-surface-raised text-left text-xs uppercase tracking-wide text-muted-foreground">
-          <tr>
-            <th className="px-3 py-2">Chinese</th>
-            <th className="px-3 py-2">Pinyin</th>
-            <th className="px-3 py-2">English</th>
-          </tr>
-        </thead>
-        <tbody>
-          {order.map((word, index) => {
-            const isCorrect = correctIds.has(word.id);
-            const isCurrent = index === currentIndex;
-            return (
-              <tr
-                key={word.id}
-                data-row-index={index}
-                onClick={() => started && goTo(index)}
-                className={
-                  (started ? "cursor-pointer " : "") +
-                  (isCurrent
-                    ? "border-l-4 border-l-current-row bg-current-row-surface"
-                    : isCorrect
-                      ? "border-l-4 border-l-success bg-success-surface hover:bg-surface-raised"
-                      : "border-l-4 border-l-transparent border-t border-border hover:bg-surface-raised")
-                }
-              >
-                <td className="px-3 py-2 font-medium">{word.chinese}</td>
-                <td className="px-3 py-2 text-muted-foreground">
-                  {isCorrect ? word.pinyin : "—"}
-                </td>
-                <td className="px-3 py-2">{word.meaning ?? "—"}</td>
-              </tr>
-            );
-          })}
-        </tbody>
-      </table>
+      {started && !paused && (
+        <div className="grid grid-cols-2 gap-4">
+          <div className="flex flex-col gap-2">
+            {leftBoard.map((id) => {
+              const word = byId.get(id)!;
+              return (
+                <button
+                  key={id}
+                  type="button"
+                  onClick={() => pickLeft(id)}
+                  className={`rounded-lg border px-4 py-3 text-left text-sm transition-colors ${
+                    selectedLeft === id
+                      ? "border-current-row bg-current-row-surface font-medium"
+                      : "border-border hover:border-border-strong hover:bg-surface-raised"
+                  }`}
+                >
+                  <span className="font-medium">{word.chinese}</span>{" "}
+                  <span className="text-muted-foreground">{word.pinyin}</span>
+                </button>
+              );
+            })}
+          </div>
+          <div className="flex flex-col gap-2">
+            {rightBoard.map((id) => {
+              const word = byId.get(id)!;
+              return (
+                <button
+                  key={id}
+                  type="button"
+                  onClick={() => pickRight(id)}
+                  className={`rounded-lg border px-4 py-3 text-left text-sm transition-colors ${
+                    selectedRight === id
+                      ? "border-current-row bg-current-row-surface font-medium"
+                      : "border-border hover:border-border-strong hover:bg-surface-raised"
+                  }`}
+                >
+                  {word.meaning ?? "—"}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -537,9 +439,7 @@ function ToolbarButton({
       disabled={disabled}
       aria-label={label}
       className={`flex items-center gap-1.5 rounded-full border border-border-strong px-3 py-1.5 text-sm font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-40 ${
-        variant === "danger"
-          ? "text-danger hover:bg-danger/10"
-          : "text-foreground hover:bg-surface-raised"
+        variant === "danger" ? "text-danger hover:bg-danger/10" : "text-foreground hover:bg-surface-raised"
       }`}
     >
       {children}

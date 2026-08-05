@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import { requireSession } from "@/lib/require-session";
 import { getLevelName, getWordsForSelections, type CustomQuizSelection } from "@/lib/queries";
 import { isLevelSlug } from "@/lib/hsk-level";
-import { QuizRunner } from "@/components/QuizRunner";
+import { QuizModeGate } from "@/components/QuizModeGate";
 
 function parseSelections(raw: string | undefined): CustomQuizSelection[] {
   if (!raw) return [];
@@ -95,10 +95,11 @@ export default async function CrossLevelCustomQuizPage({
         <p className="mt-1 text-sm text-muted-foreground">{summary}</p>
       </div>
 
-      <QuizRunner
+      <QuizModeGate
         words={words}
         backHref={backHref}
         trackAttempt={false}
+        meaningVariant="choice"
         allowDrillMissed
       />
     </main>

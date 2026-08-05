@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import { requireSession } from "@/lib/require-session";
 import { getLevelName, getWordsForChapters } from "@/lib/queries";
 import { isLevelSlug } from "@/lib/hsk-level";
-import { QuizRunner } from "@/components/QuizRunner";
+import { QuizModeGate } from "@/components/QuizModeGate";
 
 function parseChapterNumbers(raw: string | undefined): number[] {
   if (!raw) return [];
@@ -65,10 +65,11 @@ export default async function CustomQuizPage({
         </p>
       </div>
 
-      <QuizRunner
+      <QuizModeGate
         words={words}
         backHref={backHref}
         trackAttempt={false}
+        meaningVariant="choice"
         allowDrillMissed
       />
     </main>

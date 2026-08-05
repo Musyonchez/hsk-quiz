@@ -5,7 +5,7 @@ import { getCombinedWords, getLevelName, getLevelsOverview } from "@/lib/queries
 import { isLevelSlug } from "@/lib/hsk-level";
 import { quizKeyFor } from "@/quiz/quiz-key";
 import { getQuizNavigation } from "@/quiz/quiz-navigation";
-import { QuizRunner } from "@/components/QuizRunner";
+import { QuizModeGate } from "@/components/QuizModeGate";
 
 export default async function CombinedQuizPage({
   params,
@@ -24,7 +24,8 @@ export default async function CombinedQuizPage({
   if (words.length === 0 || !level) notFound();
 
   const backHref = `/hsk/${levelSlug}/combined`;
-  const quizKey = quizKeyFor({ levelSlug });
+  const typeQuizKey = quizKeyFor({ levelSlug });
+  const meaningQuizKey = quizKeyFor({ levelSlug, mode: "meaning" });
   const { next, another } = getQuizNavigation(
     { levelSlug, chapterNumber: null },
     levels.map((l) => ({ slug: l.slug, name: l.name, chapterCount: l._count.chapters }))
@@ -46,10 +47,12 @@ export default async function CombinedQuizPage({
         <h1 className="mt-2 text-2xl font-bold">{level.name} — Combined Quiz</h1>
       </div>
 
-      <QuizRunner
+      <QuizModeGate
         words={words}
         backHref={backHref}
-        quizKey={quizKey}
+        typeQuizKey={typeQuizKey}
+        meaningQuizKey={meaningQuizKey}
+        meaningVariant="choice"
         allowDrillMissed
         nextQuiz={next}
         anotherQuiz={another}
