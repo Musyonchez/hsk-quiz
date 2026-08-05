@@ -37,12 +37,20 @@ export default async function ChapterLearnPage({
         </h1>
       </div>
 
-      <Link
-        href={`/hsk/${levelSlug}/chapter/${chapterNumber}/quiz`}
-        className={pillClasses("primary")}
-      >
-        Play quiz
-      </Link>
+      <div className="flex flex-wrap gap-3">
+        <Link
+          href={`/hsk/${levelSlug}/chapter/${chapterNumber}/quiz?mode=type`}
+          className={pillClasses("primary")}
+        >
+          Type pinyin
+        </Link>
+        <Link
+          href={`/hsk/${levelSlug}/chapter/${chapterNumber}/quiz?mode=meaning`}
+          className={pillClasses("secondary")}
+        >
+          Match meaning
+        </Link>
+      </div>
 
       <VocabTable words={chapter.words} />
     </main>

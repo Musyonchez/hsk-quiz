@@ -35,9 +35,20 @@ export default async function CombinedLearnPage({
         </h1>
       </div>
 
-      <Link href={`/hsk/${levelSlug}/combined/quiz`} className={pillClasses("primary")}>
-        Play quiz
-      </Link>
+      <div className="flex flex-wrap gap-3">
+        <Link
+          href={`/hsk/${levelSlug}/combined/quiz?mode=type`}
+          className={pillClasses("primary")}
+        >
+          Type pinyin
+        </Link>
+        <Link
+          href={`/hsk/${levelSlug}/combined/quiz?mode=meaning`}
+          className={pillClasses("secondary")}
+        >
+          Match meaning
+        </Link>
+      </div>
 
       <VocabTable words={words} grouped />
     </main>

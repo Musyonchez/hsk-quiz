@@ -19,13 +19,14 @@ export default async function CustomQuizPage({
   searchParams,
 }: {
   params: Promise<{ level: string }>;
-  searchParams: Promise<{ chapters?: string }>;
+  searchParams: Promise<{ chapters?: string; mode?: string }>;
 }) {
   await requireSession();
   const { level: levelSlug } = await params;
   if (!isLevelSlug(levelSlug)) notFound();
 
-  const { chapters } = await searchParams;
+  const { chapters, mode } = await searchParams;
+  const initialMode = mode === "type" || mode === "meaning" ? mode : null;
   const chapterNumbers = parseChapterNumbers(chapters);
   const backHref = "/custom-quiz";
 
@@ -71,6 +72,7 @@ export default async function CustomQuizPage({
         trackAttempt={false}
         meaningVariant="choice"
         allowDrillMissed
+        initialMode={initialMode}
       />
     </main>
   );

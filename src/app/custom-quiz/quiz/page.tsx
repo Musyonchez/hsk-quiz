@@ -47,10 +47,11 @@ function isUsable(selections: CustomQuizSelection[]): boolean {
 export default async function CrossLevelCustomQuizPage({
   searchParams,
 }: {
-  searchParams: Promise<{ picks?: string }>;
+  searchParams: Promise<{ picks?: string; mode?: string }>;
 }) {
   await requireSession();
-  const { picks } = await searchParams;
+  const { picks, mode } = await searchParams;
+  const initialMode = mode === "type" || mode === "meaning" ? mode : null;
   const selections = parseSelections(picks);
   const backHref = "/custom-quiz";
 
@@ -101,6 +102,7 @@ export default async function CrossLevelCustomQuizPage({
         trackAttempt={false}
         meaningVariant="choice"
         allowDrillMissed
+        initialMode={initialMode}
       />
     </main>
   );

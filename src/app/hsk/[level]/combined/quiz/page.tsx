@@ -9,12 +9,16 @@ import { QuizModeGate } from "@/components/QuizModeGate";
 
 export default async function CombinedQuizPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ level: string }>;
+  searchParams: Promise<{ mode?: string }>;
 }) {
   await requireSession();
   const { level: levelSlug } = await params;
   if (!isLevelSlug(levelSlug)) notFound();
+  const { mode } = await searchParams;
+  const initialMode = mode === "type" || mode === "meaning" ? mode : null;
 
   const [words, level, levels] = await Promise.all([
     getCombinedWords(levelSlug),
@@ -57,6 +61,7 @@ export default async function CombinedQuizPage({
         nextQuiz={next}
         anotherQuiz={another}
         durationSeconds={durationSeconds}
+        initialMode={initialMode}
       />
     </main>
   );

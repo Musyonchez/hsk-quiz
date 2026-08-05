@@ -57,11 +57,17 @@ function summarize(selection: Selection | undefined): string | null {
   return null;
 }
 
-// Builds the quiz href from every level's selection. A single level picked
-// with just 1 chapter isn't enough on its own (that's the existing
-// per-chapter quiz page) — but once a second level contributes anything,
-// even one chapter each is a genuinely new combination. See docs/17.
-function buildQuizHref(selections: Record<string, Selection>): string | null {
+// Builds the quiz href from every level's selection, with the chosen mode
+// (docs/19-meaning-quiz-mode-plan.md) baked into the URL so the quiz page
+// skips its own mode-picker screen — one click from here straight into the
+// quiz instead of two. A single level picked with just 1 chapter isn't
+// enough on its own (that's the existing per-chapter quiz page) — but once
+// a second level contributes anything, even one chapter each is a
+// genuinely new combination. See docs/17.
+function buildQuizHref(
+  selections: Record<string, Selection>,
+  mode: "type" | "meaning"
+): string | null {
   const picked = Object.entries(selections).filter(
     ([, s]) => s.combined || s.chapters.size > 0
   );
@@ -69,10 +75,10 @@ function buildQuizHref(selections: Record<string, Selection>): string | null {
 
   if (picked.length === 1) {
     const [slug, selection] = picked[0];
-    if (selection.combined) return `/hsk/${slug}/combined/quiz`;
+    if (selection.combined) return `/hsk/${slug}/combined/quiz?mode=${mode}`;
     if (selection.chapters.size >= 2) {
       const chapters = [...selection.chapters].sort((a, b) => a - b).join(",");
-      return `/hsk/${slug}/custom/quiz?chapters=${chapters}`;
+      return `/hsk/${slug}/custom/quiz?chapters=${chapters}&mode=${mode}`;
     }
     return null;
   }
@@ -82,7 +88,7 @@ function buildQuizHref(selections: Record<string, Selection>): string | null {
       ? `${slug}:combined`
       : `${slug}:${[...selection.chapters].sort((a, b) => a - b).join("-")}`
   );
-  return `/custom-quiz/quiz?picks=${parts.join(",")}`;
+  return `/custom-quiz/quiz?picks=${parts.join(",")}&mode=${mode}`;
 }
 
 export function CustomQuizPicker({ levels }: { levels: LevelWithChapters[] }) {
@@ -125,9 +131,10 @@ export function CustomQuizPicker({ levels }: { levels: LevelWithChapters[] }) {
     });
   }
 
-  const href = buildQuizHref(selections);
+  const typeHref = buildQuizHref(selections, "type");
+  const meaningHref = buildQuizHref(selections, "meaning");
   const anySingleChapterOnly =
-    Object.values(selections).some((s) => !s.combined && s.chapters.size === 1) && !href;
+    Object.values(selections).some((s) => !s.combined && s.chapters.size === 1) && !typeHref;
   const hasAnySelection = Object.values(selections).some(
     (s) => s.combined || s.chapters.size > 0
   );
@@ -140,14 +147,22 @@ export function CustomQuizPicker({ levels }: { levels: LevelWithChapters[] }) {
             Select at least 2 chapters within a level, or add chapters from another level too.
           </p>
         )}
-        <div className="flex gap-3">
+        <div className="flex flex-wrap gap-3">
           <button
             type="button"
-            onClick={() => href && router.push(href)}
-            disabled={!href}
-            className={pillClasses("primary", !href)}
+            onClick={() => typeHref && router.push(typeHref)}
+            disabled={!typeHref}
+            className={pillClasses("primary", !typeHref)}
           >
-            Start quiz
+            Type pinyin
+          </button>
+          <button
+            type="button"
+            onClick={() => meaningHref && router.push(meaningHref)}
+            disabled={!meaningHref}
+            className={pillClasses("secondary", !meaningHref)}
+          >
+            Match meaning
           </button>
           <button
             type="button"

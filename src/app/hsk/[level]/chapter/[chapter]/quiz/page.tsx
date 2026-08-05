@@ -9,11 +9,15 @@ import { QuizModeGate } from "@/components/QuizModeGate";
 
 export default async function ChapterQuizPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ level: string; chapter: string }>;
+  searchParams: Promise<{ mode?: string }>;
 }) {
   await requireSession();
   const { level: levelSlug, chapter: chapterParam } = await params;
+  const { mode } = await searchParams;
+  const initialMode = mode === "type" || mode === "meaning" ? mode : null;
   const chapterNumber = Number(chapterParam);
   if (!isLevelSlug(levelSlug) || !Number.isInteger(chapterNumber)) notFound();
   // Canonicalize e.g. "05" -> "5" so a chapter never has two live URLs.
@@ -60,6 +64,7 @@ export default async function ChapterQuizPage({
         nextQuiz={next}
         anotherQuiz={another}
         durationSeconds={600}
+        initialMode={initialMode}
       />
     </main>
   );

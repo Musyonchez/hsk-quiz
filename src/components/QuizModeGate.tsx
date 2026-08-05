@@ -25,6 +25,7 @@ export function QuizModeGate({
   nextQuiz = null,
   anotherQuiz,
   durationSeconds,
+  initialMode = null,
 }: {
   words: QuizWord[];
   backHref: string;
@@ -36,8 +37,14 @@ export function QuizModeGate({
   nextQuiz?: QuizNavTarget | null;
   anotherQuiz?: QuizNavTarget;
   durationSeconds?: number;
+  // Set by the linking page (e.g. "Type pinyin"/"Match meaning" buttons on
+  // the chapter/combined Learn page, ?mode= in the URL) to skip the picker
+  // screen entirely — one click from the Learn page straight into the quiz
+  // instead of two. Falls back to the picker when absent (e.g. a bookmarked
+  // /quiz URL with no ?mode=).
+  initialMode?: "type" | "meaning" | null;
 }) {
-  const [mode, setMode] = useState<"type" | "meaning" | null>(null);
+  const [mode, setMode] = useState<"type" | "meaning" | null>(initialMode);
 
   if (mode === null) {
     return (
