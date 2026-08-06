@@ -1,0 +1,56 @@
+# Deploying hsk-quiz (Vercel)
+
+The live deploy target, per [20-postgres-vercel-migration-plan.md](20-postgres-vercel-migration-plan.md) — the database moved from SQLite to Postgres (Neon) specifically to make this possible. See [16-deploy.md](16-deploy.md) for the superseded Render setup.
+
+## Why this works now
+
+Vercel's serverless functions have an ephemeral filesystem between invocations — that's what
+ruled it out originally, back when the app used a local SQLite file. With the database on Neon
+Postgres instead, there's nothing local left to persist, so a stateless serverless host works
+fine.
+
+## Env vars
+
+Just `DATABASE_URL` — the same Neon connection string already used for local dev (a single
+database serves both right now, per [20](20-postgres-vercel-migration-plan.md)'s "what actually
+happened," since there's no live production data yet to keep separate). No `NODE_ENV` needed —
+Vercel sets that automatically for production deployments (Render required it manually).
+
+If the Neon database was created via **Vercel's own marketplace integration** (Storage tab →
+Neon), connecting that existing resource to this project auto-injects `DATABASE_URL` (and a
+handful of other `POSTGRES_*`/`PG*` vars this app doesn't use) into the project's environment
+variables — no manual copy-paste needed. Only add it manually if that connection wasn't already
+made.
+
+## Deploy flow
+
+Vercel runs `npm install` then `npm run build` by default for a detected Next.js project — no
+custom build command needed. `npm run build` already chains `prisma migrate deploy && next build
+--webpack` (see `package.json`), so pending migrations apply automatically on every deploy.
+
+Seeding is **not** automatic here either, same reasoning as the Render setup — see
+[20](20-postgres-vercel-migration-plan.md)'s "what actually happened." Not a concern for the
+first deploy specifically, though: the shared dev/prod Neon database already has all the vocab
+data seeded from the migration work itself. Only re-run `npm run db:seed` manually if vocab
+source data changes later.
+
+## One-time manual setup (do this on vercel.com)
+
+1. Sign up / log in at vercel.com, connect your GitHub account if not already connected.
+2. Add New → Project → import `Musyonchez/hsk-quiz`. Vercel auto-detects Next.js; no framework
+   settings need changing.
+3. Before the first deploy, confirm `DATABASE_URL` is set in the project's Environment Variables
+   (Settings → Environment Variables) — either already there via the Neon integration, or add it
+   manually with the same Neon connection string used locally.
+4. Deploy.
+
+## Verifying a deploy worked
+
+- Visit the live URL, confirm the landing page and level hub actually show real chapter/word
+  data (not empty) — proves the shared Neon database's existing seed data is reachable.
+- Register a test account, log in, take a quiz in each mode (typing, matching, choice), confirm
+  the attempt is recorded and shows up on the leaderboard.
+- Trigger a second deploy (e.g. a trivial commit) and confirm the test account still exists —
+  proves nothing about Vercel's stateless deploys is wiping the (external, Postgres-backed) data,
+  the same guarantee the old disk-based Render check was verifying, just via a different
+  mechanism this time.
