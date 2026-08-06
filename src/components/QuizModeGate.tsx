@@ -46,6 +46,17 @@ export function QuizModeGate({
 }) {
   const [mode, setMode] = useState<"type" | "meaning" | null>(initialMode);
 
+  // Play Next/Play Another should continue in the same mode the player just
+  // used, not dump them back on the mode picker (docs/22-audit-pass-4.md) —
+  // getQuizNavigation builds bare hrefs with no ?mode=, so it's appended
+  // here once the active mode is known, rather than needing every quiz page
+  // to know which mode will eventually be chosen client-side.
+  function withMode(target: QuizNavTarget): QuizNavTarget {
+    return { ...target, href: `${target.href}?mode=${mode}` };
+  }
+  const nextQuizWithMode = nextQuiz ? withMode(nextQuiz) : null;
+  const anotherQuizWithMode = anotherQuiz ? withMode(anotherQuiz) : undefined;
+
   if (mode === null) {
     return (
       <div className="flex flex-col items-center gap-4 rounded-xl border border-border bg-surface p-10 text-center shadow-lg shadow-background/50">
@@ -78,8 +89,8 @@ export function QuizModeGate({
         quizKey={typeQuizKey}
         trackAttempt={trackAttempt}
         allowDrillMissed={allowDrillMissed}
-        nextQuiz={nextQuiz}
-        anotherQuiz={anotherQuiz}
+        nextQuiz={nextQuizWithMode}
+        anotherQuiz={anotherQuizWithMode}
         durationSeconds={durationSeconds}
       />
     );
@@ -92,8 +103,8 @@ export function QuizModeGate({
       quizKey={meaningQuizKey}
       trackAttempt={trackAttempt}
       allowDrillMissed={allowDrillMissed}
-      nextQuiz={nextQuiz}
-      anotherQuiz={anotherQuiz}
+      nextQuiz={nextQuizWithMode}
+      anotherQuiz={anotherQuizWithMode}
       durationSeconds={durationSeconds}
     />
   ) : (
@@ -103,8 +114,8 @@ export function QuizModeGate({
       quizKey={meaningQuizKey}
       trackAttempt={trackAttempt}
       allowDrillMissed={allowDrillMissed}
-      nextQuiz={nextQuiz}
-      anotherQuiz={anotherQuiz}
+      nextQuiz={nextQuizWithMode}
+      anotherQuiz={anotherQuizWithMode}
       durationSeconds={durationSeconds}
     />
   );

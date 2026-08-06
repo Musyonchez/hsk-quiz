@@ -71,11 +71,14 @@ Both need to point at Postgres for this migration; neither one alone is enough.
   deploy && tsx prisma/seed.ts && next build`, same pattern Render's `startCommand` already used
   successfully. Idempotent, safe to run on every deploy; Vercel installs devDependencies (`tsx`)
   during build by default so this needs no extra config.
-- **Render's setup (`render.yaml`, [16-deploy.md](16-deploy.md)) is left in place, not deleted.**
-  Once the app runs on Postgres it's no longer tied to a persistent disk at all — the same
-  Postgres-backed app could deploy to *either* Render or Vercel with no further changes needed
-  either way. No reason to throw away already-working config for an option that's still valid,
-  just no longer the one being used right now.
+- **Render's setup (`render.yaml`, [16-deploy.md](16-deploy.md)) was originally planned to stay
+  in place, not deleted** — the reasoning at the time being that once Postgres removed the
+  persistent-disk requirement, the same app could deploy to *either* host with no further
+  changes, so there was no reason to throw away working config for an option that was still
+  valid. **Reversed in a later follow-up**: `render.yaml` was actually deleted once Vercel became
+  the real, committed-to target — an unused deploy config was judged more likely to confuse later
+  ("wait, which one do we actually use?") than to ever get redeployed. `docs/16-deploy.md` itself
+  was kept, marked explicitly as a historical record rather than live config.
 
 ## Package changes
 

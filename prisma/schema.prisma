@@ -102,3 +102,17 @@ model Attempt {
 
   @@index([userId, quizKey])
 }
+
+// One row per failed login attempt, per docs/22-audit-pass-4.md — an
+// in-memory Map (the original approach) doesn't survive across Vercel's
+// serverless invocations, silently disabling the lockout in production.
+// Storing failures here instead of a count+window pair keeps the "reset
+// after 15 minutes" logic entirely in the WHERE clause (createdAt within
+// the window), no separate expiry bookkeeping needed.
+model LoginFailure {
+  id        Int      @id @default(autoincrement())
+  username  String
+  createdAt DateTime @default(now())
+
+  @@index([username, createdAt])
+}

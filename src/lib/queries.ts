@@ -184,9 +184,10 @@ export type LeaderboardRow = {
 // One row per user — their single best attempt for this quizKey — ranked
 // highest score first, earliest createdAt breaking a tie. `participantIds`
 // scopes to a friends-tab lookup; omit it for the global leaderboard.
-// Dedupe happens in application code rather than a DB groupBy, since
-// SQLite/Prisma can't cleanly express "best row per user, with that row's
-// other columns" in one groupBy query — fine at this app's scale (see
+// Dedupe happens in application code rather than a DB query, since Prisma
+// has no groupBy that also returns the winning row's other columns (Postgres
+// itself could do this in one query via DISTINCT ON, just not through
+// Prisma's query builder) — fine at this app's scale (see
 // docs/14-phase6-plan.md).
 export async function getLeaderboard(
   quizKey: string,

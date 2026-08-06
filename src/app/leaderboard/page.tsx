@@ -10,10 +10,11 @@ import { QuizLinkCard } from "@/components/QuizLinkCard";
 export default async function LeaderboardPickerPage({
   searchParams,
 }: {
-  searchParams: Promise<{ level?: string }>;
+  searchParams: Promise<{ level?: string; mode?: string }>;
 }) {
   await requireSession();
-  const { level: levelSlug } = await searchParams;
+  const { level: levelSlug, mode: modeParam } = await searchParams;
+  const mode = modeParam === "meaning" ? "meaning" : "type";
 
   if (!levelSlug) {
     const levels = await getLevelsOverview();
@@ -44,6 +45,13 @@ export default async function LeaderboardPickerPage({
   const level = await getLevelWithChapters(levelSlug);
   if (!level) notFound();
 
+  const tabClasses = (active: boolean) =>
+    `rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
+      active
+        ? "bg-accent text-accent-foreground"
+        : "border border-border-strong text-foreground hover:bg-surface-raised"
+    }`;
+
   return (
     <main className="mx-auto flex w-full max-w-3xl flex-col gap-6 px-6 py-12">
       <div>
@@ -53,8 +61,20 @@ export default async function LeaderboardPickerPage({
         <h1 className="mt-2 text-2xl font-bold">{level.name}</h1>
       </div>
 
+      <div className="flex gap-2">
+        <Link href={`/leaderboard?level=${levelSlug}&mode=type`} className={tabClasses(mode === "type")}>
+          Type pinyin
+        </Link>
+        <Link
+          href={`/leaderboard?level=${levelSlug}&mode=meaning`}
+          className={tabClasses(mode === "meaning")}
+        >
+          Match meaning
+        </Link>
+      </div>
+
       <QuizLinkCard
-        href={`/leaderboard/${quizKeyFor({ levelSlug })}`}
+        href={`/leaderboard/${quizKeyFor({ levelSlug, mode })}`}
         eyebrow="Full level"
         title="Combined"
         icon={Trophy}
@@ -64,7 +84,7 @@ export default async function LeaderboardPickerPage({
         {level.chapters.map((chapter) => (
           <QuizLinkCard
             key={chapter.id}
-            href={`/leaderboard/${quizKeyFor({ levelSlug, chapterNumber: chapter.number })}`}
+            href={`/leaderboard/${quizKeyFor({ levelSlug, chapterNumber: chapter.number, mode })}`}
             eyebrow={`Chapter ${chapter.number}`}
             title={chapter.title}
           />

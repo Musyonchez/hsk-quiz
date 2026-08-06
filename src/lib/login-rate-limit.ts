@@ -1,41 +1,38 @@
-// In-memory per-username lockout for POST /api/auth/login. Deliberately simple for a small,
-// single-instance personal site — an in-process Map, not a shared/persisted store, so it resets
-// on every server restart and doesn't coordinate across multiple instances. Revisit with a real
-// store (e.g. a DB table or Redis) if this ever runs behind more than one process.
+// Per-username lockout for POST /api/auth/login, backed by the `LoginFailure`
+// table (see prisma/schema.prisma). Originally an in-memory Map — that broke
+// silently once the app moved to Vercel's serverless functions, which don't
+// reliably share memory across invocations (docs/22-audit-pass-4.md). Storing
+// each failure as its own row keeps the "reset after 15 minutes" logic
+// entirely in the query (createdAt within the window), no separate expiry
+// bookkeeping needed.
+import { prisma } from "@/lib/db";
+
 const MAX_ATTEMPTS = 5;
 const WINDOW_MS = 15 * 60 * 1000;
-
-interface Entry {
-  count: number;
-  firstAttemptAt: number;
-}
-
-const failuresByUsername = new Map<string, Entry>();
 
 function key(username: string): string {
   return username.toLowerCase();
 }
 
-export function isLoginLocked(username: string): boolean {
-  const entry = failuresByUsername.get(key(username));
-  if (!entry) return false;
-  if (Date.now() - entry.firstAttemptAt > WINDOW_MS) {
-    failuresByUsername.delete(key(username));
-    return false;
-  }
-  return entry.count >= MAX_ATTEMPTS;
+export async function isLoginLocked(username: string): Promise<boolean> {
+  const count = await prisma.loginFailure.count({
+    where: { username: key(username), createdAt: { gt: new Date(Date.now() - WINDOW_MS) } },
+  });
+  return count >= MAX_ATTEMPTS;
 }
 
-export function recordLoginFailure(username: string): void {
+export async function recordLoginFailure(username: string): Promise<void> {
   const k = key(username);
-  const entry = failuresByUsername.get(k);
-  if (!entry || Date.now() - entry.firstAttemptAt > WINDOW_MS) {
-    failuresByUsername.set(k, { count: 1, firstAttemptAt: Date.now() });
-    return;
-  }
-  entry.count += 1;
+  // Opportunistic prune of this username's own expired rows so a
+  // repeatedly-guessed username's row count doesn't grow unbounded over
+  // time — cheap, and keeps the table self-bounding per key without a
+  // separate cleanup job.
+  await prisma.loginFailure.deleteMany({
+    where: { username: k, createdAt: { lte: new Date(Date.now() - WINDOW_MS) } },
+  });
+  await prisma.loginFailure.create({ data: { username: k } });
 }
 
-export function clearLoginFailures(username: string): void {
-  failuresByUsername.delete(key(username));
+export async function clearLoginFailures(username: string): Promise<void> {
+  await prisma.loginFailure.deleteMany({ where: { username: key(username) } });
 }

@@ -21,7 +21,7 @@ export async function POST(request: Request) {
     );
   }
 
-  if (isLoginLocked(username)) {
+  if (await isLoginLocked(username)) {
     return NextResponse.json(
       { error: "Too many failed attempts. Try again later." },
       { status: 429 }
@@ -32,10 +32,10 @@ export async function POST(request: Request) {
   const valid = await verifyPassword(password, user?.passwordHash ?? UNREACHABLE_PASSWORD_HASH);
 
   if (!user || !valid) {
-    recordLoginFailure(username);
+    await recordLoginFailure(username);
     return NextResponse.json({ error: "Invalid username or password." }, { status: 401 });
   }
-  clearLoginFailures(username);
+  await clearLoginFailures(username);
 
   const { token, expiresAt } = await createSession(user.id);
   const cookieStore = await cookies();
