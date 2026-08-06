@@ -1,10 +1,12 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
+import { MessageSquare } from "lucide-react";
 import { requireSession } from "@/lib/require-session";
-import { getChapterWithWords } from "@/lib/queries";
+import { getChapterDialogWordCount, getChapterWithWords } from "@/lib/queries";
 import { isLevelSlug } from "@/lib/hsk-level";
 import { VocabTable } from "@/components/VocabTable";
 import { pillClasses } from "@/components/pill-classes";
+import { QuizLinkCard } from "@/components/QuizLinkCard";
 
 export default async function ChapterLearnPage({
   params,
@@ -20,7 +22,10 @@ export default async function ChapterLearnPage({
     redirect(`/hsk/${levelSlug}/chapter/${chapterNumber}`);
   }
 
-  const chapter = await getChapterWithWords(levelSlug, chapterNumber);
+  const [chapter, dialogWordCount] = await Promise.all([
+    getChapterWithWords(levelSlug, chapterNumber),
+    getChapterDialogWordCount(levelSlug, chapterNumber),
+  ]);
   if (!chapter) notFound();
 
   return (
@@ -52,7 +57,22 @@ export default async function ChapterLearnPage({
         </Link>
       </div>
 
-      <VocabTable words={chapter.words} />
+      {/* Only shown once this chapter actually has dialog data — no dead
+          links while docs/25-chapter-all-words-plan.md's rollout is still
+          incremental across chapters. */}
+      {dialogWordCount > 0 && (
+        <QuizLinkCard
+          href={`/hsk/${levelSlug}/chapter/${chapterNumber}/all`}
+          eyebrow="This chapter's dialog"
+          title={`All Words — ${dialogWordCount} words`}
+          icon={MessageSquare}
+        />
+      )}
+
+      <div>
+        <h2 className="mb-3 text-lg font-semibold">New Words</h2>
+        <VocabTable words={chapter.words} />
+      </div>
     </main>
   );
 }

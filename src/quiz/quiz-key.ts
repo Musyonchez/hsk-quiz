@@ -8,28 +8,40 @@
 // run isn't comparable difficulty to a fully-typed recall run, so tracked
 // meaning-mode runs get a distinct "-match" suffixed key rather than
 // sharing the typing mode's leaderboard rows.
+//
+// `wordSet` distinguishes a chapter's curated New Words (default) from its
+// full dialog vocabulary, "All Words" (docs/25-chapter-all-words-plan.md) —
+// same reasoning as `mode`: an All Words run draws from a different, larger
+// word pool than New Words, so it isn't a fair comparison and gets its own
+// "-all" suffixed key instead of sharing New Words' leaderboard rows.
 export function quizKeyFor(target: {
   levelSlug: string;
   chapterNumber?: number;
   mode?: "type" | "meaning";
+  wordSet?: "new" | "all";
 }): string {
   const suffix =
     target.chapterNumber === undefined ? "combined" : `chapter${target.chapterNumber}`;
+  const wordSetSuffix = target.wordSet === "all" ? "-all" : "";
   const modeSuffix = target.mode === "meaning" ? "-match" : "";
-  return `hsk${target.levelSlug}-${suffix}${modeSuffix}`;
+  return `hsk${target.levelSlug}-${suffix}${wordSetSuffix}${modeSuffix}`;
 }
 
-const QUIZ_KEY_PATTERN = /^hsk([1-6][ab]?)-(combined|chapter(\d+))(-match)?$/;
+const QUIZ_KEY_PATTERN = /^hsk([1-6][ab]?)-(combined|chapter(\d+))(-all)?(-match)?$/;
 
-export function parseQuizKey(
-  quizKey: string
-): { levelSlug: string; chapterNumber: number | null; mode: "type" | "meaning" } | null {
+export function parseQuizKey(quizKey: string): {
+  levelSlug: string;
+  chapterNumber: number | null;
+  wordSet: "new" | "all";
+  mode: "type" | "meaning";
+} | null {
   const match = QUIZ_KEY_PATTERN.exec(quizKey);
   if (!match) return null;
   return {
     levelSlug: match[1],
     chapterNumber: match[3] ? Number(match[3]) : null,
-    mode: match[4] ? "meaning" : "type",
+    wordSet: match[4] ? "all" : "new",
+    mode: match[5] ? "meaning" : "type",
   };
 }
 
@@ -50,5 +62,9 @@ export function describeQuizKey(
     parsed.chapterNumber === null
       ? `${levelName} — Combined`
       : `${levelName} — Chapter ${parsed.chapterNumber}`;
-  return parsed.mode === "meaning" ? `${base} (meaning)` : base;
+  const tags = [
+    parsed.wordSet === "all" ? "all words" : null,
+    parsed.mode === "meaning" ? "meaning" : null,
+  ].filter((tag): tag is string => tag !== null);
+  return tags.length > 0 ? `${base} (${tags.join(", ")})` : base;
 }

@@ -43,9 +43,16 @@ model Word {
   wordType  String? // "n." | "v." | ... (chapter source) — nullable for combined rows
   meaning   String?
   category  String? // PDF word-class, e.g. "Personal Pron." (combined source only)
-  source    String // "chapter" | "combined"
+  source    String // "chapter" | "combined" | "dialog"
 
-  @@unique([chapterId, chinese])
+  // `source` is part of the key (not just [chapterId, chinese]) because a
+  // word can legitimately have two rows for the same chapterId: a "chapter"
+  // row (curated New Words) and a "dialog" row (docs/25-chapter-all-words-
+  // plan.md's full, independently-ordered dialog vocabulary) — the same
+  // word really does appear in both the textbook's New Words box and its
+  // dialog text, and All Words intentionally isn't deduplicated against
+  // New Words (see docs/25's "What All Words means here").
+  @@unique([chapterId, chinese, source])
 }
 
 model GrammarPattern {

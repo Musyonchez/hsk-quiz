@@ -2,6 +2,7 @@ import "dotenv/config";
 import { prisma } from "@/lib/db";
 import { extractAllCombinedLevels } from "@/lib/extract/extract-combined";
 import { extractAllChapters } from "@/lib/extract/extract-chapters";
+import { extractAllDialogWords } from "@/lib/extract/extract-dialog";
 import { ALL_LEVELS, type LevelSlug } from "@/lib/hsk-level";
 
 async function ensureLevels(): Promise<Record<LevelSlug, number>> {
@@ -103,9 +104,10 @@ async function seedChapters(levelIds: Record<LevelSlug, number>) {
     for (const word of chapterData.words) {
       await prisma.word.upsert({
         where: {
-          chapterId_chinese: {
+          chapterId_chinese_source: {
             chapterId: chapterRow.id,
             chinese: word.chinese,
+            source: "chapter",
           },
         },
         create: {
@@ -128,12 +130,15 @@ async function seedChapters(levelIds: Record<LevelSlug, number>) {
 
     // Same stale-row cleanup as seedCombinedLevels — a word dropped from a
     // chapter's markdown (or a whole category, like proper nouns) shouldn't
-    // linger in the DB from a previous seed run.
+    // linger in the DB from a previous seed run. Scoped to source: "chapter"
+    // so it never touches that same chapterId's "dialog" rows (docs/25
+    // -chapter-all-words-plan.md) — the two sources are independent lists.
     if (chapterData.words.length > 0) {
       const currentChinese = chapterData.words.map((w) => w.chinese);
       await prisma.word.deleteMany({
         where: {
           chapterId: chapterRow.id,
+          source: "chapter",
           chinese: { notIn: currentChinese },
         },
       });
@@ -152,10 +157,78 @@ async function seedChapters(levelIds: Record<LevelSlug, number>) {
   // reliably from markdown structure alone. See website/docs/07-roadmap.md.
 }
 
+// docs/25-chapter-all-words-plan.md's "All Words" — a chapter's full dialog
+// vocabulary, source: "dialog", independent from that same chapter's
+// source: "chapter" New Words (a word can legitimately have a row in both).
+// Runs after seedChapters so every chapter row it looks up already exists.
+async function seedDialogWords(levelIds: Record<LevelSlug, number>) {
+  const dialogChapters = await extractAllDialogWords();
+
+  for (const dialogData of dialogChapters) {
+    const levelId = levelIds[dialogData.level];
+    const chapterRow = await prisma.chapter.findUnique({
+      where: { levelId_number: { levelId, number: dialogData.chapterNumber } },
+    });
+    if (!chapterRow) {
+      console.warn(
+        `Skipping dialog words for HSK${dialogData.level} chapter ${dialogData.chapterNumber}: no matching chapter row`
+      );
+      continue;
+    }
+
+    for (const word of dialogData.words) {
+      await prisma.word.upsert({
+        where: {
+          chapterId_chinese_source: {
+            chapterId: chapterRow.id,
+            chinese: word.chinese,
+            source: "dialog",
+          },
+        },
+        create: {
+          levelId,
+          chapterId: chapterRow.id,
+          chinese: word.chinese,
+          pinyin: word.pinyin,
+          wordType: word.wordType,
+          meaning: word.meaning,
+          category: null,
+          source: "dialog",
+        },
+        update: {
+          pinyin: word.pinyin,
+          wordType: word.wordType,
+          meaning: word.meaning,
+        },
+      });
+    }
+
+    // Same stale-row cleanup pattern as seedChapters, scoped to source:
+    // "dialog" so it never touches that chapter's "chapter" (New Words) rows.
+    if (dialogData.words.length > 0) {
+      const currentChinese = dialogData.words.map((w) => w.chinese);
+      await prisma.word.deleteMany({
+        where: {
+          chapterId: chapterRow.id,
+          source: "dialog",
+          chinese: { notIn: currentChinese },
+        },
+      });
+    }
+
+    if (dialogData.words.length > 0) {
+      console.log(
+        `Seeded HSK${dialogData.level} chapter ${dialogData.chapterNumber} dialog: ${dialogData.words.length} words`
+      );
+    }
+  }
+}
+
 async function main() {
   const levelIds = await ensureLevels();
   await seedCombinedLevels(levelIds);
   await seedChapters(levelIds);
+  await seedDialogWords(levelIds);
 }
 
 main()

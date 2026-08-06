@@ -83,6 +83,26 @@ export function getChapterWithWords(slug: string, chapterNumber: number) {
   });
 }
 
+// A chapter's full dialog vocabulary (docs/25-chapter-all-words-plan.md) —
+// independent from getChapterWithWords' New Words, ordered by `id` ascending
+// same as chapter words are, which is reading order since dialog rows are
+// seeded in the order they first appear in the source dialog text.
+export function getChapterDialogWords(slug: string, chapterNumber: number) {
+  return prisma.word.findMany({
+    where: { source: "dialog", chapter: { number: chapterNumber, level: { slug } } },
+    orderBy: { id: "asc" },
+  });
+}
+
+// Cheap count-only query so the chapter Learn page's "All Words" card can
+// stay hidden for chapters that don't have dialog data yet, without paying
+// for the full row fetch just to check for zero.
+export function getChapterDialogWordCount(slug: string, chapterNumber: number) {
+  return prisma.word.count({
+    where: { source: "dialog", chapter: { number: chapterNumber, level: { slug } } },
+  });
+}
+
 export function getCombinedWords(slug: string) {
   return prisma.word.findMany({
     where: { level: { slug }, source: "combined" },
