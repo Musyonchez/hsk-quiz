@@ -3,14 +3,18 @@ services:
     name: hsk-quiz
     env: node
     plan: starter
+    # No persistent disk needed since docs/20-postgres-vercel-migration-plan.md
+    # moved the database to Postgres (Neon) — `npm run build` already runs
+    # `prisma migrate deploy` (see package.json), so no separate migrate
+    # step is needed here either. Seeding is intentionally NOT run
+    # automatically (see docs/20's "what actually happened" — one-row-at-a-
+    # time seeding is slow over a network DB and vocab data rarely
+    # changes); run `npm run db:seed` manually against DATABASE_URL when it
+    # actually does.
     buildCommand: npm install && npm run build
-    startCommand: npx prisma migrate deploy && npx tsx prisma/seed.ts && npm start
+    startCommand: npm start
     envVars:
       - key: NODE_ENV
         value: production
       - key: DATABASE_URL
-        value: file:/var/data/prod.db
-    disk:
-      name: hsk-quiz-data
-      mountPath: /var/data
-      sizeGB: 1
+        sync: false
