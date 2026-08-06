@@ -314,7 +314,7 @@ function MatchQuizRunnerInner({
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="sticky top-18.25 z-5 flex flex-col gap-4 bg-background pb-4">
+      <div className="sticky top-[var(--header-height)] z-5 flex flex-col gap-4 bg-background pb-4">
         <div className="flex flex-wrap items-center justify-between gap-4 rounded-xl border border-border bg-surface px-5 py-4">
           <span className="text-sm font-semibold tabular-nums">
             MATCHED {attemptedCount}/{total}
@@ -324,7 +324,7 @@ function MatchQuizRunnerInner({
               {formatDuration(secondsLeft)}
             </span>
           )}
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             {timed && (
               <ToolbarButton
                 onClick={() => setPaused((p) => !p)}
@@ -438,7 +438,7 @@ function ToolbarButton({
       onClick={onClick}
       disabled={disabled}
       aria-label={label}
-      className={`flex items-center gap-1.5 rounded-full border border-border-strong px-3 py-1.5 text-sm font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-40 ${
+      className={`flex items-center gap-1.5 rounded-full border border-border-strong px-3 py-2.5 text-sm font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-40 ${
         variant === "danger" ? "text-danger hover:bg-danger/10" : "text-foreground hover:bg-surface-raised"
       }`}
     >

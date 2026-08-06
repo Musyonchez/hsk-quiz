@@ -349,7 +349,7 @@ function ChoiceQuizRunnerInner({
   return (
     <div className="flex flex-col gap-6 pb-4" ref={containerRef}>
       <div
-        className="sticky top-18.25 z-5 flex flex-col gap-4 bg-background pb-4"
+        className="sticky top-[var(--header-height)] z-5 flex flex-col gap-4 bg-background pb-4"
         ref={topStickyRef}
       >
         <div className="flex flex-wrap items-center justify-between gap-4 rounded-xl border border-border bg-surface px-5 py-4">
@@ -361,7 +361,7 @@ function ChoiceQuizRunnerInner({
               {formatDuration(secondsLeft)}
             </span>
           )}
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <ToolbarButton
               onClick={() => goTo(nextIncompleteIndex(currentIndex, -1))}
               disabled={!started}
@@ -432,44 +432,48 @@ function ChoiceQuizRunnerInner({
         )}
       </div>
 
-      <table className="w-full overflow-hidden rounded-lg border border-border text-sm">
-        <thead className="bg-surface-raised text-left text-xs uppercase tracking-wide text-muted-foreground">
-          <tr>
-            <th className="px-3 py-2">Chinese</th>
-            <th className="px-3 py-2">Pinyin</th>
-            <th className="px-3 py-2">Meaning</th>
-          </tr>
-        </thead>
-        <tbody>
-          {order.map((word, index) => {
-            const isAnswered = answers.has(word.id);
-            const isCurrent = index === currentIndex;
-            return (
-              <tr
-                key={word.id}
-                data-row-index={index}
-                onClick={() => started && goTo(index)}
-                className={
-                  (started ? "cursor-pointer " : "") +
-                  (isCurrent
-                    ? "border-l-4 border-l-current-row bg-current-row-surface"
-                    : "border-l-4 border-l-transparent border-t border-border hover:bg-surface-raised")
-                }
-              >
-                <td className="px-3 py-2 font-medium">{word.chinese}</td>
-                <td className="px-3 py-2 text-muted-foreground">{word.pinyin}</td>
-                {/* Meaning stays hidden until the whole quiz finishes, not just
-                    until this one word is answered — showing the real answer
-                    the moment it's answered would itself reveal right/wrong
-                    by comparison, the exact leak this mode avoids. */}
-                <td className="px-3 py-2 text-muted-foreground">
-                  {isAnswered ? "answered" : "—"}
-                </td>
-              </tr>
-            );
-          })}
-        </tbody>
-      </table>
+      {/* See VocabTable.tsx's VocabTableGroup for why the scroll wrapper/
+          border split (docs/24-responsive-design-plan.md). */}
+      <div className="overflow-x-auto rounded-lg border border-border">
+        <table className="w-full min-w-lg text-sm">
+          <thead className="bg-surface-raised text-left text-xs uppercase tracking-wide text-muted-foreground">
+            <tr>
+              <th className="px-3 py-2">Chinese</th>
+              <th className="px-3 py-2">Pinyin</th>
+              <th className="px-3 py-2">Meaning</th>
+            </tr>
+          </thead>
+          <tbody>
+            {order.map((word, index) => {
+              const isAnswered = answers.has(word.id);
+              const isCurrent = index === currentIndex;
+              return (
+                <tr
+                  key={word.id}
+                  data-row-index={index}
+                  onClick={() => started && goTo(index)}
+                  className={
+                    (started ? "cursor-pointer " : "") +
+                    (isCurrent
+                      ? "border-l-4 border-l-current-row bg-current-row-surface"
+                      : "border-l-4 border-l-transparent border-t border-border hover:bg-surface-raised")
+                  }
+                >
+                  <td className="px-3 py-2 font-medium">{word.chinese}</td>
+                  <td className="px-3 py-2 text-muted-foreground">{word.pinyin}</td>
+                  {/* Meaning stays hidden until the whole quiz finishes, not just
+                      until this one word is answered — showing the real answer
+                      the moment it's answered would itself reveal right/wrong
+                      by comparison, the exact leak this mode avoids. */}
+                  <td className="px-3 py-2 text-muted-foreground">
+                    {isAnswered ? "answered" : "—"}
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
 
       {started && !finished && !paused && currentWord && (
         <div
@@ -524,7 +528,7 @@ function ToolbarButton({
       onClick={onClick}
       disabled={disabled}
       aria-label={label}
-      className={`flex items-center gap-1.5 rounded-full border border-border-strong px-3 py-1.5 text-sm font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-40 ${
+      className={`flex items-center gap-1.5 rounded-full border border-border-strong px-3 py-2.5 text-sm font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-40 ${
         variant === "danger" ? "text-danger hover:bg-danger/10" : "text-foreground hover:bg-surface-raised"
       }`}
     >

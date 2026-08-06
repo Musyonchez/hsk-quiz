@@ -8,7 +8,7 @@ export default async function CustomQuizPage() {
   const levels = await getLevelsOverviewWithChapters();
 
   return (
-    <main className="mx-auto flex w-full max-w-4xl flex-col gap-6 px-6 py-12">
+    <main className="mx-auto flex w-full max-w-4xl flex-col gap-6 px-4 py-12 sm:px-6">
       <h1 className="flex items-center gap-2 text-2xl font-bold">
         <Layers size={22} className="text-muted-foreground" />
         Custom Quiz

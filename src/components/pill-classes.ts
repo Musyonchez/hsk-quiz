@@ -3,7 +3,11 @@ export function pillClasses(
   disabled = false,
   size: "md" | "sm" = "md"
 ): string {
-  const sizeClasses = size === "sm" ? "px-4 py-1.5 text-sm" : "px-5 py-2.5 text-sm";
+  // "sm"'s vertical padding matches "md" (both land ~40px tall, a real
+  // measurement against the ~40-44px comfortable touch-target minimum —
+  // docs/24-responsive-design-plan.md) — only the horizontal padding stays
+  // narrower, so "sm" is visually more compact without being harder to tap.
+  const sizeClasses = size === "sm" ? "px-4 py-2.5 text-sm" : "px-5 py-2.5 text-sm";
   const base = `inline-flex items-center justify-center rounded-full font-semibold transition-colors ${sizeClasses}`;
   const disabledClasses = disabled ? "cursor-not-allowed opacity-60" : "cursor-pointer";
 

@@ -10,7 +10,7 @@ export default async function FriendsPage() {
   const { friends, incoming, outgoing } = await getFriendsData(user.id);
 
   return (
-    <main className="mx-auto flex w-full max-w-2xl flex-col gap-8 px-6 py-12">
+    <main className="mx-auto flex w-full max-w-2xl flex-col gap-8 px-4 py-12 sm:px-6">
       <div>
         <h1 className="flex items-center gap-2 text-2xl font-bold">
           <Users size={22} className="text-muted-foreground" />

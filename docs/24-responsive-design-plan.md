@@ -132,3 +132,56 @@ about layout surviving a narrow viewport.
   measurement for the sticky offset.
 - No visual-regression tooling exists in this repo today; verification is manual/eyeballed
   against the three reference widths above, same as every other UI change so far.
+
+## What actually happened
+
+**Status: implemented and verified end-to-end.** The approach above held up largely as planned,
+with a few real findings along the way that weren't anticipated:
+
+- **`AppHeader`'s collapse breakpoint is `lg` (1024px), not `md` (768px).** `md` was flagged as
+  "the natural candidate... needs a real measurement, not a guess" — measured, and it was wrong:
+  at exactly 768px the desktop nav row still wrapped ("HSK Quiz" split across two lines, several
+  labels wrapped to two lines each), because `md` is the *minimum* width the row has to fit in,
+  and the actual link content doesn't fit there yet. `lg` is the first breakpoint where the row
+  stops being cramped, so that's where the hamburger drawer (`MobileNav.tsx`) hands off to it.
+- **The sticky-offset fix is a runtime-measured CSS custom property, not a second magic number.**
+  `HeaderHeightVar.tsx` wraps `AppHeader` in `layout.tsx`, measures its rendered height with a
+  `ResizeObserver`, and writes it to `--header-height` (fallback set in `globals.css` for
+  first paint). The three quiz runners read `top-[var(--header-height)]` instead of the old
+  `top-18.25`. Confirmed this was worth doing, not just tidiness: the header's real height
+  genuinely differs between the mobile-drawer row (73px) and the desktop nav row (61px) — a
+  fixed number really would have gone wrong on whichever layout it wasn't tuned for.
+- **A real, previously-unflagged bug turned up while checking touch targets**: the quiz
+  toolbars' Prev/Pause/Next/Give up button group had no `flex-wrap` of its own (only the *outer*
+  row did), so at 375px it forced real page-level horizontal scroll — "Give up" rendered clipped
+  half off the card. Not something the original audit caught (it assumed the row "already does
+  wrap"); fixed by adding `flex-wrap` to that inner button-group div in all three runners.
+- **The table fix itself caused a regression on the combined-vocab grouped view**, caught during
+  the tablet-breakpoint check. Giving every `VocabTableGroup` a `min-w-lg` (32rem) was correct
+  for the single-table cases (learn page, in-quiz tables, results' missed-words) but broke the
+  combined page's intentional multi-column layout — each category's table sits in a narrow grid
+  cell by design, and forcing the same min-width there made every column need its own inner
+  horizontal scroll, at both 768px and 1280px+, worse than the plain wrapping it had before this
+  plan touched it. Fixed with a `constrainWidth` prop, `true` by default, passed `false` from the
+  grouped multi-column render path only.
+- **Touch targets**: measured (not guessed) at 34px for both `pillClasses("sm")` and
+  `ToolbarButton` — under the ~40-44px target as suspected. `"sm"`'s vertical padding now matches
+  `"md"`'s (`py-2.5`), landing both at 42px; only the horizontal padding still differs between the
+  two sizes.
+- **Input font-size (iOS auto-zoom) turned out already fine** — the audit item was written as "a
+  risk, needs a real check," not a confirmed bug. Computed font-size on the pinyin/username/
+  password inputs measured 16px (they inherit the body base; nothing sets a smaller explicit
+  class on them), so there was nothing to fix.
+- **The landing page's feature-card grid (`sm:grid-cols-3`) was fine as-is at 768px** — visually
+  checked, reads cleanly, no in-between-breakpoint fix needed there. The tablet-grid risk that
+  turned out real was the combined-vocab grid (previous bullet), not this one.
+- **Matching board (`MatchQuizRunner`'s fixed `grid-cols-2`)** was checked against the actual
+  worst-case content in the data (HSK1 ch.5's 92-character meaning for 了, HSK3 ch.11's
+  `bǐjìběn diànnǎo`) at 375px and 768px — wraps cleanly, no fix needed.
+
+Verified: full flow (landing → register → dashboard → level hub → learn page → all three quiz
+modes start-to-results → leaderboard picker → custom quiz picker → friends page) scripted through
+Playwright at 375px with a horizontal-scroll check after every step — all clean. A broader sweep
+of every top-level page/route ran clean at 375px, 768px, 1024px, and 1280px, both at rest and in
+each runner's started state. `tsc --noEmit`, `eslint .`, and `npm run build` all clean throughout.
+Test accounts created during verification were cleaned up afterward.

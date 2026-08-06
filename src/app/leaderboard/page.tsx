@@ -19,7 +19,7 @@ export default async function LeaderboardPickerPage({
   if (!levelSlug) {
     const levels = await getLevelsOverview();
     return (
-      <main className="mx-auto flex w-full max-w-3xl flex-col gap-6 px-6 py-12">
+      <main className="mx-auto flex w-full max-w-3xl flex-col gap-6 px-4 py-12 sm:px-6">
         <h1 className="flex items-center gap-2 text-2xl font-bold">
           <Trophy size={22} className="text-muted-foreground" />
           Leaderboard
@@ -53,7 +53,7 @@ export default async function LeaderboardPickerPage({
     }`;
 
   return (
-    <main className="mx-auto flex w-full max-w-3xl flex-col gap-6 px-6 py-12">
+    <main className="mx-auto flex w-full max-w-3xl flex-col gap-6 px-4 py-12 sm:px-6">
       <div>
         <Link href="/leaderboard" className="text-sm text-muted-foreground hover:text-foreground">
           ← Leaderboard

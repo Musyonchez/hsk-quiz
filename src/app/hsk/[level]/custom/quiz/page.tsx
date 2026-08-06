@@ -32,7 +32,7 @@ export default async function CustomQuizPage({
 
   if (chapterNumbers.length < 2) {
     return (
-      <main className="mx-auto flex w-full max-w-3xl flex-col gap-6 px-6 py-12">
+      <main className="mx-auto flex w-full max-w-3xl flex-col gap-6 px-4 py-12 sm:px-6">
         <div>
           <Link href={backHref} className="text-sm text-muted-foreground hover:text-foreground">
             ← Custom Quiz
@@ -53,7 +53,7 @@ export default async function CustomQuizPage({
   if (!level || words.length === 0) notFound();
 
   return (
-    <main className="mx-auto flex w-full max-w-3xl flex-col gap-6 px-6 py-12">
+    <main className="mx-auto flex w-full max-w-3xl flex-col gap-6 px-4 py-12 sm:px-6">
       <div>
         <Link href={backHref} className="text-sm text-muted-foreground hover:text-foreground">
           ← Custom Quiz

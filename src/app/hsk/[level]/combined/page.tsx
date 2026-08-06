@@ -22,7 +22,7 @@ export default async function CombinedLearnPage({
   if (words.length === 0 || !level) notFound();
 
   return (
-    <main className="mx-auto flex w-full max-w-5xl flex-col gap-8 px-6 py-12">
+    <main className="mx-auto flex w-full max-w-5xl flex-col gap-8 px-4 py-12 sm:px-6">
       <div>
         <Link
           href={`/hsk/${levelSlug}`}

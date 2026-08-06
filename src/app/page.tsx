@@ -56,7 +56,7 @@ export default async function LandingPage() {
   );
 
   return (
-    <main className="flex flex-col items-center px-6">
+    <main className="flex flex-col items-center px-4 sm:px-6">
       {/* Hero */}
       <section className="flex w-full max-w-2xl flex-col items-center gap-8 py-20 text-center">
         <span
