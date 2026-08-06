@@ -12,27 +12,28 @@
   truth instead of hardcoding colors per-component.
 - **lucide-react** for icons (pause, play, prev/next chevrons, trophy for leaderboard, users
   for friends, etc.) — a single consistent icon set rather than mixing emoji/ad-hoc SVGs.
-- **Database, via an ORM (Prisma 7)**:
-  - **Dev/testing**: SQLite — a single file (`website/dev.db`), zero external
-    dependencies, fast to reset (`rm dev.db && npm run db:migrate && npm run db:seed`).
-  - **Prod**: an external Postgres instance.
-  - Correction from an earlier draft of this doc, discovered while actually wiring this up:
-    **Prisma 7 requires an explicit driver adapter** (`PrismaClient({ adapter })`) — there's no
-    more implicit "just point `DATABASE_URL` at it" connection. So the dev→prod swap is two
-    things, not one: the `provider` in `schema.prisma` (`sqlite` → `postgresql`) *and* the
-    adapter passed into `PrismaClient` in `src/lib/db.ts` (`@prisma/adapter-better-sqlite3` →
-    `@prisma/adapter-pg`). Still no query rewrites — Prisma's query builder targets both
-    identically — but "swap a connection string" undersold it; budget for changing that one
-    file's adapter import too when standing up prod.
-  - Prisma Migrate handles schema versioning for both environments from the same migration
-    history.
+- **Database, via an ORM (Prisma 7)**: a single Neon Postgres database, shared by dev and prod
+  alike (`DATABASE_URL`) — see
+  [20-postgres-vercel-migration-plan.md](20-postgres-vercel-migration-plan.md) for how this
+  replaced an earlier SQLite-in-dev/Postgres-in-prod split (the migration that moved hosting
+  from Render to Vercel, since Vercel's serverless functions can't hold a persistent SQLite
+  file on disk). No branch split between dev/prod yet — revisit once the site has real
+  production data worth isolating.
+  - **Prisma 7 requires an explicit driver adapter** (`PrismaClient({ adapter })`) — there's no
+    more implicit "just point `DATABASE_URL` at it" connection. The app uses
+    `@prisma/adapter-neon` (`src/lib/db.ts`), which talks to Postgres over HTTP/WebSockets via
+    `@neondatabase/serverless` rather than a pooled TCP connection — the right fit for many
+    short-lived Vercel serverless function instances hitting a small database, per
+    [20](20-postgres-vercel-migration-plan.md)'s Decisions section.
+  - Prisma Migrate handles schema versioning from a single migration history, applied to the
+    one shared database.
 
 ## Why a real backend instead of static JSON (superseding the earlier draft)
 
 Two earlier drafts of this doc are superseded here: first a fully static site with build-time
 JSON and no server, then a separate Vite frontend + Express backend. The requirement is a
-self-sufficient app with its own database (SQLite for dev, an external DB in prod) plus real
-accounts — Next.js's Route Handlers give a server process to own the database connection and
+self-sufficient app with its own database (a hosted Postgres instance, shared by dev and prod)
+plus real accounts — Next.js's Route Handlers give a server process to own the database connection and
 sessions without maintaining a second HTTP server/build config alongside the frontend one. The
 vocabulary content lives as in-repo TypeScript data (`src/lib/extract/hsk*-data.ts`), but it's
 *seeded into the database* rather than shipped as static JSON — see
@@ -77,10 +78,12 @@ new request to the same person (a repeat `POST /api/friends/requests` for a row 
   called from Server Components and Route Handlers alike. No JWT, no `next-auth`/third-party
   provider — the user set is small and static, so there's no reason to take on that complexity
   or its extra config surface.
-- Every route that reads/writes `Attempt` or `Friendship` requires a valid session; the
-  vocabulary read routes (`/api/levels`, `.../words`, `.../combined`) stay public/unauthenticated
-  since there's no reason to gate looking at vocabulary behind login — only progress tracking
-  and social features need an identity.
+- Every route that reads/writes `Attempt` or `Friendship` requires a valid session. Vocabulary
+  reads have no dedicated API routes at all — there's no public vocab REST API, and never has
+  been in the current codebase (an earlier draft of this doc planned one, see "API surface"
+  below); Server Components call `lib/queries.ts` directly, and since there's no reason to gate
+  looking at vocabulary behind login, those pages stay public/unauthenticated too — only
+  progress tracking and social features need an identity.
 
 ## Folder layout
 
@@ -100,9 +103,13 @@ website/
       register/page.tsx
       hsk/[level]/page.tsx                       # Level hub
       hsk/[level]/chapter/[chapter]/page.tsx      # Learn page
-      hsk/[level]/chapter/[chapter]/quiz/page.tsx # Quiz + results
+      hsk/[level]/chapter/[chapter]/quiz/page.tsx # Quiz + results, ?mode=type|meaning
       hsk/[level]/combined/page.tsx
       hsk/[level]/combined/quiz/page.tsx
+      hsk/[level]/custom/quiz/page.tsx            # single-level, multi-chapter custom quiz
+      custom-quiz/page.tsx                        # cross-level custom quiz picker
+      custom-quiz/quiz/page.tsx                   # cross-level custom quiz runner
+      leaderboard/page.tsx                        # level/chapter picker, Type/Match tabs
       leaderboard/[quizKey]/page.tsx
       friends/page.tsx
       api/
@@ -110,20 +117,18 @@ website/
         auth/register/route.ts
         auth/logout/route.ts
         auth/me/route.ts
-        levels/route.ts
-        levels/[n]/chapters/route.ts
-        levels/[n]/chapters/[c]/words/route.ts
-        levels/[n]/combined/route.ts
         attempts/route.ts
         attempts/best/route.ts
-        attempts/recent/route.ts
         leaderboard/route.ts
         friends/route.ts
         friends/requests/route.ts
         friends/requests/[id]/accept/route.ts
         friends/requests/[id]/ignore/route.ts
-    components/               # AppHeader, VocabTable, QuizLinkCard, ScoreTimerBar,
-                               # PillButton, PercentBadge, LeaderboardTable,
+                               # no vocab API routes — vocab pages read lib/queries.ts
+                               # directly from Server Components, see "Accounts and auth" above
+    components/               # AppHeader, VocabTable, QuizLinkCard, CustomQuizPicker,
+                               # QuizRunner, ChoiceQuizRunner, MatchQuizRunner, QuizModeGate,
+                               # PillButton, PercentBadge, LeaderboardTable, AddFriendForm,
                                # FriendRequestRow, UserBadge — see 08-ui-ux.md
     lib/
       extract/                # extract-combined.ts, extract-chapters.ts (dispatch by level
@@ -135,11 +140,12 @@ website/
                                # are split into independent per-book Level rows (see
                                # hsk-level.ts), each sourced from that book's own
                                # textbook appendix
-      db.ts                   # Prisma client singleton
+      db.ts                   # Prisma client singleton (PrismaNeon driver adapter)
       auth.ts                 # password hashing + session create/lookup
       require-session.ts      # Server Component guard: redirects to /login if unauthenticated
+      login-rate-limit.ts     # Postgres-backed per-username lockout for POST /api/auth/login
+      queries.ts               # all read queries vocab pages/leaderboard/friends call directly
     quiz/                     # quiz engine: input matching, scoring, timer (framework-free)
-  dev.db                      # sqlite file, git-ignored
   tailwind.config.ts
   next.config.ts
   package.json
@@ -153,30 +159,35 @@ website/
 | `POST /api/auth/register` | — | creates a `User` + sets session cookie for `{ username, password }` |
 | `POST /api/auth/logout` | session | clears session |
 | `GET /api/auth/me` | session | current user's `{ username, displayName }` |
-| `GET /api/levels` | — | `[{ number, name, chapterCount }]` |
-| `GET /api/levels/:n/chapters` | — | chapter list with titles for the level hub page |
-| `GET /api/levels/:n/chapters/:c/words` | — | word list for that chapter's learn table + quiz |
-| `GET /api/levels/:n/combined` | — | full-level word list |
 | `POST /api/attempts` | session | records a finished quiz attempt `{ quizKey, score, total, durationSeconds }` |
 | `GET /api/attempts/best?quizKey=` | session | current user's best score for one quiz, for the results page |
-| `GET /api/attempts/recent` | session | current user's single most recent attempt (any quiz), for the dashboard page |
 | `GET /api/leaderboard?quizKey=&scope=global\|friends` | session | ranked `[{ displayName, score, total, createdAt }]` |
 | `GET /api/friends` | session | accepted friends + pending incoming/outgoing requests |
 | `POST /api/friends/requests` | session | send a friend request `{ username }` |
 | `POST /api/friends/requests/:id/accept` | session | accept a pending request |
 | `POST /api/friends/requests/:id/ignore` | session | mark a pending request `ignored` |
 
+There is no vocab REST API (an earlier draft of this doc planned `GET /api/levels` and similar
+routes; they were never built) and no `/api/attempts/recent` — the dashboard's "most recent
+attempt" comes from `getMostRecentAttempt` in `lib/queries.ts`, called directly from the Server
+Component. Vocabulary pages (level hub, learn page, quiz pages, custom-quiz picker) all read
+`lib/queries.ts` the same way.
+
 ## Local dev flow
 
-1. `npm run db:migrate` — applies Prisma migrations to `dev.db`.
+1. `npm run db:migrate` — applies Prisma migrations to the Neon database `DATABASE_URL` points
+   at (the same one used in prod — see "Tech stack" above).
 2. `npm run db:seed` — runs the extraction scripts against the in-repo `src/lib/extract/`
-   data files, writes rows into the (SQLite) database.
+   data files, writes rows into that database. A manual step, not run on every deploy (seeding
+   ~1,500 words one-by-one over the network is slow enough that it's not worth re-running unless
+   the source vocab data actually changed — see
+   [20](20-postgres-vercel-migration-plan.md)'s "What actually happened").
 3. `npm run dev` — `next dev`. One process, one port — pages and `/api/*` routes are served
    together, no proxy config needed.
 
-Prod deploy swaps step 1/2's target database (`DATABASE_URL` → the Postgres instance) and runs
-`next build && next start` (or a platform that does this for you, e.g. Vercel) — same single
-deploy artifact, frontend and API together.
+Prod deploy runs `prisma migrate deploy && next build` against the same shared database (see
+[21-vercel-deploy.md](21-vercel-deploy.md)) — same single deploy artifact, frontend and API
+together.
 
 ## One app, not frontend + separate backend
 
