@@ -258,7 +258,7 @@ export const HSK1_COMBINED_WORDS: CombinedVocabRow[] = [
   { chinese: "你们", pinyin: "nǐmen", english: "(plural) you", category: "Pronoun" },
   { chinese: "前", pinyin: "qián", english: "before, earlier than", category: "Noun" },
   { chinese: "下面", pinyin: "xiàmiàn", english: "under, below", category: "Noun" },
-  { chinese: "学", pinyin: "xué", english: "to study, to learn", category: "Verb" },
+  { chinese: "学", pinyin: "xué", english: "to learn (a skill/subject)", category: "Verb" },
   { chinese: "雨", pinyin: "yǔ", english: "rain", category: "Noun" },
   { chinese: "这儿", pinyin: "zhèr", english: "here", category: "Pronoun" },
   { chinese: "这些", pinyin: "zhèxiē", english: "these", category: "Pronoun" },

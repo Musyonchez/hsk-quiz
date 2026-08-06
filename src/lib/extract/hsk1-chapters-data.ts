@@ -223,7 +223,7 @@ export const HSK1_CHAPTERS: Hsk1ChapterData[] = [
       { chinese: "喂", pinyin: "wèi", wordType: "interj.", meaning: "hello, hey (on the phone)" },
       { chinese: "也", pinyin: "yě", wordType: "adv.", meaning: "also, too" },
       { chinese: "学习", pinyin: "xuéxí", wordType: "v.", meaning: "to study, to learn" },
-      { chinese: "学", pinyin: "xué", wordType: "v.", meaning: "to study, to learn" },
+      { chinese: "学", pinyin: "xué", wordType: "v.", meaning: "to learn (a skill/subject)" },
       { chinese: "上午", pinyin: "shàngwǔ", wordType: "n.", meaning: "morning, before noon" },
       { chinese: "睡觉", pinyin: "shuì jiào", wordType: "v.", meaning: "to sleep" },
       { chinese: "电视", pinyin: "diànshì", wordType: "n.", meaning: "television" },

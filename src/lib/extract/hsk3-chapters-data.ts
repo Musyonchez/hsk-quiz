@@ -72,9 +72,9 @@ export const HSK3_CHAPTERS: Hsk3ChapterData[] = [
     words: [
       { chinese: "衬衫", pinyin: "chènshān", wordType: "n.", meaning: "shirt" },
       { chinese: "放", pinyin: "fàng", wordType: "v.", meaning: "to put, to place" },
-      { chinese: "还是", pinyin: "háishi", wordType: "conj.", meaning: "or" },
+      { chinese: "还是", pinyin: "háishi", wordType: "conj.", meaning: "or (in questions)" },
       { chinese: "花", pinyin: "huā", wordType: "n.", meaning: "flower" },
-      { chinese: "或者", pinyin: "huòzhě", wordType: "conj.", meaning: "or" },
+      { chinese: "或者", pinyin: "huòzhě", wordType: "conj.", meaning: "or (in statements)" },
       { chinese: "记得", pinyin: "jìde", wordType: "v.", meaning: "to remember" },
       { chinese: "裤子", pinyin: "kùzi", wordType: "n.", meaning: "pants" },
       { chinese: "绿", pinyin: "lǜ", wordType: "adj.", meaning: "green" },

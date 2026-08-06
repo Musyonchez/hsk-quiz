@@ -178,7 +178,7 @@ export const HSK2_CHAPTERS: Hsk2ChapterData[] = [
       { chinese: "上班", pinyin: "shàng bān", wordType: "v.", meaning: "to work, to do a job" },
       { chinese: "懂", pinyin: "dǒng", wordType: "v.", meaning: "to understand, to know" },
       { chinese: "完", pinyin: "wán", wordType: "v.", meaning: "to finish, to end" },
-      { chinese: "题", pinyin: "tí", wordType: "n.", meaning: "question, problem" },
+      { chinese: "题", pinyin: "tí", wordType: "n.", meaning: "question (exam/exercise), topic" },
     ],
   },
   {

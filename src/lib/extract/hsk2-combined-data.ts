@@ -128,7 +128,7 @@ const HSK2_OWN_WORDS: CombinedVocabRow[] = [
   { chinese: "所以", pinyin: "suǒyǐ", english: "so, therefore", category: "Conjunction" },
   { chinese: "它", pinyin: "tā", english: "it", category: "Pronoun" },
   { chinese: "踢足球", pinyin: "tī zúqiú", english: "to play football", category: null },
-  { chinese: "题", pinyin: "tí", english: "question, problem", category: "Noun" },
+  { chinese: "题", pinyin: "tí", english: "question (exam/exercise), topic", category: "Noun" },
   { chinese: "跳舞", pinyin: "tiàowǔ", english: "to dance", category: "Verb" },
   { chinese: "外", pinyin: "wài", english: "outer, outside", category: "Noun" },
   { chinese: "完", pinyin: "wán", english: "to finish, to end", category: "Verb" },
