@@ -71,8 +71,11 @@ export default async function LandingPage() {
 
   return (
     <main className="flex flex-col items-center px-4 sm:px-6">
-      {/* Hero */}
-      <section className="flex w-full max-w-2xl flex-col items-center gap-8 py-20 text-center">
+      {/* Hero — everything above the fold in one section, per
+          docs/29-landing-page-trim-plan.md: the stats strip folds in here
+          instead of its own bordered section, and there's no second,
+          repeat CTA section further down the page. */}
+      <section className="flex w-full max-w-2xl flex-col items-center gap-6 py-16 text-center">
         <span
           aria-hidden
           className="flex h-16 w-16 -rotate-6 items-center justify-center rounded-md border-2 border-accent text-3xl font-bold text-accent"
@@ -84,20 +87,19 @@ export default async function LandingPage() {
           <p className="mx-auto mt-4 max-w-lg text-lg text-muted-foreground">
             Learn Chinese vocabulary the way you&rsquo;ll actually be tested on
             it — type the pinyin, beat the clock, watch the row turn green.
+            Free, no email required.
           </p>
         </div>
         <AuthCta />
-      </section>
-
-      {/* Stats strip */}
-      <section className="flex w-full max-w-2xl items-center justify-center gap-10 border-y border-border py-8 sm:gap-16">
-        <Stat value={levels.length} label="HSK levels" />
-        <Stat value={totalChapters} label="chapters" />
-        <Stat value={totalWords} label="combined words" />
+        <div className="flex items-center justify-center gap-8 pt-2 sm:gap-12">
+          <Stat value={levels.length} label="HSK levels" />
+          <Stat value={totalChapters} label="chapters" />
+          <Stat value={totalWords} label="combined words" />
+        </div>
       </section>
 
       {/* Features */}
-      <section className="grid w-full max-w-4xl gap-6 py-20 sm:grid-cols-3">
+      <section className="grid w-full max-w-4xl gap-6 border-t border-border py-16 sm:grid-cols-3">
         {FEATURES.map(({ icon: Icon, title, body }) => (
           <div key={title} className="rounded-xl border border-border bg-surface p-6">
             <Icon aria-hidden className="text-accent" size={28} />
@@ -108,22 +110,13 @@ export default async function LandingPage() {
       </section>
 
       {/* Vocab preview */}
-      <section className="flex w-full max-w-2xl flex-col items-center gap-4 pb-20 text-center">
+      <section className="flex w-full max-w-2xl flex-col items-center gap-4 border-t border-border py-16 text-center">
         <h2 className="text-sm font-medium uppercase tracking-wide text-muted-foreground">
           What you&rsquo;ll see
         </h2>
         <div className="w-full max-w-md">
           <VocabTableGroup words={[...PREVIEW_ROWS]} />
         </div>
-      </section>
-
-      {/* Closing CTA */}
-      <section className="flex w-full max-w-2xl flex-col items-center gap-6 border-t border-border py-20 text-center">
-        <h2 className="text-2xl font-bold">Ready to start?</h2>
-        <p className="max-w-md text-muted-foreground">
-          Free, no email required — just a username and a password.
-        </p>
-        <AuthCta />
       </section>
     </main>
   );
