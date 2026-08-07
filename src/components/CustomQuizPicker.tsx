@@ -117,7 +117,26 @@ export function CustomQuizPicker({ levels }: { levels: LevelWithChapters[] }) {
   function toggleCombined(slug: string) {
     setSelections((prev) => {
       const current = prev[slug] ?? emptySelection();
-      return { ...prev, [slug]: { combined: !current.combined, chapters: new Set() } };
+      const turningOn = !current.combined;
+      const next: Record<string, Selection> = {
+        ...prev,
+        [slug]: { combined: turningOn, chapters: new Set() },
+      };
+      // A level's Combined quiz is cumulative through every earlier level
+      // (see hsk1-combined-data.ts's own comment — "combined" has always
+      // meant "everything up through this level," not just this level's own
+      // new words), so picking it makes any selection in an earlier, lower-
+      // tier level entirely redundant. `levels` is already ordered by
+      // number/part (see getLevelsOverviewWithChapters), so its index is the
+      // tier ranking — clear every level before this one, leave later
+      // (higher-tier) levels' selections alone.
+      if (turningOn) {
+        const index = levels.findIndex((l) => l.slug === slug);
+        for (let i = 0; i < index; i++) {
+          delete next[levels[i].slug];
+        }
+      }
+      return next;
     });
   }
 
