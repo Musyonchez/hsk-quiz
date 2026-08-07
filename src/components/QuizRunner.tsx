@@ -5,6 +5,7 @@ import {
   ArrowRight,
   ChevronLeft,
   ChevronRight,
+  EyeOff,
   Flag,
   Pause,
   Play,
@@ -12,6 +13,7 @@ import {
 } from "lucide-react";
 import { matchesPinyin } from "@/quiz/pinyin-match";
 import { formatDuration } from "@/quiz/format-time";
+import { withHardSuffix } from "@/quiz/quiz-key";
 import type { QuizNavTarget } from "@/quiz/quiz-navigation";
 import type { QuizWord } from "@/quiz/types";
 import { pillClasses } from "@/components/pill-classes";
@@ -119,6 +121,13 @@ function QuizRunnerInner({
   const [currentIndex, setCurrentIndex] = useState(0);
   const [input, setInput] = useState("");
   const [correctIds, setCorrectIds] = useState<Set<number>>(new Set());
+  // docs/28-progressive-difficulty-plan.md: optional harder tier, blanking
+  // the English column too (normally always visible) so the player recalls
+  // from Chinese alone instead of Chinese+English. Only settable pre-start
+  // (see the ToolbarButton below, rendered only in the !started branch), so
+  // once a run begins this can't change mid-run — safe to read directly at
+  // submit time without a separate "locked in" ref.
+  const [hideSecondColumn, setHideSecondColumn] = useState(false);
   const [secondsLeft, setSecondsLeft] = useState(durationSeconds ?? 0);
   const [paused, setPaused] = useState(false);
   // Only the two user-triggered end states are stored — "timeup" is derived
@@ -149,16 +158,23 @@ function QuizRunnerInner({
   // re-renders but not a Replay, since QuizRunner remounts this component
   // with a fresh key). Fire-and-forget: a failed write shouldn't surface as
   // a failed quiz to the player.
+  const effectiveQuizKey = quizKey ? withHardSuffix(quizKey, hideSecondColumn) : quizKey;
+
   useEffect(() => {
-    if (!finished || submittedRef.current || !trackAttempt || !quizKey) return;
+    if (!finished || submittedRef.current || !trackAttempt || !effectiveQuizKey) return;
     submittedRef.current = true;
     const elapsedSeconds = (durationSeconds ?? 0) - secondsLeft;
-    const encodedKey = encodeURIComponent(quizKey);
+    const encodedKey = encodeURIComponent(effectiveQuizKey);
 
     fetch("/api/attempts", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ quizKey, score, total, durationSeconds: elapsedSeconds }),
+      body: JSON.stringify({
+        quizKey: effectiveQuizKey,
+        score,
+        total,
+        durationSeconds: elapsedSeconds,
+      }),
     })
       .then(() =>
         Promise.all([
@@ -186,7 +202,7 @@ function QuizRunnerInner({
         },
       )
       .catch((err) => console.error("Failed to record quiz attempt", err));
-  }, [finished, trackAttempt, quizKey, score, total, secondsLeft, durationSeconds]);
+  }, [finished, trackAttempt, effectiveQuizKey, score, total, secondsLeft, durationSeconds]);
 
   // Default Stats to open if anything was missed, closed on a perfect run —
   // set once when the quiz finishes, not re-derived on every render, so a
@@ -352,9 +368,9 @@ function QuizRunnerInner({
               Back
             </a>
           </div>
-          {trackAttempt && quizKey && (
+          {trackAttempt && effectiveQuizKey && (
             <a
-              href={`/leaderboard/${encodeURIComponent(quizKey)}`}
+              href={`/leaderboard/${encodeURIComponent(effectiveQuizKey)}`}
               className="text-sm text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
             >
               View leaderboard
@@ -437,7 +453,7 @@ function QuizRunnerInner({
               {total} words
               {timed && <> · {formatDuration(durationSeconds ?? 0)} on the clock</>}
             </p>
-            <div className="flex items-center gap-3">
+            <div className="flex flex-wrap items-center justify-center gap-3">
               <button
                 type="button"
                 onClick={() => setStarted(true)}
@@ -453,7 +469,25 @@ function QuizRunnerInner({
                 <Shuffle size={16} />
                 Shuffle
               </ToolbarButton>
+              {/* docs/28-progressive-difficulty-plan.md: opt-in harder tier,
+                  set once before Start quiz like Shuffle above — see the
+                  hideSecondColumn state comment for why it's safe to read
+                  directly (no separate "locked in" value) once a run starts. */}
+              <ToolbarButton
+                onClick={() => setHideSecondColumn((v) => !v)}
+                disabled={false}
+                label="Toggle hard mode"
+                variant={hideSecondColumn ? "active" : "default"}
+              >
+                <EyeOff size={16} />
+                {hideSecondColumn ? "Hard mode: on" : "Hard mode"}
+              </ToolbarButton>
             </div>
+            {hideSecondColumn && (
+              <p className="text-xs text-muted-foreground">
+                English stays hidden too — only the Chinese character shows until you answer.
+              </p>
+            )}
           </div>
         ) : paused ? (
           <div className="rounded-xl border border-border bg-surface p-10 text-center text-muted-foreground shadow-lg shadow-background/50">
@@ -510,7 +544,9 @@ function QuizRunnerInner({
                   <td className="px-3 py-2 text-muted-foreground">
                     {isCorrect ? word.pinyin : "—"}
                   </td>
-                  <td className="px-3 py-2">{word.meaning ?? "—"}</td>
+                  <td className="px-3 py-2">
+                    {!hideSecondColumn || isCorrect ? (word.meaning ?? "—") : "—"}
+                  </td>
                 </tr>
               );
             })}
@@ -531,7 +567,10 @@ function ToolbarButton({
   onClick: () => void;
   disabled: boolean;
   label: string;
-  variant?: "default" | "danger";
+  // "active" — a selected/toggled-on state (e.g. Hard mode once enabled),
+  // bronze per docs/30-color-palette-expansion-plan.md's accent-secondary,
+  // same "selected but not a primary action" role tabs already use it for.
+  variant?: "default" | "danger" | "active";
   children: React.ReactNode;
 }) {
   return (
@@ -540,10 +579,12 @@ function ToolbarButton({
       onClick={onClick}
       disabled={disabled}
       aria-label={label}
-      className={`flex items-center gap-1.5 rounded-full border border-border-strong px-3 py-2.5 text-sm font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-40 ${
+      className={`flex items-center gap-1.5 rounded-full border px-3 py-2.5 text-sm font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-40 ${
         variant === "danger"
-          ? "text-danger hover:bg-danger/10"
-          : "text-foreground hover:bg-surface-raised"
+          ? "border-border-strong text-danger hover:bg-danger/10"
+          : variant === "active"
+            ? "border-accent-secondary bg-accent-secondary text-accent-secondary-foreground hover:bg-accent-secondary-hover"
+            : "border-border-strong text-foreground hover:bg-surface-raised"
       }`}
     >
       {children}

@@ -27,13 +27,24 @@ export function quizKeyFor(target: {
   return `hsk${target.levelSlug}-${suffix}${wordSetSuffix}${modeSuffix}`;
 }
 
-const QUIZ_KEY_PATTERN = /^hsk([1-6][ab]?)-(combined|chapter(\d+))(-all)?(-match)?$/;
+// Appends the "hard mode" suffix (docs/28-progressive-difficulty-plan.md —
+// the optional "hide a second column" toggle) onto an already-built quizKey
+// at run-start, rather than adding a `difficulty` field to `quizKeyFor`
+// itself: the toggle is a per-run player choice made on the pre-quiz
+// screen, not a property of which quiz this is, so it's layered on here
+// instead of threaded through every `quizKeyFor` call site.
+export function withHardSuffix(quizKey: string, hard: boolean): string {
+  return hard ? `${quizKey}-hard` : quizKey;
+}
+
+const QUIZ_KEY_PATTERN = /^hsk([1-6][ab]?)-(combined|chapter(\d+))(-all)?(-match)?(-hard)?$/;
 
 export function parseQuizKey(quizKey: string): {
   levelSlug: string;
   chapterNumber: number | null;
   wordSet: "new" | "all";
   mode: "type" | "meaning";
+  difficulty: "normal" | "hard";
 } | null {
   const match = QUIZ_KEY_PATTERN.exec(quizKey);
   if (!match) return null;
@@ -42,6 +53,7 @@ export function parseQuizKey(quizKey: string): {
     chapterNumber: match[3] ? Number(match[3]) : null,
     wordSet: match[4] ? "all" : "new",
     mode: match[5] ? "meaning" : "type",
+    difficulty: match[6] ? "hard" : "normal",
   };
 }
 
@@ -65,6 +77,7 @@ export function describeQuizKey(
   const tags = [
     parsed.wordSet === "all" ? "all words" : null,
     parsed.mode === "meaning" ? "meaning" : null,
+    parsed.difficulty === "hard" ? "hard" : null,
   ].filter((tag): tag is string => tag !== null);
   return tags.length > 0 ? `${base} (${tags.join(", ")})` : base;
 }
