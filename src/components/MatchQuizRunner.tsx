@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { Fragment, useEffect, useMemo, useRef, useState } from "react";
 import { ArrowRight, Flag, Pause, Play, Shuffle } from "lucide-react";
 import { formatDuration } from "@/quiz/format-time";
 import type { QuizNavTarget } from "@/quiz/quiz-navigation";
@@ -373,46 +373,47 @@ function MatchQuizRunnerInner({
       </div>
 
       {started && !paused && (
-        <div className="grid grid-cols-2 gap-4">
-          <div className="flex flex-col gap-2">
-            {leftBoard.map((id) => {
-              const word = byId.get(id)!;
-              return (
+        // A single grid, not two independent flex-col columns — leftBoard[i]
+        // and rightBoard[i] are two unrelated words (each board is shuffled
+        // independently, on purpose, for the memory-match mechanic), but
+        // their tiles still need to sit in the same grid row so a taller
+        // wrapped meaning on one side doesn't push every row below it out of
+        // horizontal alignment with the other column. Native grid row-sizing
+        // (each row auto-sizes to its tallest cell) handles this for free;
+        // two separate flex-col stacks never could.
+        <div className="grid grid-cols-2 gap-x-4 gap-y-2">
+          {leftBoard.map((leftId, i) => {
+            const rightId = rightBoard[i];
+            const leftWord = byId.get(leftId)!;
+            const rightWord = byId.get(rightId)!;
+            return (
+              <Fragment key={leftId}>
                 <button
-                  key={id}
                   type="button"
-                  onClick={() => pickLeft(id)}
+                  onClick={() => pickLeft(leftId)}
                   className={`rounded-lg border px-4 py-3 text-left text-sm transition-colors ${
-                    selectedLeft === id
+                    selectedLeft === leftId
                       ? "border-current-row bg-current-row-surface font-medium"
                       : "border-border hover:border-border-strong hover:bg-surface-raised"
                   }`}
                 >
-                  <span className="font-medium">{word.chinese}</span>{" "}
-                  <span className="text-muted-foreground">{word.pinyin}</span>
+                  <span className="font-medium">{leftWord.chinese}</span>{" "}
+                  <span className="text-muted-foreground">{leftWord.pinyin}</span>
                 </button>
-              );
-            })}
-          </div>
-          <div className="flex flex-col gap-2">
-            {rightBoard.map((id) => {
-              const word = byId.get(id)!;
-              return (
                 <button
-                  key={id}
                   type="button"
-                  onClick={() => pickRight(id)}
+                  onClick={() => pickRight(rightId)}
                   className={`rounded-lg border px-4 py-3 text-left text-sm transition-colors ${
-                    selectedRight === id
+                    selectedRight === rightId
                       ? "border-current-row bg-current-row-surface font-medium"
                       : "border-border hover:border-border-strong hover:bg-surface-raised"
                   }`}
                 >
-                  {word.meaning ?? "—"}
+                  {rightWord.meaning ?? "—"}
                 </button>
-              );
-            })}
-          </div>
+              </Fragment>
+            );
+          })}
         </div>
       )}
     </div>
