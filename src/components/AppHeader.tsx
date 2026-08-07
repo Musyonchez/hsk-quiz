@@ -105,14 +105,17 @@ export async function AppHeader() {
                 <LogoutButton />
               </>
             ) : (
-              <>
+              // Side by side, not stacked with everything else in the
+              // drawer's flex-col — a two-button row reads oddly split
+              // across two lines.
+              <div className="flex items-center gap-3">
                 <Link href="/login" className={pillClasses("primary", false, "sm")}>
                   Log in
                 </Link>
                 <Link href="/register" className={pillClasses("secondary", false, "sm")}>
                   Register
                 </Link>
-              </>
+              </div>
             )}
           </MobileNav>
         </div>
