@@ -54,7 +54,11 @@ export function getLevelWithChapters(slug: string) {
     include: {
       chapters: {
         orderBy: { number: "asc" },
-        include: { _count: { select: { words: true } } },
+        // Scoped to "chapter" (New Words) for the same reason as
+        // getChapterWithWords above — an unfiltered count would now also
+        // include each chapter's "dialog" rows once they exist, inflating
+        // the level hub's "N words" per chapter.
+        include: { _count: { select: { words: { where: { source: "chapter" } } } } },
       },
     },
   });
@@ -77,7 +81,14 @@ export function getChapterWithWords(slug: string, chapterNumber: number) {
   return prisma.chapter.findFirst({
     where: { number: chapterNumber, level: { slug } },
     include: {
-      words: { orderBy: { id: "asc" } },
+      // Scoped to "chapter" (New Words) explicitly — before
+      // docs/25-chapter-all-words-plan.md, chapterId was only ever set on
+      // "chapter"-source rows, so this filter was implicit. Now "dialog"
+      // rows share the same chapterId, so leaving this unfiltered would
+      // silently merge a chapter's curated New Words with its entire dialog
+      // vocabulary — including in the New Words quiz itself, not just this
+      // page's display.
+      words: { where: { source: "chapter" }, orderBy: { id: "asc" } },
       level: { select: { name: true } },
     },
   });
