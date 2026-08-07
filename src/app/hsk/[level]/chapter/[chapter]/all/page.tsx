@@ -69,13 +69,19 @@ export default async function ChapterDialogPage({
             </h2>
             <div className="flex flex-col gap-2">
               {scene.lines.map((line) => (
-                <div key={line.order} className="rounded-lg border border-border bg-surface p-4">
-                  <p>
-                    <span className="font-semibold text-accent">{line.speaker}:</span>{" "}
-                    <span className="font-medium">{line.chinese}</span>{" "}
-                    <span className="text-muted-foreground">({line.pinyin})</span>
-                  </p>
-                  <p className="mt-1 text-sm text-muted-foreground">{line.english}</p>
+                <div
+                  key={line.order}
+                  className="flex gap-2 rounded-lg border border-border bg-surface p-4"
+                >
+                  <span className="shrink-0 font-semibold text-accent">{line.speaker}:</span>
+                  {/* Chinese/pinyin/English each on their own line, all
+                      starting at the same left edge — right after the
+                      speaker label, not the card's own left edge. */}
+                  <div className="flex flex-col">
+                    <span className="font-medium">{line.chinese}</span>
+                    <span className="text-muted-foreground">{line.pinyin}</span>
+                    <span className="mt-1 text-sm text-muted-foreground">{line.english}</span>
+                  </div>
                 </div>
               ))}
             </div>
