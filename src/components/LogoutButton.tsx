@@ -1,9 +1,27 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 
 export function LogoutButton() {
+  const [confirming, setConfirming] = useState(false);
   const [loggingOut, setLoggingOut] = useState(false);
+  // The confirmation dialog is portaled to document.body (below) rather than
+  // rendered in place, so it isn't trapped inside AppHeader's backdrop-blur
+  // — any element with a backdrop-filter/filter establishes a containing
+  // block for position: fixed descendants (CSS Filter Effects spec), which
+  // confined an in-place "fixed inset-0" overlay to the header's own ~64px
+  // box instead of the viewport. Portals need document to exist, so this
+  // only renders after mount — server-rendered output has no dialog markup.
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => {
+    // One-time mount detection for the portal target (document.body), which
+    // can't exist before mount — not state this effect is meant to keep
+    // syncing, so the usual "move it into an event handler" advice doesn't
+    // apply here (same exception CustomQuizPicker.tsx documents).
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setMounted(true);
+  }, []);
 
   async function handleLogout() {
     setLoggingOut(true);
@@ -14,13 +32,59 @@ export function LogoutButton() {
   }
 
   return (
-    <button
-      type="button"
-      onClick={handleLogout}
-      disabled={loggingOut}
-      className="text-sm text-muted-foreground hover:text-foreground disabled:opacity-60"
-    >
-      {loggingOut ? "Logging out…" : "Log out"}
-    </button>
+    <>
+      <button
+        type="button"
+        onClick={() => setConfirming(true)}
+        className="rounded-full bg-danger px-4 py-1.5 text-sm font-medium text-accent-foreground transition-colors hover:bg-danger/85"
+      >
+        Log out
+      </button>
+
+      {mounted &&
+        confirming &&
+        createPortal(
+          <div
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4"
+            onClick={() => !loggingOut && setConfirming(false)}
+          >
+            <div
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="logout-confirm-heading"
+              onClick={(e) => e.stopPropagation()}
+              className="flex w-full max-w-sm flex-col gap-4 rounded-xl border border-border bg-surface p-6 shadow-lg shadow-background/50"
+            >
+              <div>
+                <h2 id="logout-confirm-heading" className="text-lg font-bold">
+                  Log out?
+                </h2>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  You&rsquo;ll need to sign back in to keep playing.
+                </p>
+              </div>
+              <div className="flex justify-end gap-3">
+                <button
+                  type="button"
+                  onClick={() => setConfirming(false)}
+                  disabled={loggingOut}
+                  className="rounded-full border border-border-strong px-4 py-1.5 text-sm font-medium text-foreground transition-colors hover:bg-surface-raised disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={handleLogout}
+                  disabled={loggingOut}
+                  className="rounded-full bg-danger px-4 py-1.5 text-sm font-medium text-accent-foreground transition-colors hover:bg-danger/85 disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  {loggingOut ? "Logging out…" : "Log out"}
+                </button>
+              </div>
+            </div>
+          </div>,
+          document.body
+        )}
+    </>
   );
 }
