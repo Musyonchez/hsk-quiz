@@ -53,3 +53,13 @@ next-env.d.ts
 /.claude
 /.windsurf
 /skills-lock.json
+
+# Playwright MCP's default screenshot/snapshot output dir — must never land
+# here during `npm run dev`: the dev server's file watcher treats any new
+# file here as a change and fires a Fast Refresh rebuild, which remounts
+# client components and silently resets their local state (found the hard
+# way testing docs/28's Hard mode toggle). Always pass an absolute
+# out-of-repo path to browser_take_screenshot/browser_snapshot instead of
+# relying on this being ignored — gitignore doesn't stop the watcher, it
+# only stops the files from being committed if one slips through.
+/.playwright-mcp
