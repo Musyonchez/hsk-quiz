@@ -13,6 +13,14 @@
   --accent-hover: #a8391f;
   --accent-foreground: #fbf1e8;
 
+  /* Second accent, "bronze" — docs/30-color-palette-expansion-plan.md.
+     Active-tab/selection fill, distinct from --accent so a screen can show
+     both a primary action (seal red) and an active tab (bronze) without
+     reading as two competing calls-to-action. */
+  --accent-secondary: #8a6c3f;
+  --accent-secondary-hover: #75592f;
+  --accent-secondary-foreground: #fbf1e8;
+
   --success: #5c8a54;
   --success-surface: rgba(92, 138, 84, 0.16);
   --current-row: #c99a3a;
@@ -41,6 +49,10 @@
   --color-accent: var(--accent);
   --color-accent-hover: var(--accent-hover);
   --color-accent-foreground: var(--accent-foreground);
+
+  --color-accent-secondary: var(--accent-secondary);
+  --color-accent-secondary-hover: var(--accent-secondary-hover);
+  --color-accent-secondary-foreground: var(--accent-secondary-foreground);
 
   --color-success: var(--success);
   --color-success-surface: var(--success-surface);

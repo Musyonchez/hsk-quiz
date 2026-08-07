@@ -48,6 +48,22 @@ The accent is used **once per screen** — the single primary call to action. It
 text, links, secondary buttons, or decoration. If two things on a screen want to be red, one of
 them is wrong.
 
+## Second accent: bronze (tab/selection state)
+
+[30-color-palette-expansion-plan.md](30-color-palette-expansion-plan.md) added a second accent
+once tab groups (leaderboard scope tabs, [AllWordsTabs](../src/components/AllWordsTabs.tsx))
+grew common enough that reusing `--accent` for "this tab is active" started reading as a second
+competing call-to-action on the same screen as a real `PLAY QUIZ` button.
+
+| Token | Hex | Role |
+|---|---|---|
+| `--accent-secondary` | `#8a6c3f` | Bronze — active-tab fill, secondary selection state. Never a primary call to action. |
+| `--accent-secondary-hover` | `#75592f` | Hover/active state, darker not lighter, same ink-darkens rule as `--accent-hover` |
+| `--accent-secondary-foreground` | `#fbf1e8` | Text/icon on top of `--accent-secondary` (reuses `--accent-foreground`'s value) |
+
+Usage stays scoped to tabs/mode-pickers/filter chips — not a general-purpose second color for
+decoration, same restraint as the primary accent.
+
 ## Semantic colors
 
 | Token | Hex | Role |
