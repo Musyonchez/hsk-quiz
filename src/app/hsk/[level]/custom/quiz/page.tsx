@@ -26,7 +26,8 @@ export default async function CustomQuizPage({
   if (!isLevelSlug(levelSlug)) notFound();
 
   const { chapters, mode } = await searchParams;
-  const initialMode = mode === "type" || mode === "meaning" ? mode : null;
+  const initialMode =
+    mode === "type" || mode === "meaning" || mode === "character" ? mode : null;
   const chapterNumbers = parseChapterNumbers(chapters);
   const backHref = "/custom-quiz";
 
@@ -71,6 +72,7 @@ export default async function CustomQuizPage({
         backHref={backHref}
         trackAttempt={false}
         meaningVariant="choice"
+        characterVariant="choice"
         allowDrillMissed
         initialMode={initialMode}
       />

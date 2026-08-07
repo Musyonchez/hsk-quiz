@@ -51,7 +51,8 @@ export default async function CrossLevelCustomQuizPage({
 }) {
   await requireSession();
   const { picks, mode } = await searchParams;
-  const initialMode = mode === "type" || mode === "meaning" ? mode : null;
+  const initialMode =
+    mode === "type" || mode === "meaning" || mode === "character" ? mode : null;
   const selections = parseSelections(picks);
   const backHref = "/custom-quiz";
 
@@ -101,6 +102,7 @@ export default async function CrossLevelCustomQuizPage({
         backHref={backHref}
         trackAttempt={false}
         meaningVariant="choice"
+        characterVariant="choice"
         allowDrillMissed
         initialMode={initialMode}
       />

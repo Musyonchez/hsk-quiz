@@ -4,10 +4,11 @@
 // they're wired back into ALL_LEVELS — see docs/14-phase6-plan.md.
 //
 // `mode` distinguishes the typing quiz from the pinyin->meaning quiz
-// (docs/19-meaning-quiz-mode-plan.md) — a guessed multiple-choice/matching
-// run isn't comparable difficulty to a fully-typed recall run, so tracked
-// meaning-mode runs get a distinct "-match" suffixed key rather than
-// sharing the typing mode's leaderboard rows.
+// (docs/19-meaning-quiz-mode-plan.md) and the meaning->character quiz
+// (docs/27-character-quiz-plan.md) — a guessed multiple-choice/matching run
+// isn't comparable difficulty to a fully-typed recall run, and reading a
+// character isn't the same skill as recalling its meaning, so each tracked
+// non-typing mode gets its own suffixed key rather than sharing rows.
 //
 // `wordSet` distinguishes a chapter's curated New Words (default) from its
 // full dialog vocabulary, "All Words" (docs/25-chapter-all-words-plan.md) —
@@ -17,13 +18,14 @@
 export function quizKeyFor(target: {
   levelSlug: string;
   chapterNumber?: number;
-  mode?: "type" | "meaning";
+  mode?: "type" | "meaning" | "character";
   wordSet?: "new" | "all";
 }): string {
   const suffix =
     target.chapterNumber === undefined ? "combined" : `chapter${target.chapterNumber}`;
   const wordSetSuffix = target.wordSet === "all" ? "-all" : "";
-  const modeSuffix = target.mode === "meaning" ? "-match" : "";
+  const modeSuffix =
+    target.mode === "meaning" ? "-match" : target.mode === "character" ? "-char" : "";
   return `hsk${target.levelSlug}-${suffix}${wordSetSuffix}${modeSuffix}`;
 }
 
@@ -37,13 +39,14 @@ export function withHardSuffix(quizKey: string, hard: boolean): string {
   return hard ? `${quizKey}-hard` : quizKey;
 }
 
-const QUIZ_KEY_PATTERN = /^hsk([1-6][ab]?)-(combined|chapter(\d+))(-all)?(-match)?(-hard)?$/;
+const QUIZ_KEY_PATTERN =
+  /^hsk([1-6][ab]?)-(combined|chapter(\d+))(-all)?(-match|-char)?(-hard)?$/;
 
 export function parseQuizKey(quizKey: string): {
   levelSlug: string;
   chapterNumber: number | null;
   wordSet: "new" | "all";
-  mode: "type" | "meaning";
+  mode: "type" | "meaning" | "character";
   difficulty: "normal" | "hard";
 } | null {
   const match = QUIZ_KEY_PATTERN.exec(quizKey);
@@ -52,7 +55,7 @@ export function parseQuizKey(quizKey: string): {
     levelSlug: match[1],
     chapterNumber: match[3] ? Number(match[3]) : null,
     wordSet: match[4] ? "all" : "new",
-    mode: match[5] ? "meaning" : "type",
+    mode: match[5] === "-match" ? "meaning" : match[5] === "-char" ? "character" : "type",
     difficulty: match[6] ? "hard" : "normal",
   };
 }
@@ -76,7 +79,7 @@ export function describeQuizKey(
       : `${levelName} — Chapter ${parsed.chapterNumber}`;
   const tags = [
     parsed.wordSet === "all" ? "all words" : null,
-    parsed.mode === "meaning" ? "meaning" : null,
+    parsed.mode === "meaning" ? "meaning" : parsed.mode === "character" ? "character" : null,
     parsed.difficulty === "hard" ? "hard" : null,
   ].filter((tag): tag is string => tag !== null);
   return tags.length > 0 ? `${base} (${tags.join(", ")})` : base;

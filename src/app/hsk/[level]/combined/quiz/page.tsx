@@ -18,7 +18,8 @@ export default async function CombinedQuizPage({
   const { level: levelSlug } = await params;
   if (!isLevelSlug(levelSlug)) notFound();
   const { mode } = await searchParams;
-  const initialMode = mode === "type" || mode === "meaning" ? mode : null;
+  const initialMode =
+    mode === "type" || mode === "meaning" || mode === "character" ? mode : null;
 
   const [words, level, levels] = await Promise.all([
     getCombinedWords(levelSlug),
@@ -30,6 +31,7 @@ export default async function CombinedQuizPage({
   const backHref = `/hsk/${levelSlug}/combined`;
   const typeQuizKey = quizKeyFor({ levelSlug });
   const meaningQuizKey = quizKeyFor({ levelSlug, mode: "meaning" });
+  const characterQuizKey = quizKeyFor({ levelSlug, mode: "character" });
   const { next, another } = getQuizNavigation(
     { levelSlug, chapterNumber: null },
     levels.map((l) => ({ slug: l.slug, name: l.name, chapterCount: l._count.chapters }))
@@ -56,7 +58,9 @@ export default async function CombinedQuizPage({
         backHref={backHref}
         typeQuizKey={typeQuizKey}
         meaningQuizKey={meaningQuizKey}
+        characterQuizKey={characterQuizKey}
         meaningVariant="choice"
+        characterVariant="choice"
         allowDrillMissed
         nextQuiz={next}
         anotherQuiz={another}
