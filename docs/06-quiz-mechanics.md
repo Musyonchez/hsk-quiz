@@ -64,6 +64,16 @@ toggle, `SCORE 0/N`, `TIMER 10:00` (configurable, default matches reference).
   /api/leaderboard?quizKey=&scope=friends` instead. A link from here into the full leaderboard
   page — see [09-pages.md](09-pages.md).
 
+## Hard mode (optional, per docs/28-progressive-difficulty-plan.md)
+
+An opt-in toggle on the pre-quiz "Start quiz" screen (`QuizRunner`, Type pinyin mode first —
+see docs/28 for why the other modes come later), set the same way Shuffle already is: before
+starting, not mid-run. With it on, the English column is blanked too, alongside the pinyin
+column the typing quiz already blanks — the player recalls from the Chinese character alone
+instead of Chinese+English, revealing both hidden columns for a row once it's answered. Tracked
+runs get a `-hard` suffixed `quizKey` (`withHardSuffix` in `quiz-key.ts`), so hard-mode scores
+never mix into a normal run's leaderboard.
+
 ## Grammar-pattern items (optional, from Rule 2 of extraction)
 
 Chapters that yield a qualifying structural pattern (e.g. `是...的`, `把`-sentence) get an
