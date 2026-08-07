@@ -138,3 +138,30 @@ lands, so this can happen gradually rather than all 50 at once.
   chapter's New Words attempts; a chapter with zero dialog rows still 404s cleanly if `/all` is
   hit directly.
 - `tsc --noEmit` / `eslint` clean, `npm run build` clean, as always.
+
+## Addendum: real dialog transcripts, not just extracted vocabulary
+
+After the vocabulary version of this feature shipped and was populated from `hold.txt` for all 50
+chapters, the user asked for a further step: `hold.txt` doesn't just contain vocabulary — it
+contains the actual textbook dialog transcripts (speaker, Chinese, pinyin, English, per line,
+grouped into "Dialog 1/2/3..." scenes) that the vocabulary was originally extracted *from*. That
+content is worth surfacing directly, not just mined for words and discarded.
+
+**Tab restructure**: the "Dialog" tab (previously the All Words vocabulary table, mislabeled)
+becomes the real conversation transcript; the vocabulary table moves to a new, explicitly-named
+"All Words" tab. Four tabs total: **Dialog** (transcript) / **All Words** (vocabulary list) /
+**Type pinyin** / **Match meaning**.
+
+**New data model**: a `DialogLine` table (`chapterId`, `dialogNumber` + optional scene `label`,
+`order` for full-chapter reading order, `speaker`, `chinese`, `pinyin`, `english`) — genuinely
+different shape from `Word` (full sentences with a speaker and an English translation, not a
+single vocabulary entry), so a new model rather than overloading `Word` again.
+
+**Routes**: `/hsk/[level]/chapter/[chapter]/all` becomes the transcript page; the vocabulary list
+moves to `/hsk/[level]/chapter/[chapter]/all/words`; `/all/quiz` unchanged. Same incremental-
+rollout gating as the vocabulary version — the Learn page's card and the transcript page itself
+only appear once a chapter actually has `DialogLine` rows.
+
+**Source**: re-parsed from the same `hold.txt` already used for the vocabulary extraction — the
+dialog lines and their pinyin/English translations were sitting right there in the same source,
+just not captured by the first pass (which only needed the Chinese text to segment against).

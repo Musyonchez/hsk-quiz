@@ -1,16 +1,17 @@
 import Link from "next/link";
 
-// Shared by /hsk/[level]/chapter/[chapter]/all and its /quiz route
-// (docs/25-chapter-all-words-plan.md) — three tabs: the plain dialog
-// reference list itself, and the two quiz modes, all pointed at the same
-// underlying dialog word set. Same active/inactive pill styling as the
-// leaderboard pages' existing tabClasses, reused rather than reinvented.
+// Shared by /hsk/[level]/chapter/[chapter]/all, its /words sub-page, and its
+// /quiz route (docs/25-chapter-all-words-plan.md, and its addendum) — four
+// tabs: the real dialog transcript, the flat All Words vocabulary list, and
+// the two quiz modes, all scoped to the same chapter. Same active/inactive
+// pill styling as the leaderboard pages' existing tabClasses, reused rather
+// than reinvented.
 export function AllWordsTabs({
   baseHref,
   active,
 }: {
   baseHref: string;
-  active: "dialog" | "type" | "meaning";
+  active: "dialog" | "words" | "type" | "meaning";
 }) {
   const tabClasses = (isActive: boolean) =>
     `rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
@@ -23,6 +24,9 @@ export function AllWordsTabs({
     <div className="flex flex-wrap gap-2">
       <Link href={baseHref} className={tabClasses(active === "dialog")}>
         Dialog
+      </Link>
+      <Link href={`${baseHref}/words`} className={tabClasses(active === "words")}>
+        All Words
       </Link>
       <Link href={`${baseHref}/quiz?mode=type`} className={tabClasses(active === "type")}>
         Type pinyin

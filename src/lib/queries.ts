@@ -114,6 +114,24 @@ export function getChapterDialogWordCount(slug: string, chapterNumber: number) {
   });
 }
 
+// A chapter's actual dialog transcript (docs/25-chapter-all-words-plan.md's
+// addendum) — full sentences with a speaker and English translation, not
+// vocabulary entries. Ordered by DialogLine's own `order` (absolute across
+// the whole chapter), set at seed time to match the source dialog's real
+// reading order.
+export function getChapterDialogLines(slug: string, chapterNumber: number) {
+  return prisma.dialogLine.findMany({
+    where: { chapter: { number: chapterNumber, level: { slug } } },
+    orderBy: { order: "asc" },
+  });
+}
+
+export function getChapterDialogLineCount(slug: string, chapterNumber: number) {
+  return prisma.dialogLine.count({
+    where: { chapter: { number: chapterNumber, level: { slug } } },
+  });
+}
+
 export function getCombinedWords(slug: string) {
   return prisma.word.findMany({
     where: { level: { slug }, source: "combined" },

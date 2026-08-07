@@ -28,6 +28,7 @@ model Chapter {
   title           String
   words           Word[]
   grammarPatterns GrammarPattern[]
+  dialogLines     DialogLine[]
 
   @@unique([levelId, number])
 }
@@ -53,6 +54,28 @@ model Word {
   // dialog text, and All Words intentionally isn't deduplicated against
   // New Words (see docs/25's "What All Words means here").
   @@unique([chapterId, chinese, source])
+}
+
+// A chapter's actual dialog transcript — docs/25-chapter-all-words-plan.md's
+// addendum. Genuinely different shape from Word (a full sentence with a
+// speaker and an English translation, not a single vocabulary entry), so
+// its own model rather than overloading Word again. `order` is absolute
+// across the whole chapter (spans every dialogNumber) so the transcript
+// page can render everything in one straightforward orderBy without also
+// needing a secondary sort key.
+model DialogLine {
+  id           Int     @id @default(autoincrement())
+  chapterId    Int
+  chapter      Chapter @relation(fields: [chapterId], references: [id])
+  order        Int
+  dialogNumber Int // which "Dialog N" scene this line belongs to
+  dialogLabel  String? // e.g. "In the classroom" — same for every line in that scene
+  speaker      String // "A" | "B" | a named character, e.g. "小丽" | "妈妈"
+  chinese      String
+  pinyin       String
+  english      String
+
+  @@unique([chapterId, order])
 }
 
 model GrammarPattern {

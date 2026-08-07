@@ -59,12 +59,14 @@ export default async function ChapterLearnPage({
 
       {/* Only shown once this chapter actually has dialog data — no dead
           links while docs/25-chapter-all-words-plan.md's rollout is still
-          incremental across chapters. */}
+          incremental across chapters. Links to /all, the real dialog
+          transcript (the plan doc's addendum) — its own tab bar reaches the
+          All Words vocabulary list and both quiz modes from there. */}
       {dialogWordCount > 0 && (
         <QuizLinkCard
           href={`/hsk/${levelSlug}/chapter/${chapterNumber}/all`}
           eyebrow="This chapter's dialog"
-          title={`All Words — ${dialogWordCount} words`}
+          title={`Dialog & All Words — ${dialogWordCount} words`}
           icon={MessageSquare}
         />
       )}

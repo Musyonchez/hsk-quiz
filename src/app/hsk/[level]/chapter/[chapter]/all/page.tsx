@@ -1,17 +1,16 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { requireSession } from "@/lib/require-session";
-import { getChapterDialogWords, getChapterWithWords } from "@/lib/queries";
+import { getChapterDialogLines, getChapterWithWords } from "@/lib/queries";
 import { isLevelSlug } from "@/lib/hsk-level";
-import { VocabTable } from "@/components/VocabTable";
 import { AllWordsTabs } from "@/components/AllWordsTabs";
 
-// docs/25-chapter-all-words-plan.md's "Dialog" tab — a chapter's full,
-// independently-ordered dialog vocabulary, not merged/deduplicated against
-// that chapter's New Words (see the Learn page). 404s if the chapter has no
-// dialog data yet, same as the Learn page's "All Words" card only appearing
-// once that data exists — no dead links either way.
-export default async function ChapterAllWordsPage({
+// docs/25-chapter-all-words-plan.md's addendum: the real "Dialog" tab — the
+// chapter's actual textbook conversation (speaker, Chinese, pinyin, English
+// per line, grouped into scenes), not just the vocabulary extracted from it
+// (see the "All Words" tab / .../all/words). 404s if the chapter has no
+// transcript data yet, same gating as the Learn page's "All Words" card.
+export default async function ChapterDialogPage({
   params,
 }: {
   params: Promise<{ level: string; chapter: string }>;
@@ -24,16 +23,29 @@ export default async function ChapterAllWordsPage({
     redirect(`/hsk/${levelSlug}/chapter/${chapterNumber}/all`);
   }
 
-  const [chapter, dialogWords] = await Promise.all([
+  const [chapter, lines] = await Promise.all([
     getChapterWithWords(levelSlug, chapterNumber),
-    getChapterDialogWords(levelSlug, chapterNumber),
+    getChapterDialogLines(levelSlug, chapterNumber),
   ]);
-  if (!chapter || dialogWords.length === 0) notFound();
+  if (!chapter || lines.length === 0) notFound();
 
   const baseHref = `/hsk/${levelSlug}/chapter/${chapterNumber}/all`;
 
+  // Group consecutive lines by dialogNumber for separate scene blocks —
+  // `lines` is already in full-chapter reading order (DialogLine.order), so
+  // a single pass is enough; no need to re-sort within each scene.
+  const scenes: { dialogNumber: number; dialogLabel: string | null; lines: typeof lines }[] = [];
+  for (const line of lines) {
+    const currentScene = scenes.at(-1);
+    if (currentScene && currentScene.dialogNumber === line.dialogNumber) {
+      currentScene.lines.push(line);
+    } else {
+      scenes.push({ dialogNumber: line.dialogNumber, dialogLabel: line.dialogLabel, lines: [line] });
+    }
+  }
+
   return (
-    <main className="mx-auto flex w-full max-w-4xl flex-col gap-8 px-4 py-12 sm:px-6">
+    <main className="mx-auto flex w-full max-w-3xl flex-col gap-8 px-4 py-12 sm:px-6">
       <div>
         <Link
           href={`/hsk/${levelSlug}/chapter/${chapterNumber}`}
@@ -42,13 +54,34 @@ export default async function ChapterAllWordsPage({
           ← Chapter {chapter.number}
         </Link>
         <h1 className="mt-2 text-2xl font-bold">
-          Chapter {chapter.number} — {chapter.title} — All Words
+          Chapter {chapter.number} — {chapter.title} — Dialog
         </h1>
       </div>
 
       <AllWordsTabs baseHref={baseHref} active="dialog" />
 
-      <VocabTable words={dialogWords} />
+      <div className="flex flex-col gap-8">
+        {scenes.map((scene) => (
+          <div key={scene.dialogNumber} className="flex flex-col gap-3">
+            <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+              Dialog {scene.dialogNumber}
+              {scene.dialogLabel && <> — {scene.dialogLabel}</>}
+            </h2>
+            <div className="flex flex-col gap-2">
+              {scene.lines.map((line) => (
+                <div key={line.order} className="rounded-lg border border-border bg-surface p-4">
+                  <p>
+                    <span className="font-semibold text-accent">{line.speaker}:</span>{" "}
+                    <span className="font-medium">{line.chinese}</span>{" "}
+                    <span className="text-muted-foreground">({line.pinyin})</span>
+                  </p>
+                  <p className="mt-1 text-sm text-muted-foreground">{line.english}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
     </main>
   );
 }

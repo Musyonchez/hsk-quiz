@@ -3,6 +3,7 @@ import { prisma } from "@/lib/db";
 import { extractAllCombinedLevels } from "@/lib/extract/extract-combined";
 import { extractAllChapters } from "@/lib/extract/extract-chapters";
 import { extractAllDialogWords } from "@/lib/extract/extract-dialog";
+import { extractAllTranscripts } from "@/lib/extract/extract-transcripts";
 import { ALL_LEVELS, type LevelSlug } from "@/lib/hsk-level";
 
 async function ensureLevels(): Promise<Record<LevelSlug, number>> {
@@ -224,11 +225,55 @@ async function seedDialogWords(levelIds: Record<LevelSlug, number>) {
   }
 }
 
+// A chapter's dialog transcript (docs/25-chapter-all-words-plan.md's
+// addendum) — unlike Word rows (upserted one at a time, matched/kept stable
+// by their own chinese/pinyin/meaning), a transcript is just "the ordered
+// list of lines for this chapter," so delete-then-recreate per chapter is
+// simpler and correct: no stable identity for a single line to upsert
+// against anyway (order is literally what defines it), and a batched
+// createMany is far faster than one row at a time over the network.
+async function seedTranscripts(levelIds: Record<LevelSlug, number>) {
+  const transcriptChapters = await extractAllTranscripts();
+
+  for (const transcriptData of transcriptChapters) {
+    if (transcriptData.lines.length === 0) continue;
+    const levelId = levelIds[transcriptData.level];
+    const chapterRow = await prisma.chapter.findUnique({
+      where: { levelId_number: { levelId, number: transcriptData.chapterNumber } },
+    });
+    if (!chapterRow) {
+      console.warn(
+        `Skipping transcript for HSK${transcriptData.level} chapter ${transcriptData.chapterNumber}: no matching chapter row`
+      );
+      continue;
+    }
+
+    await prisma.dialogLine.deleteMany({ where: { chapterId: chapterRow.id } });
+    await prisma.dialogLine.createMany({
+      data: transcriptData.lines.map((line) => ({
+        chapterId: chapterRow.id,
+        order: line.order,
+        dialogNumber: line.dialogNumber,
+        dialogLabel: line.dialogLabel,
+        speaker: line.speaker,
+        chinese: line.chinese,
+        pinyin: line.pinyin,
+        english: line.english,
+      })),
+    });
+
+    console.log(
+      `Seeded HSK${transcriptData.level} chapter ${transcriptData.chapterNumber} transcript: ${transcriptData.lines.length} lines`
+    );
+  }
+}
+
 async function main() {
   const levelIds = await ensureLevels();
   await seedCombinedLevels(levelIds);
   await seedChapters(levelIds);
   await seedDialogWords(levelIds);
+  await seedTranscripts(levelIds);
 }
 
 main()
