@@ -29,7 +29,7 @@ export default async function LeaderboardPage({
   const tabClasses = (active: boolean) =>
     `rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
       active
-        ? "bg-accent text-accent-foreground"
+        ? "bg-accent-secondary text-accent-secondary-foreground"
         : "border border-border-strong text-foreground hover:bg-surface-raised"
     }`;
 

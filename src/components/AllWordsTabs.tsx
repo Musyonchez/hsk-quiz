@@ -16,7 +16,7 @@ export function AllWordsTabs({
   const tabClasses = (isActive: boolean) =>
     `rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
       isActive
-        ? "bg-accent text-accent-foreground"
+        ? "bg-accent-secondary text-accent-secondary-foreground"
         : "border border-border-strong text-foreground hover:bg-surface-raised"
     }`;
 
