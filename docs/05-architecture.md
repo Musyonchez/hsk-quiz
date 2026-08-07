@@ -97,8 +97,11 @@ website/
   src/
     app/
       layout.tsx             # <AppHeader> + Tailwind globals
-      page.tsx                # Public landing (§1 in 09-pages.md)
-      dashboard/page.tsx      # Dashboard, session-protected (§1.5 in 09-pages.md)
+      page.tsx                # "/" — marketing landing page when logged out,
+                               # last-played + level grid when logged in (no
+                               # separate /dashboard route; folded in here as
+                               # of docs/25's landing-page update, replacing
+                               # what 09-pages.md §1.5 originally described)
       login/page.tsx
       register/page.tsx
       hsk/[level]/page.tsx                       # Level hub
@@ -168,9 +171,9 @@ website/
 | `POST /api/friends/requests/:id/ignore` | session | mark a pending request `ignored` |
 
 There is no vocab REST API (an earlier draft of this doc planned `GET /api/levels` and similar
-routes; they were never built) and no `/api/attempts/recent` — the dashboard's "most recent
-attempt" comes from `getMostRecentAttempt` in `lib/queries.ts`, called directly from the Server
-Component. Vocabulary pages (level hub, learn page, quiz pages, custom-quiz picker) all read
+routes; they were never built) and no `/api/attempts/recent` — the logged-in "/" view's "most
+recent attempt" line comes from `getMostRecentAttempt` in `lib/queries.ts`, called directly from
+the Server Component. Vocabulary pages (level hub, learn page, quiz pages, custom-quiz picker) all read
 `lib/queries.ts` the same way.
 
 ## Local dev flow

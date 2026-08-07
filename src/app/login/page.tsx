@@ -30,12 +30,13 @@ export default function LoginPage() {
       return;
     }
 
-    // A full navigation, not router.push(): the header's dashboard link can
+    // A full navigation, not router.push(): a level link in the header can
     // get prefetched while still logged out, which bakes in a
     // redirect-to-/login response from that state. A client-side push after
     // login can replay that stale cached redirect. A real navigation always
-    // hits the server fresh with the new session cookie.
-    window.location.href = "/dashboard";
+    // hits the server fresh with the new session cookie. "/" itself is the
+    // post-login landing page — see page.tsx's LoggedInHome.
+    window.location.href = "/";
   }
 
   return (

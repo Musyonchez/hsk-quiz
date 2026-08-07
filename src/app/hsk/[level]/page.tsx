@@ -24,8 +24,8 @@ export default async function LevelHubPage({
   return (
     <main className="mx-auto flex w-full max-w-4xl flex-col gap-8 px-4 py-12 sm:px-6">
       <div>
-        <Link href="/dashboard" className="text-sm text-muted-foreground hover:text-foreground">
-          ← Dashboard
+        <Link href="/" className="text-sm text-muted-foreground hover:text-foreground">
+          ← Home
         </Link>
         <h1 className="mt-2 text-2xl font-bold">{level.name}</h1>
       </div>

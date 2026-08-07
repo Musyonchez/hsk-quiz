@@ -12,8 +12,8 @@ export async function AppHeader() {
   const levels = user ? await getLevelsOverview() : [];
 
   // docs/24-responsive-design-plan.md: below `lg` the full link row (logo +
-  // Dashboard + one link per level + Custom Quiz/Leaderboard/Friends +
-  // user badge + log out) doesn't fit without wrapping — checked against the
+  // one link per level + Custom Quiz/Leaderboard/Friends + user badge + log
+  // out) doesn't fit without wrapping — checked against the
   // actual 768px tablet target, where `md` (768px) still forces "HSK Quiz"
   // and several labels onto two lines. `lg` (1024px) is the breakpoint where
   // this row genuinely stops being cramped, so it collapses into a hamburger
@@ -28,9 +28,6 @@ export async function AppHeader() {
           </Link>
           {user && (
             <nav className="hidden items-center gap-4 text-sm text-muted-foreground lg:flex">
-              <Link href="/dashboard" className="hover:text-foreground">
-                Dashboard
-              </Link>
               {levels.map((level) => (
                 <Link
                   key={level.id}
@@ -86,9 +83,6 @@ export async function AppHeader() {
           <MobileNav>
             {user ? (
               <>
-                <Link href="/dashboard" className="text-foreground">
-                  Dashboard
-                </Link>
                 {levels.map((level) => (
                   <Link key={level.id} href={`/hsk/${level.slug}`} className="text-foreground">
                     {level.name}

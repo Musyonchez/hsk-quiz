@@ -38,8 +38,9 @@ export default function RegisterPage() {
     }
 
     // Real navigation, not router.push() — see the same note on the login
-    // page: a client-side push can replay a stale cached redirect.
-    window.location.href = "/dashboard";
+    // page: a client-side push can replay a stale cached redirect. "/"
+    // itself is the post-login landing page — see page.tsx's LoggedInHome.
+    window.location.href = "/";
   }
 
   return (
