@@ -1,8 +1,18 @@
 "use client";
 
-import { Fragment, useEffect, useMemo, useRef, useState } from "react";
-import { ArrowRight, Flag, Pause, Play, Shuffle } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import {
+  ArrowRight,
+  ChevronLeft,
+  ChevronRight,
+  Flag,
+  Pause,
+  Play,
+  Shuffle,
+} from "lucide-react";
+import { matchesPinyin } from "@/quiz/pinyin-match";
 import { formatDuration } from "@/quiz/format-time";
+import { buildCharacterChoices } from "@/quiz/character-choices";
 import type { QuizNavTarget } from "@/quiz/quiz-navigation";
 import type { QuizWord } from "@/quiz/types";
 import { pillClasses } from "@/components/pill-classes";
@@ -26,29 +36,23 @@ function shuffle<T>(items: T[]): T[] {
   return copy;
 }
 
-// Chapter-scale matching board. Two variants share this exact mechanic:
-//   - "meaning" (default, docs/19-meaning-quiz-mode-plan.md): left tiles are
-//     pinyin+character, right tiles are English meanings.
-//   - "character" (docs/27-character-quiz-plan.md): left tiles are English
-//     meanings, right tiles are Chinese characters (pinyin withheld — see
-//     docs/27's chapter-scale section for why: showing it would give away
-//     the exact recall this mode exists to test).
-// Either way it's a closed N-to-N pool, not independently-sampled options
-// like ChoiceQuizRunner/CharacterQuizRunner — click one tile in each column
-// to make a guess pair. Both tiles clear from the board immediately on any
-// guess, right or wrong, with no color/feedback either way (see docs/19):
-// if only *correct* pairs disappeared, that disappearing-or-not would
-// itself be the exact reveal this mode exists to avoid. A real consequence
-// of that: an early wrong guess can strand another word's correct answer
-// (its true partner is now gone too) — expected, like a physical
-// memory-match game, and Drill missed words is what cleans it up after.
-export function MatchQuizRunner({
+// Combined/Custom-scale character quiz (docs/27-character-quiz-plan.md).
+// Structurally a fork of ChoiceQuizRunner (same sticky-toolbar/answered-
+// table/bottom-prompt-bar shell) but the bottom bar's interaction is a
+// virtual IME rather than static buttons: the prompt shows the word's
+// English meaning, the player types the pinyin from memory (checked
+// tone-free, same as the typing quiz), and only once that matches does a
+// candidate row of Chinese-character options appear to click. No
+// right/wrong color on click either way — same no-reveal-until-the-end
+// rule docs/19 established for meaning-match, since candidate rows are
+// regenerated fresh per word and a wrong pick's distractors can overlap
+// another word's.
+export function CharacterQuizRunner({
   words,
   backHref,
   quizKey,
   trackAttempt = true,
   allowDrillMissed = false,
-  variant = "meaning",
   nextQuiz = null,
   anotherQuiz,
   durationSeconds,
@@ -58,7 +62,6 @@ export function MatchQuizRunner({
   quizKey?: string;
   trackAttempt?: boolean;
   allowDrillMissed?: boolean;
-  variant?: "meaning" | "character";
   nextQuiz?: QuizNavTarget | null;
   anotherQuiz?: QuizNavTarget;
   durationSeconds?: number;
@@ -76,14 +79,13 @@ export function MatchQuizRunner({
   }
 
   return (
-    <MatchQuizRunnerInner
+    <CharacterQuizRunnerInner
       key={runId}
       words={activeWords}
       backHref={backHref}
       quizKey={quizKey}
       trackAttempt={activeTrackAttempt}
       allowDrillMissed={allowDrillMissed}
-      variant={variant}
       nextQuiz={nextQuiz}
       anotherQuiz={anotherQuiz}
       durationSeconds={activeDurationSeconds}
@@ -93,13 +95,12 @@ export function MatchQuizRunner({
   );
 }
 
-function MatchQuizRunnerInner({
+function CharacterQuizRunnerInner({
   words,
   backHref,
   quizKey,
   trackAttempt,
   allowDrillMissed,
-  variant,
   nextQuiz,
   anotherQuiz,
   durationSeconds,
@@ -111,7 +112,6 @@ function MatchQuizRunnerInner({
   quizKey?: string;
   trackAttempt: boolean;
   allowDrillMissed: boolean;
-  variant: "meaning" | "character";
   nextQuiz: QuizNavTarget | null;
   anotherQuiz?: QuizNavTarget;
   durationSeconds?: number;
@@ -119,32 +119,40 @@ function MatchQuizRunnerInner({
   onDrillMissed: (missed: QuizWord[]) => void;
 }) {
   const timed = durationSeconds !== undefined;
-  const total = words.length;
-  const byId = useMemo(() => new Map(words.map((w) => [w.id, w])), [words]);
-
-  const [leftBoard, setLeftBoard] = useState(() => shuffle(words.map((w) => w.id)));
-  const [rightBoard, setRightBoard] = useState(() => shuffle(words.map((w) => w.id)));
-  const [selectedLeft, setSelectedLeft] = useState<number | null>(null);
-  const [selectedRight, setSelectedRight] = useState<number | null>(null);
-  // Tracked the whole time, never rendered with any indication until
-  // `finished` — this IS the score, just not shown early.
-  const [correctIds, setCorrectIds] = useState<Set<number>>(new Set());
+  const [order, setOrder] = useState(words);
+  // Frozen for the whole run, same reasoning as ChoiceQuizRunner's `choices`
+  // — generated once at mount, never regenerated on Prev/Next/row-click.
+  const [choices] = useState(() => buildCharacterChoices(words));
   const [started, setStarted] = useState(false);
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [typedPinyin, setTypedPinyin] = useState("");
+  // Right or wrong, right alongside it — same as ChoiceQuizRunner's
+  // `answers`, never rendered with any color/label until `finished`.
+  const [answers, setAnswers] = useState<Map<number, number>>(new Map());
   const [secondsLeft, setSecondsLeft] = useState(durationSeconds ?? 0);
   const [paused, setPaused] = useState(false);
   const [finishedState, setFinishedState] = useState<"completed" | "gaveup" | null>(null);
-  const finished =
-    finishedState ??
-    (leftBoard.length === 0 ? "completed" : timed && started && secondsLeft === 0 ? "timeup" : null);
+  const finished = finishedState ?? (timed && started && secondsLeft === 0 ? "timeup" : null);
   const [bestPercent, setBestPercent] = useState<number | null>(null);
   const [avgGlobalPercent, setAvgGlobalPercent] = useState<number | null>(null);
   const [avgFriendPercent, setAvgFriendPercent] = useState<number | null>(null);
   const [showStats, setShowStats] = useState(false);
   const statsDefaultSetRef = useRef(false);
   const submittedRef = useRef(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const topStickyRef = useRef<HTMLDivElement>(null);
+  const bottomStickyRef = useRef<HTMLDivElement>(null);
+  const pinyinInputRef = useRef<HTMLInputElement>(null);
 
-  const attemptedCount = total - leftBoard.length;
-  const score = correctIds.size;
+  const currentWord = order[currentIndex];
+  const total = order.length;
+  const answeredCount = answers.size;
+  const score = [...answers.entries()].filter(([wordId, picked]) => picked === wordId).length;
+  // The candidate row only appears once the typed pinyin actually matches —
+  // this is what makes it feel like a real IME's type-to-filter step rather
+  // than options being available from the start.
+  const candidatesUnlocked =
+    currentWord !== undefined && matchesPinyin(typedPinyin, currentWord.pinyin);
 
   useEffect(() => {
     if (!finished || submittedRef.current || !trackAttempt || !quizKey) return;
@@ -198,42 +206,61 @@ function MatchQuizRunnerInner({
     return () => clearInterval(timer);
   }, [timed, started, paused, finished]);
 
-  // Resolves a guess pair the instant both sides are picked — both tiles
-  // clear immediately, right or wrong, with no color either way (see
-  // docs/19). This is the only place correctIds gets written.
-  function resolvePair(leftId: number, rightId: number) {
-    if (leftId === rightId) {
-      setCorrectIds((prev) => new Set(prev).add(leftId));
-    }
-    setLeftBoard((prev) => prev.filter((id) => id !== leftId));
-    setRightBoard((prev) => prev.filter((id) => id !== rightId));
-    setSelectedLeft(null);
-    setSelectedRight(null);
+  useEffect(() => {
+    if (started && !finished && !paused) pinyinInputRef.current?.focus();
+  }, [currentIndex, started, finished, paused]);
+
+  // Same centering approach as ChoiceQuizRunner — the visible band is
+  // between the top toolbar and the bottom prompt/candidate bar.
+  useEffect(() => {
+    if (!started || finished || paused) return;
+    const container = containerRef.current;
+    const topSticky = topStickyRef.current;
+    if (!container || !topSticky) return;
+    const row = container.querySelector<HTMLElement>(`[data-row-index="${currentIndex}"]`);
+    if (!row) return;
+
+    const topBottom = topSticky.getBoundingClientRect().bottom;
+    const bottomTop = bottomStickyRef.current?.getBoundingClientRect().top ?? window.innerHeight;
+    const remainingSpace = bottomTop - topBottom;
+    const rowRect = row.getBoundingClientRect();
+    const rowCenter = rowRect.top + rowRect.height / 2;
+    const targetCenter = topBottom + remainingSpace / 2;
+    window.scrollBy({ top: rowCenter - targetCenter, behavior: "smooth" });
+  }, [currentIndex, started, finished, paused]);
+
+  function goTo(index: number) {
+    setCurrentIndex(((index % total) + total) % total);
+    setTypedPinyin("");
   }
 
-  function pickLeft(id: number) {
-    if (!started || paused) return;
-    if (selectedRight !== null) {
-      resolvePair(id, selectedRight);
-      return;
+  // Same skip-already-done walk as ChoiceQuizRunner's nextIncompleteIndex.
+  function nextIncompleteIndex(from: number, step: 1 | -1): number {
+    for (let i = 1; i <= total; i++) {
+      const index = (((from + step * i) % total) + total) % total;
+      if (!answers.has(order[index].id)) return index;
     }
-    setSelectedLeft((prev) => (prev === id ? null : id));
+    return from;
   }
 
-  function pickRight(id: number) {
-    if (!started || paused) return;
-    if (selectedLeft !== null) {
-      resolvePair(selectedLeft, id);
+  function pick(wordId: number, pickedId: number) {
+    if (answers.has(wordId)) return;
+    const updated = new Map(answers).set(wordId, pickedId);
+    setAnswers(updated);
+
+    if (updated.size === total) {
+      setFinishedState("completed");
       return;
     }
-    setSelectedRight((prev) => (prev === id ? null : id));
+
+    goTo(nextIncompleteIndex(currentIndex, 1));
   }
 
   if (finished) {
     const percent = total > 0 ? Math.round((score / total) * 100) : 0;
     const heading =
       finished === "timeup" ? "Time's up!" : finished === "gaveup" ? "Quiz ended" : "Quiz complete!";
-    const missedWords = words.filter((word) => !correctIds.has(word.id));
+    const missedWords = order.filter((word) => answers.get(word.id) !== word.id);
 
     return (
       <div className="flex flex-col gap-6">
@@ -323,12 +350,18 @@ function MatchQuizRunnerInner({
     );
   }
 
+  const currentAnswer = currentWord ? answers.get(currentWord.id) : undefined;
+  const currentOptions = currentWord ? (choices.get(currentWord.id) ?? []) : [];
+
   return (
-    <div className="flex flex-col gap-6">
-      <div className="sticky top-[var(--header-height)] z-5 flex flex-col gap-4 bg-background pb-4">
+    <div className="flex flex-col gap-6 pb-4" ref={containerRef}>
+      <div
+        className="sticky top-[var(--header-height)] z-5 flex flex-col gap-4 bg-background pb-4"
+        ref={topStickyRef}
+      >
         <div className="flex flex-wrap items-center justify-between gap-4 rounded-xl border border-border bg-surface px-5 py-4">
           <span className="text-sm font-semibold tabular-nums">
-            MATCHED {attemptedCount}/{total}
+            ANSWERED {answeredCount}/{total}
           </span>
           {timed && (
             <span className="text-sm font-semibold tabular-nums">
@@ -336,6 +369,14 @@ function MatchQuizRunnerInner({
             </span>
           )}
           <div className="flex flex-wrap items-center gap-2">
+            <ToolbarButton
+              onClick={() => goTo(nextIncompleteIndex(currentIndex, -1))}
+              disabled={!started}
+              label="Prev"
+            >
+              <ChevronLeft size={16} />
+              Prev
+            </ToolbarButton>
             {timed && (
               <ToolbarButton
                 onClick={() => setPaused((p) => !p)}
@@ -346,6 +387,14 @@ function MatchQuizRunnerInner({
                 {paused ? "Resume" : "Pause"}
               </ToolbarButton>
             )}
+            <ToolbarButton
+              onClick={() => goTo(nextIncompleteIndex(currentIndex, 1))}
+              disabled={!started}
+              label="Next"
+            >
+              Next
+              <ChevronRight size={16} />
+            </ToolbarButton>
             <ToolbarButton
               onClick={() => setFinishedState("gaveup")}
               disabled={!started}
@@ -358,83 +407,122 @@ function MatchQuizRunnerInner({
           </div>
         </div>
 
-        {!started ? (
+        {!started && (
           <div className="flex flex-col items-center gap-4 rounded-xl border border-border bg-surface p-10 text-center shadow-lg shadow-background/50">
             <p className="text-muted-foreground">
-              {total} words to match
+              {total} words
               {timed && <> · {formatDuration(durationSeconds ?? 0)} on the clock</>}
             </p>
-            <button
-              type="button"
-              onClick={() => setStarted(true)}
-              className={pillClasses("primary")}
-            >
-              Start quiz
-            </button>
+            <div className="flex items-center gap-3">
+              <button
+                type="button"
+                onClick={() => setStarted(true)}
+                className={pillClasses("primary")}
+              >
+                Start quiz
+              </button>
+              <ToolbarButton
+                onClick={() => setOrder((prev) => shuffle(prev))}
+                disabled={false}
+                label="Shuffle word order"
+              >
+                <Shuffle size={16} />
+                Shuffle
+              </ToolbarButton>
+            </div>
           </div>
-        ) : paused ? (
+        )}
+        {started && paused && (
           <div className="rounded-xl border border-border bg-surface p-10 text-center text-muted-foreground shadow-lg shadow-background/50">
             Paused
           </div>
-        ) : (
-          <p className="text-center text-sm text-muted-foreground">
-            {variant === "character"
-              ? "Click a meaning, then click its matching character."
-              : "Click a word, then click its meaning."}
-          </p>
         )}
       </div>
 
-      {started && !paused && (
-        // A single grid, not two independent flex-col columns — leftBoard[i]
-        // and rightBoard[i] are two unrelated words (each board is shuffled
-        // independently, on purpose, for the memory-match mechanic), but
-        // their tiles still need to sit in the same grid row so a taller
-        // wrapped meaning on one side doesn't push every row below it out of
-        // horizontal alignment with the other column. Native grid row-sizing
-        // (each row auto-sizes to its tallest cell) handles this for free;
-        // two separate flex-col stacks never could.
-        <div className="grid grid-cols-2 gap-x-4 gap-y-2">
-          {leftBoard.map((leftId, i) => {
-            const rightId = rightBoard[i];
-            const leftWord = byId.get(leftId)!;
-            const rightWord = byId.get(rightId)!;
-            return (
-              <Fragment key={leftId}>
+      {/* See VocabTable.tsx's VocabTableGroup for why the scroll wrapper/
+          border split (docs/24-responsive-design-plan.md). Character and
+          Pinyin stay masked until answered — they're what's being tested
+          here, unlike ChoiceQuizRunner where the given prompt (Chinese)
+          stays visible and only the meaning column is masked. */}
+      <div className="overflow-x-auto rounded-lg border border-border">
+        <table className="w-full min-w-lg text-sm">
+          <thead className="bg-surface-raised text-left text-xs uppercase tracking-wide text-muted-foreground">
+            <tr>
+              <th className="px-3 py-2">Chinese</th>
+              <th className="px-3 py-2">Pinyin</th>
+              <th className="px-3 py-2">English</th>
+            </tr>
+          </thead>
+          <tbody>
+            {order.map((word, index) => {
+              const isAnswered = answers.has(word.id);
+              const isCurrent = index === currentIndex;
+              return (
+                <tr
+                  key={word.id}
+                  data-row-index={index}
+                  onClick={() => started && goTo(index)}
+                  className={
+                    (started ? "cursor-pointer " : "") +
+                    (isCurrent
+                      ? "border-l-4 border-l-current-row bg-current-row-surface"
+                      : "border-l-4 border-l-transparent border-t border-border hover:bg-surface-raised")
+                  }
+                >
+                  <td className="px-3 py-2 font-medium">{isAnswered ? word.chinese : "—"}</td>
+                  <td className="px-3 py-2 text-muted-foreground">
+                    {isAnswered ? word.pinyin : "—"}
+                  </td>
+                  <td className="px-3 py-2">{word.meaning ?? "—"}</td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+
+      {started && !finished && !paused && currentWord && (
+        <div
+          className="sticky bottom-0 z-5 flex flex-col gap-3 border-t border-border bg-surface p-5 shadow-lg shadow-background/50"
+          ref={bottomStickyRef}
+        >
+          <div className="text-center">
+            <p className="text-lg font-medium">{currentWord.meaning ?? "—"}</p>
+            <input
+              ref={pinyinInputRef}
+              type="text"
+              value={typedPinyin}
+              onChange={(e) => setTypedPinyin(e.target.value)}
+              autoFocus
+              placeholder="type the pinyin to unlock candidates"
+              className="mx-auto mt-2 w-full max-w-xs rounded border border-border bg-transparent px-3 py-2 text-center outline-none focus:border-border-strong"
+            />
+          </div>
+          {/* The candidate row — a small on-screen IME, per docs/27's "Why
+              not a real text input" section. Only appears once the typed
+              pinyin actually matches, mirroring how a real IME narrows
+              candidates as you type. */}
+          {candidatesUnlocked && (
+            <div className="grid gap-2 sm:grid-cols-2">
+              {currentOptions.map((option) => (
                 <button
+                  key={option.id}
                   type="button"
-                  onClick={() => pickLeft(leftId)}
-                  className={`rounded-lg border px-4 py-3 text-left text-sm transition-colors ${
-                    selectedLeft === leftId
-                      ? "border-current-row bg-current-row-surface font-medium"
-                      : "border-border hover:border-border-strong hover:bg-surface-raised"
+                  disabled={currentAnswer !== undefined}
+                  onClick={() => pick(currentWord.id, option.id)}
+                  className={`rounded-lg border px-4 py-3 text-center text-lg font-medium transition-colors disabled:cursor-not-allowed ${
+                    currentAnswer === option.id
+                      ? "border-current-row bg-current-row-surface"
+                      : currentAnswer !== undefined
+                        ? "border-border opacity-50"
+                        : "border-border hover:border-border-strong hover:bg-surface-raised"
                   }`}
                 >
-                  {variant === "character" ? (
-                    (leftWord.meaning ?? "—")
-                  ) : (
-                    <>
-                      <span className="font-medium">{leftWord.chinese}</span>{" "}
-                      <span className="text-muted-foreground">{leftWord.pinyin}</span>
-                    </>
-                  )}
+                  {option.chinese}
                 </button>
-                <button
-                  type="button"
-                  onClick={() => pickRight(rightId)}
-                  className={`rounded-lg border px-4 py-3 text-left text-sm transition-colors ${
-                    selectedRight === rightId
-                      ? "border-current-row bg-current-row-surface font-medium"
-                      : "border-border hover:border-border-strong hover:bg-surface-raised"
-                  }`}
-                >
-                  {/* Character variant deliberately omits pinyin here — see
-                      docs/27's chapter-scale section for why. */}
-                  {variant === "character" ? rightWord.chinese : (rightWord.meaning ?? "—")}
-                </button>
-              </Fragment>
-            );
-          })}
+              ))}
+            </div>
+          )}
         </div>
       )}
     </div>

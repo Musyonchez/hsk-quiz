@@ -17,7 +17,8 @@ export default async function ChapterQuizPage({
   await requireSession();
   const { level: levelSlug, chapter: chapterParam } = await params;
   const { mode } = await searchParams;
-  const initialMode = mode === "type" || mode === "meaning" ? mode : null;
+  const initialMode =
+    mode === "type" || mode === "meaning" || mode === "character" ? mode : null;
   const chapterNumber = Number(chapterParam);
   if (!isLevelSlug(levelSlug) || !Number.isInteger(chapterNumber)) notFound();
   // Canonicalize e.g. "05" -> "5" so a chapter never has two live URLs.
@@ -34,6 +35,7 @@ export default async function ChapterQuizPage({
   const backHref = `/hsk/${levelSlug}/chapter/${chapterNumber}`;
   const typeQuizKey = quizKeyFor({ levelSlug, chapterNumber });
   const meaningQuizKey = quizKeyFor({ levelSlug, chapterNumber, mode: "meaning" });
+  const characterQuizKey = quizKeyFor({ levelSlug, chapterNumber, mode: "character" });
   const { next, another } = getQuizNavigation(
     { levelSlug, chapterNumber },
     levels.map((level) => ({
@@ -59,7 +61,9 @@ export default async function ChapterQuizPage({
         backHref={backHref}
         typeQuizKey={typeQuizKey}
         meaningQuizKey={meaningQuizKey}
+        characterQuizKey={characterQuizKey}
         meaningVariant="match"
+        characterVariant="match"
         allowDrillMissed
         nextQuiz={next}
         anotherQuiz={another}

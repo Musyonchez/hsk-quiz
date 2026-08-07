@@ -7,21 +7,28 @@ import { pillClasses } from "@/components/pill-classes";
 import { QuizRunner } from "@/components/QuizRunner";
 import { ChoiceQuizRunner } from "@/components/ChoiceQuizRunner";
 import { MatchQuizRunner } from "@/components/MatchQuizRunner";
+import { CharacterQuizRunner } from "@/components/CharacterQuizRunner";
 
-// Lets the player pick "Type pinyin" (the original quiz) or "Match meaning"
-// (docs/19-meaning-quiz-mode-plan.md) before any words are shown, then
-// renders the matching runner. `meaningVariant` picks which meaning-mode
-// component fits the quiz's scale: chapters get the click-to-pair matching
+// Lets the player pick "Type pinyin" (the original quiz), "Match meaning"
+// (docs/19-meaning-quiz-mode-plan.md), or "Character" (docs/27-character-
+// quiz-plan.md) before any words are shown, then renders the matching
+// runner. `meaningVariant`/`characterVariant` each pick which scale-specific
+// component fits the quiz's scale: chapters get a click-to-pair matching
 // board (MatchQuizRunner), combined/custom quizzes get the one-word-at-a-
-// time 5-choice flow (ChoiceQuizRunner) — see docs/19 for why those differ.
+// time flow (ChoiceQuizRunner/CharacterQuizRunner) — see docs/19 and
+// docs/27 for why those differ. `characterQuizKey`/`characterVariant` are
+// both optional so pages can opt in incrementally without breaking callers
+// that haven't wired Character mode yet — omitting either hides the button.
 export function QuizModeGate({
   words,
   backHref,
   typeQuizKey,
   meaningQuizKey,
+  characterQuizKey,
   trackAttempt = true,
   allowDrillMissed = false,
   meaningVariant,
+  characterVariant,
   nextQuiz = null,
   anotherQuiz,
   durationSeconds,
@@ -31,9 +38,11 @@ export function QuizModeGate({
   backHref: string;
   typeQuizKey?: string;
   meaningQuizKey?: string;
+  characterQuizKey?: string;
   trackAttempt?: boolean;
   allowDrillMissed?: boolean;
   meaningVariant: "choice" | "match";
+  characterVariant?: "choice" | "match";
   nextQuiz?: QuizNavTarget | null;
   anotherQuiz?: QuizNavTarget;
   durationSeconds?: number;
@@ -42,9 +51,10 @@ export function QuizModeGate({
   // screen entirely — one click from the Learn page straight into the quiz
   // instead of two. Falls back to the picker when absent (e.g. a bookmarked
   // /quiz URL with no ?mode=).
-  initialMode?: "type" | "meaning" | null;
+  initialMode?: "type" | "meaning" | "character" | null;
 }) {
-  const [mode, setMode] = useState<"type" | "meaning" | null>(initialMode);
+  const [mode, setMode] = useState<"type" | "meaning" | "character" | null>(initialMode);
+  const characterModeAvailable = characterVariant !== undefined;
 
   // Play Next/Play Another should continue in the same mode the player just
   // used, not dump them back on the mode picker (docs/22-audit-pass-4.md) —
@@ -76,6 +86,15 @@ export function QuizModeGate({
           >
             Match meaning
           </button>
+          {characterModeAvailable && (
+            <button
+              type="button"
+              onClick={() => setMode("character")}
+              className={pillClasses("secondary")}
+            >
+              Character
+            </button>
+          )}
         </div>
       </div>
     );
@@ -87,6 +106,33 @@ export function QuizModeGate({
         words={words}
         backHref={backHref}
         quizKey={typeQuizKey}
+        trackAttempt={trackAttempt}
+        allowDrillMissed={allowDrillMissed}
+        nextQuiz={nextQuizWithMode}
+        anotherQuiz={anotherQuizWithMode}
+        durationSeconds={durationSeconds}
+      />
+    );
+  }
+
+  if (mode === "character") {
+    return characterVariant === "match" ? (
+      <MatchQuizRunner
+        words={words}
+        backHref={backHref}
+        quizKey={characterQuizKey}
+        trackAttempt={trackAttempt}
+        allowDrillMissed={allowDrillMissed}
+        variant="character"
+        nextQuiz={nextQuizWithMode}
+        anotherQuiz={anotherQuizWithMode}
+        durationSeconds={durationSeconds}
+      />
+    ) : (
+      <CharacterQuizRunner
+        words={words}
+        backHref={backHref}
+        quizKey={characterQuizKey}
         trackAttempt={trackAttempt}
         allowDrillMissed={allowDrillMissed}
         nextQuiz={nextQuizWithMode}

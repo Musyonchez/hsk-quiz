@@ -14,7 +14,8 @@ export default async function LeaderboardPickerPage({
 }) {
   await requireSession();
   const { level: levelSlug, mode: modeParam } = await searchParams;
-  const mode = modeParam === "meaning" ? "meaning" : "type";
+  const mode =
+    modeParam === "meaning" ? "meaning" : modeParam === "character" ? "character" : "type";
 
   if (!levelSlug) {
     const levels = await getLevelsOverview();
@@ -70,6 +71,12 @@ export default async function LeaderboardPickerPage({
           className={tabClasses(mode === "meaning")}
         >
           Match meaning
+        </Link>
+        <Link
+          href={`/leaderboard?level=${levelSlug}&mode=character`}
+          className={tabClasses(mode === "character")}
+        >
+          Character
         </Link>
       </div>
 

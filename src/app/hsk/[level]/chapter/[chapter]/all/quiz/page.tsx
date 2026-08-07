@@ -24,7 +24,8 @@ export default async function ChapterAllWordsQuizPage({
   await requireSession();
   const { level: levelSlug, chapter: chapterParam } = await params;
   const { mode } = await searchParams;
-  const initialMode = mode === "type" || mode === "meaning" ? mode : null;
+  const initialMode =
+    mode === "type" || mode === "meaning" || mode === "character" ? mode : null;
   const chapterNumber = Number(chapterParam);
   if (!isLevelSlug(levelSlug) || !Number.isInteger(chapterNumber)) notFound();
   if (String(chapterNumber) !== chapterParam) {
@@ -40,6 +41,12 @@ export default async function ChapterAllWordsQuizPage({
   const backHref = `/hsk/${levelSlug}/chapter/${chapterNumber}/all`;
   const typeQuizKey = quizKeyFor({ levelSlug, chapterNumber, wordSet: "all" });
   const meaningQuizKey = quizKeyFor({ levelSlug, chapterNumber, wordSet: "all", mode: "meaning" });
+  const characterQuizKey = quizKeyFor({
+    levelSlug,
+    chapterNumber,
+    wordSet: "all",
+    mode: "character",
+  });
 
   return (
     <main className="mx-auto flex w-full max-w-3xl flex-col gap-6 px-4 py-12 sm:px-6">
@@ -54,7 +61,9 @@ export default async function ChapterAllWordsQuizPage({
 
       <AllWordsTabs
         baseHref={backHref}
-        active={initialMode === "meaning" ? "meaning" : "type"}
+        active={
+          initialMode === "meaning" ? "meaning" : initialMode === "character" ? "character" : "type"
+        }
       />
 
       <QuizModeGate
@@ -62,7 +71,9 @@ export default async function ChapterAllWordsQuizPage({
         backHref={backHref}
         typeQuizKey={typeQuizKey}
         meaningQuizKey={meaningQuizKey}
+        characterQuizKey={characterQuizKey}
         meaningVariant="match"
+        characterVariant="match"
         allowDrillMissed
         durationSeconds={600}
         initialMode={initialMode}

@@ -64,6 +64,18 @@ toggle, `SCORE 0/N`, `TIMER 10:00` (configurable, default matches reference).
   /api/leaderboard?quizKey=&scope=friends` instead. A link from here into the full leaderboard
   page — see [09-pages.md](09-pages.md).
 
+## Character mode (per docs/27-character-quiz-plan.md)
+
+A third quiz mode, reading recall instead of typing/meaning recall: the prompt shows a word's
+English meaning, the player types its pinyin (unlocking a small on-screen candidate row once it
+matches, same tone-free rule as typing mode), then clicks the correct Chinese character among
+2-5 ranked distractors (homophones first, then words with a similar-sounding start, then random
+fill — `character-choices.ts`). No right/wrong reveal until the results screen, same rule
+docs/19 established for meaning-match. Chapter-scale quizzes get a click-to-pair matching board
+(`MatchQuizRunner`'s `variant="character"`, English left / Chinese character right) instead of
+the candidate-picker flow, mirroring the existing chapter-vs-combined split for meaning-match.
+Tracked runs get a `-char` suffixed `quizKey`, its own leaderboard family.
+
 ## Hard mode (optional, per docs/28-progressive-difficulty-plan.md)
 
 An opt-in toggle on the pre-quiz "Start quiz" screen (`QuizRunner`, Type pinyin mode first —
