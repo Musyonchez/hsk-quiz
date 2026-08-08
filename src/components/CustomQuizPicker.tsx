@@ -58,15 +58,15 @@ function summarize(selection: Selection | undefined): string | null {
 }
 
 // Builds the quiz href from every level's selection, with the chosen mode
-// (docs/19-meaning-quiz-mode-plan.md) baked into the URL so the quiz page
-// skips its own mode-picker screen — one click from here straight into the
-// quiz instead of two. A single level picked with just 1 chapter isn't
-// enough on its own (that's the existing per-chapter quiz page) — but once
-// a second level contributes anything, even one chapter each is a
-// genuinely new combination. See docs/17.
+// (docs/19-meaning-quiz-mode-plan.md, docs/27-character-quiz-plan.md) baked
+// into the URL so the quiz page skips its own mode-picker screen — one
+// click from here straight into the quiz instead of two. A single level
+// picked with just 1 chapter isn't enough on its own (that's the existing
+// per-chapter quiz page) — but once a second level contributes anything,
+// even one chapter each is a genuinely new combination. See docs/17.
 function buildQuizHref(
   selections: Record<string, Selection>,
-  mode: "type" | "meaning"
+  mode: "type" | "meaning" | "character"
 ): string | null {
   const picked = Object.entries(selections).filter(
     ([, s]) => s.combined || s.chapters.size > 0
@@ -152,6 +152,7 @@ export function CustomQuizPicker({ levels }: { levels: LevelWithChapters[] }) {
 
   const typeHref = buildQuizHref(selections, "type");
   const meaningHref = buildQuizHref(selections, "meaning");
+  const characterHref = buildQuizHref(selections, "character");
   const anySingleChapterOnly =
     Object.values(selections).some((s) => !s.combined && s.chapters.size === 1) && !typeHref;
   const hasAnySelection = Object.values(selections).some(
@@ -182,6 +183,14 @@ export function CustomQuizPicker({ levels }: { levels: LevelWithChapters[] }) {
             className={pillClasses("secondary", !meaningHref)}
           >
             Match meaning
+          </button>
+          <button
+            type="button"
+            onClick={() => characterHref && router.push(characterHref)}
+            disabled={!characterHref}
+            className={pillClasses("secondary", !characterHref)}
+          >
+            Character
           </button>
           <button
             type="button"
