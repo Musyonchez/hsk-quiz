@@ -12,7 +12,7 @@ const COMBINING_MARKS = /[\u0300-\u036f]/g;
 // a separate column, e.g. "n\u00e1n (f\u0101ng)" for \u5357\uff08\u65b9\uff09, "(d\u00e0i)t\u00ec" for (\u4ee3)\u66ff \u2014 the parenthesized
 // part is a dictionary-convention gloss on the *character* side, not something the player is
 // meant to type. Dropped entirely (not just the punctuation) before normalizing so the target
-// becomes just the mandatory syllables \u2014 see docs/12-audit-pass-3-bugs.md.
+// becomes just the mandatory syllables \u2014 see docs/hold/12-audit-pass-3-bugs.md.
 const PARENTHETICAL = /[\uff08(][^\uff09)]*[\uff09)]/g;
 
 export function normalizePinyin(input: string): string {

@@ -5,7 +5,7 @@ import { useEffect, useRef } from "react";
 // Keeps the `--header-height` CSS custom property (globals.css) in sync with
 // AppHeader's actual rendered height, so the quiz runners' sticky toolbars
 // (`top-[var(--header-height)]`) sit exactly below it instead of relying on
-// a hand-picked magic number — see docs/24-responsive-design-plan.md.
+// a hand-picked magic number — see docs/hold/24-responsive-design-plan.md.
 // AppHeader is a Server Component, so this wraps it rather than living
 // inside it; a ResizeObserver on the wrapper (which has no layout impact of
 // its own — a plain block div sized to its single child) catches every case

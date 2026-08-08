@@ -57,7 +57,7 @@ note.
   separate files and 05 was never revisited:
   - "Dev/testing: SQLite — a single file (`website/dev.db`)... **Prod**: an external Postgres
     instance" — per [20](20-postgres-vercel-migration-plan.md)'s "What actually happened" and
-    [21](21-vercel-deploy.md), dev and prod now share the *same* Neon Postgres database; there is
+    [21](../21-vercel-deploy.md), dev and prod now share the *same* Neon Postgres database; there is
     no SQLite anywhere anymore.
   - The driver-adapter paragraph still frames `@prisma/adapter-better-sqlite3` →
     `@prisma/adapter-pg` as a still-pending swap to "budget for... when standing up prod" — that

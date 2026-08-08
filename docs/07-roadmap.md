@@ -208,7 +208,7 @@ Phased so each phase produces something runnable/checkable before moving on.
 
 ## Phase 6 — Results, leaderboard, friends ✅
 
-Sequenced and specced in [14-phase6-plan.md](14-phase6-plan.md) before any code, then built in
+Sequenced and specced in [14-phase6-plan.md](hold/14-phase6-plan.md) before any code, then built in
 three shippable sub-phases:
 
 - **Attempt persistence**: `quizKeyFor`/`parseQuizKey`/`describeQuizKey` (`src/quiz/quiz-key.ts`)

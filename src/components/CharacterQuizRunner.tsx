@@ -36,7 +36,7 @@ function shuffle<T>(items: T[]): T[] {
   return copy;
 }
 
-// Combined/Custom-scale character quiz (docs/27-character-quiz-plan.md).
+// Combined/Custom-scale character quiz (docs/hold/27-character-quiz-plan.md).
 // Structurally a fork of ChoiceQuizRunner (same sticky-toolbar/answered-
 // table/bottom-prompt-bar shell) but the bottom bar's interaction is a
 // virtual IME rather than static buttons: the prompt shows the word's
@@ -440,7 +440,7 @@ function CharacterQuizRunnerInner({
       </div>
 
       {/* See VocabTable.tsx's VocabTableGroup for why the scroll wrapper/
-          border split (docs/24-responsive-design-plan.md). Character and
+          border split (docs/hold/24-responsive-design-plan.md). Character and
           Pinyin stay masked until answered — they're what's being tested
           here, unlike ChoiceQuizRunner where the given prompt (Chinese)
           stays visible and only the meaning column is masked. */}

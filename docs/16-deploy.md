@@ -3,7 +3,7 @@
 **This is a historical record, not the current deploy path.** The app was originally hosted on
 Render because it used SQLite (`better-sqlite3`), which needs a persistent disk and a
 long-running process — not something a serverless platform like Vercel can provide.
-[20-postgres-vercel-migration-plan.md](20-postgres-vercel-migration-plan.md) later migrated the
+[20-postgres-vercel-migration-plan.md](hold/20-postgres-vercel-migration-plan.md) later migrated the
 database to Postgres (Neon) specifically to move onto Vercel instead, which removed the
 persistent-disk requirement entirely. `render.yaml` has been **deleted** — Vercel is now the
 live target; see [21-vercel-deploy.md](21-vercel-deploy.md) (once written) for that flow.
@@ -13,7 +13,7 @@ live target; see [21-vercel-deploy.md](21-vercel-deploy.md) (once written) for t
 - The app used `better-sqlite3` via Prisma for a SQLite file on disk, plus real user accounts/
   sessions/quiz attempts. That needed a host with a **persistent filesystem** and a **long-running
   Node process** — Vercel's ephemeral filesystem couldn't provide that without first migrating
-  off SQLite, which is exactly what [20](20-postgres-vercel-migration-plan.md) did.
+  off SQLite, which is exactly what [20](hold/20-postgres-vercel-migration-plan.md) did.
 - Render's Starter plan was a **flat monthly fee** ($7/mo), not usage-metered like Railway's
   Hobby plan — predictable billing was the deciding factor over other hosts at the time.
 

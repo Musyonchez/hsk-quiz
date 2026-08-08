@@ -56,7 +56,7 @@ export function VocabTableGroup({
 }) {
   return (
     // Scrolls horizontally inside its own card rather than forcing the page
-    // wider (docs/24-responsive-design-plan.md) — the table keeps a sane
+    // wider (docs/hold/24-responsive-design-plan.md) — the table keeps a sane
     // min-width so its three columns don't crush illegibly on a narrow
     // screen, and the wrapper (not the table) owns the border/rounding so it
     // stays visible while the table content scrolls under it.

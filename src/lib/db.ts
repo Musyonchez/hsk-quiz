@@ -1,5 +1,5 @@
 // Prisma 7 requires an explicit driver adapter. This app runs on Neon
-// Postgres (docs/20-postgres-vercel-migration-plan.md) via @prisma/adapter-neon,
+// Postgres (docs/hold/20-postgres-vercel-migration-plan.md) via @prisma/adapter-neon,
 // which talks to Postgres over HTTP/WebSockets (@neondatabase/serverless)
 // instead of a pooled TCP connection — the right fit for serverless hosts
 // like Vercel, where many short-lived function instances opening

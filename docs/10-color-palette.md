@@ -50,7 +50,7 @@ them is wrong.
 
 ## Second accent: bronze (tab/selection state)
 
-[30-color-palette-expansion-plan.md](30-color-palette-expansion-plan.md) added a second accent
+[30-color-palette-expansion-plan.md](hold/30-color-palette-expansion-plan.md) added a second accent
 once tab groups (leaderboard scope tabs, [AllWordsTabs](../src/components/AllWordsTabs.tsx))
 grew common enough that reusing `--accent` for "this tab is active" started reading as a second
 competing call-to-action on the same screen as a real `PLAY QUIZ` button.

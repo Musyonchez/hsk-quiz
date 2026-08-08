@@ -5,7 +5,7 @@ import { getChapterDialogLines, getChapterWithWords } from "@/lib/queries";
 import { isLevelSlug } from "@/lib/hsk-level";
 import { AllWordsTabs } from "@/components/AllWordsTabs";
 
-// docs/25-chapter-all-words-plan.md's addendum: the real "Dialog" tab — the
+// docs/hold/25-chapter-all-words-plan.md's addendum: the real "Dialog" tab — the
 // chapter's actual textbook conversation (speaker, Chinese, pinyin, English
 // per line, grouped into scenes), not just the vocabulary extracted from it
 // (see the "All Words" tab / .../all/words). 404s if the chapter has no

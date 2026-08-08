@@ -7,7 +7,7 @@ import { quizKeyFor } from "@/quiz/quiz-key";
 import { AllWordsTabs } from "@/components/AllWordsTabs";
 import { QuizModeGate } from "@/components/QuizModeGate";
 
-// docs/25-chapter-all-words-plan.md's Type pinyin / Match meaning tabs, quizzing
+// docs/hold/25-chapter-all-words-plan.md's Type pinyin / Match meaning tabs, quizzing
 // on a chapter's full dialog vocabulary instead of its curated New Words —
 // same QuizModeGate/runners as the New Words quiz, just a different word set
 // and its own "-all"/"-all-match" quizKeys so attempts never mix with New

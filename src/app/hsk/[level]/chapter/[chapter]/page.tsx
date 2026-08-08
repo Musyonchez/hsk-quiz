@@ -64,7 +64,7 @@ export default async function ChapterLearnPage({
       </div>
 
       {/* Only shown once this chapter actually has dialog data — no dead
-          links while docs/25-chapter-all-words-plan.md's rollout is still
+          links while docs/hold/25-chapter-all-words-plan.md's rollout is still
           incremental across chapters. Links to /all, the real dialog
           transcript (the plan doc's addendum) — its own tab bar reaches the
           All Words vocabulary list and both quiz modes from there. */}

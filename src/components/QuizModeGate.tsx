@@ -10,7 +10,7 @@ import { MatchQuizRunner } from "@/components/MatchQuizRunner";
 import { CharacterQuizRunner } from "@/components/CharacterQuizRunner";
 
 // Lets the player pick "Type pinyin" (the original quiz), "Match meaning"
-// (docs/19-meaning-quiz-mode-plan.md), or "Character" (docs/27-character-
+// (docs/hold/19-meaning-quiz-mode-plan.md), or "Character" (docs/27-character-
 // quiz-plan.md) before any words are shown, then renders the matching
 // runner. `meaningVariant`/`characterVariant` each pick which scale-specific
 // component fits the quiz's scale: chapters get a click-to-pair matching
@@ -57,7 +57,7 @@ export function QuizModeGate({
   const characterModeAvailable = characterVariant !== undefined;
 
   // Play Next/Play Another should continue in the same mode the player just
-  // used, not dump them back on the mode picker (docs/22-audit-pass-4.md) —
+  // used, not dump them back on the mode picker (docs/hold/22-audit-pass-4.md) —
   // getQuizNavigation builds bare hrefs with no ?mode=, so it's appended
   // here once the active mode is known, rather than needing every quiz page
   // to know which mode will eventually be chosen client-side.

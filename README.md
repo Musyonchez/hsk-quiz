@@ -4,8 +4,10 @@ A study site for HSK 1-3 Chinese vocabulary — type the pinyin, match the meani
 character itself, by chapter, by full level, or across levels in a custom mix. Fully
 self-contained: one Next.js app, one Postgres database, real accounts with friends and
 leaderboards. See [`docs/`](docs/01-overview.md) for the full spec — start at
-[`docs/01-overview.md`](docs/01-overview.md); every later doc there is a dated, incremental
-plan for one feature or fix, kept as a running design log rather than rewritten in place.
+[`docs/01-overview.md`](docs/01-overview.md), which covers the site through `docs/10` and
+`docs/16`/`docs/21` (deploy). Everything past that is a dated, incremental plan for one
+feature/fix/audit — a running design log rather than something rewritten in place — archived
+under [`docs/hold/`](docs/hold/) once superseded, to keep the top-level folder short.
 
 ## Features
 

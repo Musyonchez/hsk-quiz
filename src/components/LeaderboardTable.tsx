@@ -18,7 +18,7 @@ export function LeaderboardTable({
 
   return (
     // See VocabTable.tsx's VocabTableGroup for why the scroll wrapper/border
-    // split (docs/24-responsive-design-plan.md).
+    // split (docs/hold/24-responsive-design-plan.md).
     <div className="overflow-x-auto rounded-lg border border-border">
       <table className="w-full min-w-md text-sm">
         <thead className="bg-surface-raised text-left text-xs uppercase tracking-wide text-muted-foreground">

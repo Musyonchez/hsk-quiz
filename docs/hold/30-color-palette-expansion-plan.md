@@ -1,6 +1,6 @@
 # Color Palette Expansion — A Second UI Accent for Tabs
 
-[10-color-palette.md](10-color-palette.md)'s "ink / paper / seal" palette deliberately has **one**
+[10-color-palette.md](../10-color-palette.md)'s "ink / paper / seal" palette deliberately has **one**
 accent (`--accent`, seal red) and one rule: it's used once per screen, only for the single
 primary call-to-action (`PLAY QUIZ`, `REPLAY`, solid pill buttons). Everything else is
 ink/charcoal or an outline. That worked cleanly when tabs were rare, but tab groups have grown —
@@ -57,7 +57,7 @@ already uses.
 - Sweep every current `bg-accent`-as-active-tab usage (`AllWordsTabs.tsx`, leaderboard's
   `tabClasses`, `QuizModeGate.tsx` if it has its own) and switch to `bg-accent-secondary` +
   `text-accent-secondary-foreground`.
-- Update [10-color-palette.md](10-color-palette.md) itself with the new tokens and the
+- Update [10-color-palette.md](../10-color-palette.md) itself with the new tokens and the
   clarified usage rule, since that doc is the source of truth every future component should be
   built against.
 

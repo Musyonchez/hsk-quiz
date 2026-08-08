@@ -1,6 +1,6 @@
 import type { ChapterWordRow } from "./extract-chapters";
 
-// HSK3 chapters' full dialog vocabulary — docs/25-chapter-all-words-plan.md.
+// HSK3 chapters' full dialog vocabulary — docs/hold/25-chapter-all-words-plan.md.
 // Auto-extracted (scripts-tmp-extract-dialogs.ts) from pasted textbook dialog
 // text via longest-match segmentation against this app's own existing
 // vocabulary (hsk{1,2,3}-{chapters,combined}-data.ts) — see

@@ -14,7 +14,7 @@
   for friends, etc.) — a single consistent icon set rather than mixing emoji/ad-hoc SVGs.
 - **Database, via an ORM (Prisma 7)**: a single Neon Postgres database, shared by dev and prod
   alike (`DATABASE_URL`) — see
-  [20-postgres-vercel-migration-plan.md](20-postgres-vercel-migration-plan.md) for how this
+  [20-postgres-vercel-migration-plan.md](hold/20-postgres-vercel-migration-plan.md) for how this
   replaced an earlier SQLite-in-dev/Postgres-in-prod split (the migration that moved hosting
   from Render to Vercel, since Vercel's serverless functions can't hold a persistent SQLite
   file on disk). No branch split between dev/prod yet — revisit once the site has real
@@ -24,7 +24,7 @@
     `@prisma/adapter-neon` (`src/lib/db.ts`), which talks to Postgres over HTTP/WebSockets via
     `@neondatabase/serverless` rather than a pooled TCP connection — the right fit for many
     short-lived Vercel serverless function instances hitting a small database, per
-    [20](20-postgres-vercel-migration-plan.md)'s Decisions section.
+    [20](hold/20-postgres-vercel-migration-plan.md)'s Decisions section.
   - Prisma Migrate handles schema versioning from a single migration history, applied to the
     one shared database.
 
@@ -184,7 +184,7 @@ the Server Component. Vocabulary pages (level hub, learn page, quiz pages, custo
    data files, writes rows into that database. A manual step, not run on every deploy (seeding
    ~1,500 words one-by-one over the network is slow enough that it's not worth re-running unless
    the source vocab data actually changed — see
-   [20](20-postgres-vercel-migration-plan.md)'s "What actually happened").
+   [20](hold/20-postgres-vercel-migration-plan.md)'s "What actually happened").
 3. `npm run dev` — `next dev`. One process, one port — pages and `/api/*` routes are served
    together, no proxy config needed.
 

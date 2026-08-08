@@ -13,7 +13,7 @@
   --accent-hover: #a8391f;
   --accent-foreground: #fbf1e8;
 
-  /* Second accent, "bronze" — docs/30-color-palette-expansion-plan.md.
+  /* Second accent, "bronze" — docs/hold/30-color-palette-expansion-plan.md.
      Active-tab/selection fill, distinct from --accent so a screen can show
      both a primary action (seal red) and an active tab (bronze) without
      reading as two competing calls-to-action. */
@@ -28,7 +28,7 @@
   --danger: #b3453a;
 
   /* AppHeader's actual rendered height, kept in sync at runtime by
-     HeaderHeightVar (docs/24-responsive-design-plan.md) — the sticky quiz
+     HeaderHeightVar (docs/hold/24-responsive-design-plan.md) — the sticky quiz
      toolbars (QuizRunner/ChoiceQuizRunner/MatchQuizRunner) read this instead
      of a hand-picked magic number, since the header's height now genuinely
      differs between the desktop nav row and the mobile hamburger row. This

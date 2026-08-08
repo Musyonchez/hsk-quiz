@@ -6,7 +6,7 @@ import { isLevelSlug } from "@/lib/hsk-level";
 import { VocabTable } from "@/components/VocabTable";
 import { AllWordsTabs } from "@/components/AllWordsTabs";
 
-// docs/25-chapter-all-words-plan.md's "All Words" tab (moved here from the
+// docs/hold/25-chapter-all-words-plan.md's "All Words" tab (moved here from the
 // base /all route once that became the real dialog transcript — see the
 // plan doc's addendum) — a chapter's full, independently-ordered dialog
 // vocabulary, not merged/deduplicated against that chapter's New Words (see

@@ -158,7 +158,7 @@ async function seedChapters(levelIds: Record<LevelSlug, number>) {
   // reliably from markdown structure alone. See website/docs/07-roadmap.md.
 }
 
-// docs/25-chapter-all-words-plan.md's "All Words" — a chapter's full dialog
+// docs/hold/25-chapter-all-words-plan.md's "All Words" — a chapter's full dialog
 // vocabulary, source: "dialog", independent from that same chapter's
 // source: "chapter" New Words (a word can legitimately have a row in both).
 // Runs after seedChapters so every chapter row it looks up already exists.
@@ -225,7 +225,7 @@ async function seedDialogWords(levelIds: Record<LevelSlug, number>) {
   }
 }
 
-// A chapter's dialog transcript (docs/25-chapter-all-words-plan.md's
+// A chapter's dialog transcript (docs/hold/25-chapter-all-words-plan.md's
 // addendum) — unlike Word rows (upserted one at a time, matched/kept stable
 // by their own chinese/pinyin/meaning), a transcript is just "the ordered
 // list of lines for this chapter," so delete-then-recreate per chapter is

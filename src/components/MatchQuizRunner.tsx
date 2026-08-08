@@ -27,9 +27,9 @@ function shuffle<T>(items: T[]): T[] {
 }
 
 // Chapter-scale matching board. Two variants share this exact mechanic:
-//   - "meaning" (default, docs/19-meaning-quiz-mode-plan.md): left tiles are
+//   - "meaning" (default, docs/hold/19-meaning-quiz-mode-plan.md): left tiles are
 //     pinyin+character, right tiles are English meanings.
-//   - "character" (docs/27-character-quiz-plan.md): left tiles are English
+//   - "character" (docs/hold/27-character-quiz-plan.md): left tiles are English
 //     meanings, right tiles are Chinese characters (pinyin withheld — see
 //     docs/27's chapter-scale section for why: showing it would give away
 //     the exact recall this mode exists to test).

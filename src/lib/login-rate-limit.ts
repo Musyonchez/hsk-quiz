@@ -1,7 +1,7 @@
 // Per-username lockout for POST /api/auth/login, backed by the `LoginFailure`
 // table (see prisma/schema.prisma). Originally an in-memory Map — that broke
 // silently once the app moved to Vercel's serverless functions, which don't
-// reliably share memory across invocations (docs/22-audit-pass-4.md). Storing
+// reliably share memory across invocations (docs/hold/22-audit-pass-4.md). Storing
 // each failure as its own row keeps the "reset after 15 minutes" logic
 // entirely in the query (createdAt within the window), no separate expiry
 // bookkeeping needed.

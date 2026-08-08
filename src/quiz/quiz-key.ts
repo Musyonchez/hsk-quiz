@@ -1,17 +1,17 @@
 // The stable identifier for one quiz (one chapter, or one level's combined
 // list), used as Attempt.quizKey and in leaderboard URLs. Built from
 // Level.slug (not Level.number) so HSK4A/4B stay distinguishable whenever
-// they're wired back into ALL_LEVELS — see docs/14-phase6-plan.md.
+// they're wired back into ALL_LEVELS — see docs/hold/14-phase6-plan.md.
 //
 // `mode` distinguishes the typing quiz from the pinyin->meaning quiz
-// (docs/19-meaning-quiz-mode-plan.md) and the meaning->character quiz
-// (docs/27-character-quiz-plan.md) — a guessed multiple-choice/matching run
+// (docs/hold/19-meaning-quiz-mode-plan.md) and the meaning->character quiz
+// (docs/hold/27-character-quiz-plan.md) — a guessed multiple-choice/matching run
 // isn't comparable difficulty to a fully-typed recall run, and reading a
 // character isn't the same skill as recalling its meaning, so each tracked
 // non-typing mode gets its own suffixed key rather than sharing rows.
 //
 // `wordSet` distinguishes a chapter's curated New Words (default) from its
-// full dialog vocabulary, "All Words" (docs/25-chapter-all-words-plan.md) —
+// full dialog vocabulary, "All Words" (docs/hold/25-chapter-all-words-plan.md) —
 // same reasoning as `mode`: an All Words run draws from a different, larger
 // word pool than New Words, so it isn't a fair comparison and gets its own
 // "-all" suffixed key instead of sharing New Words' leaderboard rows.
@@ -29,7 +29,7 @@ export function quizKeyFor(target: {
   return `hsk${target.levelSlug}-${suffix}${wordSetSuffix}${modeSuffix}`;
 }
 
-// Appends the "hard mode" suffix (docs/28-progressive-difficulty-plan.md —
+// Appends the "hard mode" suffix (docs/hold/28-progressive-difficulty-plan.md —
 // the optional "hide a second column" toggle) onto an already-built quizKey
 // at run-start, rather than adding a `difficulty` field to `quizKeyFor`
 // itself: the toggle is a per-run player choice made on the pre-quiz

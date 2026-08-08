@@ -11,7 +11,7 @@ export interface DialogChapterData {
 }
 
 // Mirrors extract-chapters.ts's dispatch pattern exactly — see
-// docs/25-chapter-all-words-plan.md. HSK4A/4B/5A/5B not included yet, same
+// docs/hold/25-chapter-all-words-plan.md. HSK4A/4B/5A/5B not included yet, same
 // reasoning as extractAllChapters (see hsk-level.ts's ALL_LEVELS comment).
 export async function extractAllDialogWords(): Promise<DialogChapterData[]> {
   const withLevel = (level: LevelSlug, chapters: readonly { chapterNumber: number; words: ChapterWordRow[] }[]) =>

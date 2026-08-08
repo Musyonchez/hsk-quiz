@@ -72,7 +72,7 @@ export default async function LandingPage() {
   return (
     <main className="flex flex-col items-center px-4 sm:px-6">
       {/* Hero — everything above the fold in one section, per
-          docs/29-landing-page-trim-plan.md: the stats strip folds in here
+          docs/hold/29-landing-page-trim-plan.md: the stats strip folds in here
           instead of its own bordered section, and there's no second,
           repeat CTA section further down the page. */}
       <section className="flex w-full max-w-2xl flex-col items-center gap-6 py-16 text-center">

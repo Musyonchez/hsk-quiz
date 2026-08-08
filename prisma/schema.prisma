@@ -56,7 +56,7 @@ model Word {
   @@unique([chapterId, chinese, source])
 }
 
-// A chapter's actual dialog transcript — docs/25-chapter-all-words-plan.md's
+// A chapter's actual dialog transcript — docs/hold/25-chapter-all-words-plan.md's
 // addendum. Genuinely different shape from Word (a full sentence with a
 // speaker and an English translation, not a single vocabulary entry), so
 // its own model rather than overloading Word again. `order` is absolute
@@ -133,7 +133,7 @@ model Attempt {
   @@index([userId, quizKey])
 }
 
-// One row per failed login attempt, per docs/22-audit-pass-4.md — an
+// One row per failed login attempt, per docs/hold/22-audit-pass-4.md — an
 // in-memory Map (the original approach) doesn't survive across Vercel's
 // serverless invocations, silently disabling the lockout in production.
 // Storing failures here instead of a count+window pair keeps the "reset

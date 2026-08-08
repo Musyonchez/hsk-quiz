@@ -1,6 +1,6 @@
 # Deploying hsk-quiz (Vercel)
 
-The live deploy target, per [20-postgres-vercel-migration-plan.md](20-postgres-vercel-migration-plan.md) — the database moved from SQLite to Postgres (Neon) specifically to make this possible. See [16-deploy.md](16-deploy.md) for the superseded Render setup.
+The live deploy target, per [20-postgres-vercel-migration-plan.md](hold/20-postgres-vercel-migration-plan.md) — the database moved from SQLite to Postgres (Neon) specifically to make this possible. See [16-deploy.md](16-deploy.md) for the superseded Render setup.
 
 ## Why this works now
 
@@ -12,7 +12,7 @@ fine.
 ## Env vars
 
 Just `DATABASE_URL` — the same Neon connection string already used for local dev (a single
-database serves both right now, per [20](20-postgres-vercel-migration-plan.md)'s "what actually
+database serves both right now, per [20](hold/20-postgres-vercel-migration-plan.md)'s "what actually
 happened," since there's no live production data yet to keep separate). No `NODE_ENV` needed —
 Vercel sets that automatically for production deployments (Render required it manually).
 
@@ -29,7 +29,7 @@ custom build command needed. `npm run build` already chains `prisma migrate depl
 --webpack` (see `package.json`), so pending migrations apply automatically on every deploy.
 
 Seeding is **not** automatic here either, same reasoning as the Render setup — see
-[20](20-postgres-vercel-migration-plan.md)'s "what actually happened." Not a concern for the
+[20](hold/20-postgres-vercel-migration-plan.md)'s "what actually happened." Not a concern for the
 first deploy specifically, though: the shared dev/prod Neon database already has all the vocab
 data seeded from the migration work itself. Only re-run `npm run db:seed` manually if vocab
 source data changes later.

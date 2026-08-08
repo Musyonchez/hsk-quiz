@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { Menu, X } from "lucide-react";
 
-// The <md drawer for AppHeader's nav links (docs/24-responsive-design-plan.md).
+// The <md drawer for AppHeader's nav links (docs/hold/24-responsive-design-plan.md).
 // AppHeader stays a Server Component (it fetches the session + level list), so
 // this client component only owns the open/closed toggle — the actual link
 // markup is passed in as `children`, pre-rendered server-side same as the
