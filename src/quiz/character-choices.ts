@@ -1,5 +1,5 @@
 // Builds the candidate-row options for the Combined/Custom-scale character
-// quiz (docs/27-character-quiz-plan.md) — the meaning->character equivalent
+// quiz (docs/hold/27-character-quiz-plan.md) — the meaning->character equivalent
 // of meaning-choices.ts's pinyin->meaning options, but ranked rather than
 // purely random: a distractor that's actually plausible (a homophone, or a
 // word that starts the same way) is what makes reading recall a real skill

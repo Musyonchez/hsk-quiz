@@ -1,7 +1,7 @@
 # Codebase Audit (post-HSK4-pause)
 
 A file-by-file pass over all of `website/src`, `prisma/`, and the top-level
-config/docs files, after the HSK4+ pause (see [07-roadmap.md](07-roadmap.md)),
+config/docs files, after the HSK4+ pause (see [07-roadmap.md](../07-roadmap.md)),
 looking for redundancy, gaps, errors, and best-practice drift accumulated
 while iterating quickly. Findings are split into
 what got fixed immediately (low-risk, clear-cut) and what's flagged for later
@@ -60,7 +60,7 @@ what got fixed immediately (low-risk, clear-cut) and what's flagged for later
   explicitly stated) a two-level HSK1/HSK2-only world — "HSK 3 is out of
   scope for now", `hsk{1,2}` path patterns, "two large cards, HSK 1 and HSK
   2", a claim that `GrammarPattern` gets extracted (it deliberately doesn't —
-  see [07-roadmap.md](07-roadmap.md)), and a seed-order description that
+  see [07-roadmap.md](../07-roadmap.md)), and a seed-order description that
   didn't match `seed.ts`'s actual `Level → Word(combined) → Chapter →
   Word(chapter)` sequence. All updated in place to describe HSK1-3 as they
   actually work today (markdown source for HSK1/2, in-repo data files for
@@ -80,13 +80,13 @@ what got fixed immediately (low-risk, clear-cut) and what's flagged for later
   quiz entirely client-side and never calls an API to record the result. The
   dashboard's "Last played" line will therefore never render. This matches
   the documented roadmap (attempts/leaderboard/friends are a later phase,
-  per [07-roadmap.md](07-roadmap.md)), but is worth flagging explicitly since
+  per [07-roadmap.md](../07-roadmap.md)), but is worth flagging explicitly since
   the read-side already exists and looks functional while being silently
   dead until `POST /api/attempts` is built.
 - **`GET /api/auth/me` has no caller.** Server Components call
   `getSessionUser()` directly, so nothing in the app fetches this route. It's
   documented as intentional public API surface in
-  [05-architecture.md](05-architecture.md)'s API table, so left in place, but
+  [05-architecture.md](../05-architecture.md)'s API table, so left in place, but
   it's currently unexercised code.
 - **`QuizRunner`'s table vs. `VocabTable`'s table.** Both render a
   Chinese/Pinyin/English table, but `QuizRunner`'s masks the pinyin column
@@ -102,7 +102,7 @@ what got fixed immediately (low-risk, clear-cut) and what's flagged for later
   variable or measured value); flagged so a future `AppHeader` change knows
   to check it.
 - **`better-sqlite3` / `@prisma/adapter-better-sqlite3` are in `dependencies`,
-  not `devDependencies`**, even though [05-architecture.md](05-architecture.md)
+  not `devDependencies`**, even though [05-architecture.md](../05-architecture.md)
   documents SQLite as dev/test-only with Postgres in prod. Not moved since
   the prod swap-over doc already exists and this is a one-line fix at that
   time — flagged so whoever wires up `@prisma/adapter-pg` remembers to move
@@ -126,7 +126,7 @@ what got fixed immediately (low-risk, clear-cut) and what's flagged for later
 
 - The HSK4A/4B/5A/5B data files (`hsk4a-combined-data.ts`,
   `hsk4a-chapters-data.ts`, and the 4b/5a/5b equivalents) are intentionally
-  unreferenced right now — see [07-roadmap.md](07-roadmap.md)'s "HSK4+
+  unreferenced right now — see [07-roadmap.md](../07-roadmap.md)'s "HSK4+
   paused" entry. They're not "redundant" in the sense flagged above; they're
   parked, complete work waiting for `ALL_LEVELS` (`hsk-level.ts`) to grow
   again.

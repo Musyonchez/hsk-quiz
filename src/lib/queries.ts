@@ -82,7 +82,7 @@ export function getChapterWithWords(slug: string, chapterNumber: number) {
     where: { number: chapterNumber, level: { slug } },
     include: {
       // Scoped to "chapter" (New Words) explicitly — before
-      // docs/25-chapter-all-words-plan.md, chapterId was only ever set on
+      // docs/hold/25-chapter-all-words-plan.md, chapterId was only ever set on
       // "chapter"-source rows, so this filter was implicit. Now "dialog"
       // rows share the same chapterId, so leaving this unfiltered would
       // silently merge a chapter's curated New Words with its entire dialog
@@ -94,7 +94,7 @@ export function getChapterWithWords(slug: string, chapterNumber: number) {
   });
 }
 
-// A chapter's full dialog vocabulary (docs/25-chapter-all-words-plan.md) —
+// A chapter's full dialog vocabulary (docs/hold/25-chapter-all-words-plan.md) —
 // independent from getChapterWithWords' New Words, ordered by `id` ascending
 // same as chapter words are, which is reading order since dialog rows are
 // seeded in the order they first appear in the source dialog text.
@@ -114,7 +114,7 @@ export function getChapterDialogWordCount(slug: string, chapterNumber: number) {
   });
 }
 
-// A chapter's actual dialog transcript (docs/25-chapter-all-words-plan.md's
+// A chapter's actual dialog transcript (docs/hold/25-chapter-all-words-plan.md's
 // addendum) — full sentences with a speaker and English translation, not
 // vocabulary entries. Ordered by DialogLine's own `order` (absolute across
 // the whole chapter), set at seed time to match the source dialog's real
@@ -140,7 +140,7 @@ export function getCombinedWords(slug: string) {
 }
 
 // Words from an arbitrary subset of a level's chapters — for the custom
-// multi-chapter quiz (docs/17-custom-chapter-quiz-plan.md). Filters on the
+// multi-chapter quiz (docs/hold/17-custom-chapter-quiz-plan.md). Filters on the
 // chapter's own `number` (not `chapterId`) since the picker page works in
 // chapter numbers, not internal ids.
 export function getWordsForChapters(slug: string, chapterNumbers: number[]) {
@@ -237,7 +237,7 @@ export type LeaderboardRow = {
 // has no groupBy that also returns the winning row's other columns (Postgres
 // itself could do this in one query via DISTINCT ON, just not through
 // Prisma's query builder) — fine at this app's scale (see
-// docs/14-phase6-plan.md).
+// docs/hold/14-phase6-plan.md).
 export async function getLeaderboard(
   quizKey: string,
   participantIds?: number[]

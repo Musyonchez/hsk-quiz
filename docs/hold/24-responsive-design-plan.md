@@ -3,7 +3,7 @@
 Written before any implementation, same discipline as
 [17](17-custom-chapter-quiz-plan.md)/[18](18-quiz-runner-and-picker-improvements-plan.md)/
 [19](19-meaning-quiz-mode-plan.md)/[20](20-postgres-vercel-migration-plan.md). The app was built
-and visually tuned against a desktop viewport throughout — [08-ui-ux.md](08-ui-ux.md) *says*
+and visually tuned against a desktop viewport throughout — [08-ui-ux.md](../08-ui-ux.md) *says*
 "single column, full-width tables on mobile" as a goal, but that was never actually implemented
 or verified against a narrow screen. This doc is a from-scratch look at what breaks today on
 phone/tablet widths and what needs to change, page by page and component by component, before
@@ -28,7 +28,7 @@ config (there's no `tailwind.config.ts`; this app is on Tailwind v4's CSS-first 
 
 A pass over every page/component found these concretely broken-or-untested-on-narrow spots. Not
 a redesign — the visual language (ink/paper/seal palette, cards, pill buttons) in
-[08-ui-ux.md](08-ui-ux.md)/[10-color-palette.md](10-color-palette.md) is staying; this is purely
+[08-ui-ux.md](../08-ui-ux.md)/[10-color-palette.md](../10-color-palette.md) is staying; this is purely
 about layout surviving a narrow viewport.
 
 - **`AppHeader` has no mobile treatment at all.** It's one `flex items-center justify-between`
@@ -48,7 +48,7 @@ about layout surviving a narrow viewport.
 - **Vocab/answer tables have no horizontal-scroll wrapper.** `VocabTable`/`VocabTableGroup`
   (learn pages, results-screen "missed words"), `QuizRunner`'s in-quiz answer table, and
   `LeaderboardTable` are all plain `w-full` tables with no `overflow-x-auto` container —
-  contradicts [08-ui-ux.md](08-ui-ux.md)'s own stated intent ("tables become horizontally
+  contradicts [08-ui-ux.md](../08-ui-ux.md)'s own stated intent ("tables become horizontally
   scrollable rather than reflowing to cards"). Today a long English meaning or a wide Chinese
   phrase just forces the table wider than the card that contains it, which can force the whole
   page wider than the viewport (real horizontal page-scroll, the one thing 08's spec explicitly
@@ -105,10 +105,10 @@ about layout surviving a narrow viewport.
   Exact breakpoint TBD during implementation (`md` is the natural candidate, matching where the
   nav row's content actually starts colliding) — needs a real measurement against the current
   link count, not a guess, since it'll only get longer once HSK4+ levels go live
-  ([07-roadmap.md](07-roadmap.md)).
+  ([07-roadmap.md](../07-roadmap.md)).
 - **Tables**: wrap every table (`VocabTableGroup`, `QuizRunner`'s in-quiz table,
   `LeaderboardTable`) in a `overflow-x-auto` container per column, matching what
-  [08-ui-ux.md](08-ui-ux.md) already specifies — the table itself keeps a sane `min-width` so
+  [08-ui-ux.md](../08-ui-ux.md) already specifies — the table itself keeps a sane `min-width` so
   columns don't crush illegibly, and the *container* scrolls instead of the page.
 - **Touch targets**: bump `pillClasses`'s `"sm"` vertical padding and/or `ToolbarButton`'s
   padding if a real measurement (rendered height) comes in under ~40-44px, rather than

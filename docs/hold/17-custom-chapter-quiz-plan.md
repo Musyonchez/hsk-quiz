@@ -159,7 +159,7 @@ Not a navbar dropdown — the navbar just gets one more plain link, same as `Lea
 ```
 
 (`Layers` is already used elsewhere in the app for "combined"-flavored entry points, per
-[07-roadmap.md](07-roadmap.md)'s Phase 7 icon-set note — reusing it here keeps the icon
+[07-roadmap.md](../07-roadmap.md)'s Phase 7 icon-set note — reusing it here keeps the icon
 vocabulary consistent rather than introducing a new one for a closely related concept.)
 
 The actual picker lives on its own page, `src/app/custom-quiz/page.tsx` (server component,

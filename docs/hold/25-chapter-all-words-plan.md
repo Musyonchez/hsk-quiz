@@ -75,7 +75,7 @@ by different data).
   routes themselves 404 if hit directly with zero dialog words, same `notFound()` pattern
   `ChapterQuizPage` already uses for an empty chapter.
 - **Extraction is manual, word-by-word, chapter-by-chapter** — no NLP segmenter is wired into
-  this app (see [04-data-pipeline.md](04-data-pipeline.md)'s existing PDF/data pipeline, which is
+  this app (see [04-data-pipeline.md](../04-data-pipeline.md)'s existing PDF/data pipeline, which is
   also hand-curated, not auto-extracted). Workflow: you paste one chapter's dialog text in chat, I
   segment it into distinct words in appearance order, look up pinyin + an English gloss for each
   (cross-checking against that chapter's existing New Words for any word that's also a New Word,

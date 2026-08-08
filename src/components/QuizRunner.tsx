@@ -121,7 +121,7 @@ function QuizRunnerInner({
   const [currentIndex, setCurrentIndex] = useState(0);
   const [input, setInput] = useState("");
   const [correctIds, setCorrectIds] = useState<Set<number>>(new Set());
-  // docs/28-progressive-difficulty-plan.md: optional harder tier, blanking
+  // docs/hold/28-progressive-difficulty-plan.md: optional harder tier, blanking
   // the English column too (normally always visible) so the player recalls
   // from Chinese alone instead of Chinese+English. Only settable pre-start
   // (see the ToolbarButton below, rendered only in the !started branch), so
@@ -469,7 +469,7 @@ function QuizRunnerInner({
                 <Shuffle size={16} />
                 Shuffle
               </ToolbarButton>
-              {/* docs/28-progressive-difficulty-plan.md: opt-in harder tier,
+              {/* docs/hold/28-progressive-difficulty-plan.md: opt-in harder tier,
                   set once before Start quiz like Shuffle above — see the
                   hideSecondColumn state comment for why it's safe to read
                   directly (no separate "locked in" value) once a run starts. */}
@@ -512,7 +512,7 @@ function QuizRunnerInner({
       </div>
 
       {/* See VocabTable.tsx's VocabTableGroup for why the scroll wrapper/
-          border split (docs/24-responsive-design-plan.md). */}
+          border split (docs/hold/24-responsive-design-plan.md). */}
       <div className="overflow-x-auto rounded-lg border border-border">
         <table className="w-full min-w-lg text-sm">
           <thead className="bg-surface-raised text-left text-xs uppercase tracking-wide text-muted-foreground">
@@ -568,7 +568,7 @@ function ToolbarButton({
   disabled: boolean;
   label: string;
   // "active" — a selected/toggled-on state (e.g. Hard mode once enabled),
-  // bronze per docs/30-color-palette-expansion-plan.md's accent-secondary,
+  // bronze per docs/hold/30-color-palette-expansion-plan.md's accent-secondary,
   // same "selected but not a primary action" role tabs already use it for.
   variant?: "default" | "danger" | "active";
   children: React.ReactNode;

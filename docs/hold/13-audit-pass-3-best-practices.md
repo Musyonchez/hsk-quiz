@@ -2,7 +2,7 @@
 
 The non-bug half of this pass: things that work correctly today but drift from best practice,
 or are worth a deliberate call before HSK4+ (and the account-facing features in
-[07-roadmap.md](07-roadmap.md)) go live. See
+[07-roadmap.md](../07-roadmap.md)) go live. See
 [12-audit-pass-3-bugs.md](12-audit-pass-3-bugs.md) for the actual-defect half of the same pass.
 
 ## Fixed
@@ -34,7 +34,7 @@ or are worth a deliberate call before HSK4+ (and the account-facing features in
 ## Noted, not fixed (judgment calls / deferred)
 
 - **`better-sqlite3` / `@prisma/adapter-better-sqlite3` are in `dependencies`, not
-  `devDependencies`**, even though [05-architecture.md](05-architecture.md) documents SQLite as
+  `devDependencies`**, even though [05-architecture.md](../05-architecture.md) documents SQLite as
   dev/test-only with Postgres in prod — already flagged in
   [11-codebase-audit.md](11-codebase-audit.md)'s "not fixed" list, restated here only because
   this pass reconfirmed it's still true; not a new finding, still deferred for the same reason
@@ -49,7 +49,7 @@ or are worth a deliberate call before HSK4+ (and the account-facing features in
 - **`GrammarPattern` model has no `@@unique` constraint**, unlike `Chapter`
   (`@@unique([levelId, number])`) and `Word` (`@@unique([chapterId, chinese])`). Not currently
   exercised — nothing seeds `GrammarPattern` rows yet (deliberately, per
-  [07-roadmap.md](07-roadmap.md)) — left unadded here since it needs a new Prisma migration and
+  [07-roadmap.md](../07-roadmap.md)) — left unadded here since it needs a new Prisma migration and
   there's no data or seed code exercising this model yet to validate the choice against; worth
   deciding the natural key (likely `[chapterId, label]`) at the same time the grammar-pattern
   extractor is actually built, rather than speculatively now.

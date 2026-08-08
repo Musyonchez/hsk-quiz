@@ -1,5 +1,5 @@
 // Builds the 5-option (1 correct + up to 4 distractors) answer set for the
-// pinyin->meaning quiz mode (docs/19-meaning-quiz-mode-plan.md). Pure and
+// pinyin->meaning quiz mode (docs/hold/19-meaning-quiz-mode-plan.md). Pure and
 // framework-free like pinyin-match.ts/format-time.ts — called once per run
 // start (see docs/19), never regenerated on a mid-run revisit.
 

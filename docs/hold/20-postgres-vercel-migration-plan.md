@@ -10,7 +10,7 @@ user is ready to go through Vercel's own signup/connect flow.
 
 ## Context
 
-[16-deploy.md](16-deploy.md) picked Render specifically because the app used `better-sqlite3`
+[16-deploy.md](../16-deploy.md) picked Render specifically because the app used `better-sqlite3`
 against a local SQLite file, which needs a persistent disk and a long-running process — a
 serverless platform like Vercel can't provide that (ephemeral filesystem between invocations).
 The user has now decided to actually do the migration to get onto Vercel's free tier instead of
@@ -22,7 +22,7 @@ persistent-disk requirement entirely and makes serverless hosting work.
 The schema is fully relational already (`prisma/schema.prisma`) — Postgres is a strictly better
 fit for it than SQLite ever was, not a compromise. The data itself is small (current `dev.db` is
 ~200KB) and every vocab table is fully reseedable from source (`prisma/seed.ts`, idempotent,
-already re-run safely many times per [07-roadmap.md](07-roadmap.md)'s history) — only `User`/
+already re-run safely many times per [07-roadmap.md](../07-roadmap.md)'s history) — only `User`/
 `Session`/`Attempt`/`Friendship` rows are real, irreplaceable data, and there's no production
 data yet to migrate (nothing has been deployed live).
 
@@ -30,7 +30,7 @@ data yet to migrate (nothing has been deployed live).
 
 This app already has two independent places a database URL matters, which is *why* the previous
 SQLite→anything swap was flagged as "swap the adapter, not just the schema" back in
-[16-deploy.md](16-deploy.md):
+[16-deploy.md](../16-deploy.md):
 
 1. **`prisma.config.ts`** — supplies `DATABASE_URL` to the Prisma *CLI* (`migrate dev`, `migrate
    deploy`, `studio`). This is why `prisma/schema.prisma`'s `datasource` block has never needed
@@ -60,7 +60,7 @@ Both need to point at Postgres for this migration; neither one alone is enough.
   exists, generating a correct Postgres-flavored initial migration from the current schema.
   Mirrors exactly what already happened once before in this repo's history (the dev SQLite DB was
   reset rather than migrated when the `slug` column was added, since everything was reseedable —
-  see [07-roadmap.md](07-roadmap.md)).
+  see [07-roadmap.md](../07-roadmap.md)).
 - **Local dev also moves to Postgres** — there's no more SQLite fallback once `better-sqlite3` is
   removed, so local development needs its own reachable Postgres too. Recommended: a second Neon
   **branch** (Neon's free tier supports branching a database) used only for local dev, kept
@@ -71,7 +71,7 @@ Both need to point at Postgres for this migration; neither one alone is enough.
   deploy && tsx prisma/seed.ts && next build`, same pattern Render's `startCommand` already used
   successfully. Idempotent, safe to run on every deploy; Vercel installs devDependencies (`tsx`)
   during build by default so this needs no extra config.
-- **Render's setup (`render.yaml`, [16-deploy.md](16-deploy.md)) was originally planned to stay
+- **Render's setup (`render.yaml`, [16-deploy.md](../16-deploy.md)) was originally planned to stay
   in place, not deleted** — the reasoning at the time being that once Postgres removed the
   persistent-disk requirement, the same app could deploy to *either* host with no further
   changes, so there was no reason to throw away working config for an option that was still
@@ -105,10 +105,10 @@ Add: `@prisma/adapter-neon`, `@neondatabase/serverless`.
   secret).
 - **`package.json`**: dependency swap above; `build` script becomes `prisma migrate deploy && tsx
   prisma/seed.ts && next build --webpack` (keeping the existing `--webpack` flag from
-  [16-deploy.md](16-deploy.md)'s local-machine fix — still needed on this dev machine, harmless
+  [16-deploy.md](../16-deploy.md)'s local-machine fix — still needed on this dev machine, harmless
   elsewhere).
 - **New `docs/21-vercel-deploy.md`**: the Vercel-side equivalent of
-  [16-deploy.md](16-deploy.md) — how to actually deploy once the code changes above are in place
+  [16-deploy.md](../16-deploy.md) — how to actually deploy once the code changes above are in place
   (connect the GitHub repo on vercel.com, set `DATABASE_URL` in project env vars, deploy). Written
   once the migration itself is done and verified, not before — same "plan first, but the deploy
   doc reflects the real working state" approach 16 followed.

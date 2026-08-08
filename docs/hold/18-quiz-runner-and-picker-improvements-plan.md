@@ -44,7 +44,7 @@ clicking a row directly (`goTo` is already the single function all three paths f
 
 - **Not `scrollIntoView({block: "center"})`**: that centers against the full viewport, which
   would tuck the target row halfway behind the sticky score/timer/input bar
-  (`sticky top-18.25`, see [10-color-palette.md](10-color-palette.md)'s `--current-row` note and
+  (`sticky top-18.25`, see [10-color-palette.md](../10-color-palette.md)'s `--current-row` note and
   the Phase 5 sticky-header work). Instead, compute manually: the sticky bar's own
   `getBoundingClientRect().bottom` marks where the *actually visible* area starts; center the
   target row within `window.innerHeight - stickyBottom`, not the full window height.

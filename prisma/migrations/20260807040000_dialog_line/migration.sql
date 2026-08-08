@@ -1,4 +1,4 @@
--- docs/25-chapter-all-words-plan.md's addendum: a chapter's actual dialog
+-- docs/hold/25-chapter-all-words-plan.md's addendum: a chapter's actual dialog
 -- transcript, distinct from Word's vocabulary entries.
 CREATE TABLE "DialogLine" (
     "id" SERIAL NOT NULL,

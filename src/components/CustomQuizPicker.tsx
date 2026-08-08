@@ -58,7 +58,7 @@ function summarize(selection: Selection | undefined): string | null {
 }
 
 // Builds the quiz href from every level's selection, with the chosen mode
-// (docs/19-meaning-quiz-mode-plan.md, docs/27-character-quiz-plan.md) baked
+// (docs/hold/19-meaning-quiz-mode-plan.md, docs/hold/27-character-quiz-plan.md) baked
 // into the URL so the quiz page skips its own mode-picker screen — one
 // click from here straight into the quiz instead of two. A single level
 // picked with just 1 chapter isn't enough on its own (that's the existing

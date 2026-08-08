@@ -9,7 +9,7 @@ their pinyin or meaning.
 
 There's no way to type Chinese characters on a plain ASCII keyboard without an IME (input
 method editor) doing pinyin→hanzi conversion behind the scenes — same reason
-[06-quiz-mechanics.md](06-quiz-mechanics.md) made pinyin answers tone-free rather than requiring
+[06-quiz-mechanics.md](../06-quiz-mechanics.md) made pinyin answers tone-free rather than requiring
 diacritics. Relying on the player's own OS-level Chinese IME would make the quiz untypeable for
 anyone who hasn't got one installed, which defeats the point of a web quiz. So instead of a text
 field, this mode gives the player **a small on-screen IME**: type the pinyin (a real, familiar

@@ -39,7 +39,7 @@ function shuffle<T>(items: T[]): T[] {
 }
 
 // Pinyin -> meaning, one word at a time, 5 clickable options instead of a
-// text field. See docs/19-meaning-quiz-mode-plan.md for the full design —
+// text field. See docs/hold/19-meaning-quiz-mode-plan.md for the full design —
 // notably: no right/wrong is ever shown until the quiz finishes (a wrong
 // answer's distractor set can overlap another word's, so even single-shot
 // locking wouldn't stop cross-word leakage from instant feedback), and
@@ -433,7 +433,7 @@ function ChoiceQuizRunnerInner({
       </div>
 
       {/* See VocabTable.tsx's VocabTableGroup for why the scroll wrapper/
-          border split (docs/24-responsive-design-plan.md). */}
+          border split (docs/hold/24-responsive-design-plan.md). */}
       <div className="overflow-x-auto rounded-lg border border-border">
         <table className="w-full min-w-lg text-sm">
           <thead className="bg-surface-raised text-left text-xs uppercase tracking-wide text-muted-foreground">

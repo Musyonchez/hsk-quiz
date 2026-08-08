@@ -11,7 +11,7 @@ export async function AppHeader() {
   const user = await getSessionUser();
   const levels = user ? await getLevelsOverview() : [];
 
-  // docs/24-responsive-design-plan.md: below `lg` the full link row (logo +
+  // docs/hold/24-responsive-design-plan.md: below `lg` the full link row (logo +
   // one link per level + Custom Quiz/Leaderboard/Friends + user badge + log
   // out) doesn't fit without wrapping — checked against the
   // actual 768px tablet target, where `md` (768px) still forces "HSK Quiz"

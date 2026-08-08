@@ -1,8 +1,8 @@
 import Link from "next/link";
 
 // Shared by /hsk/[level]/chapter/[chapter]/all, its /words sub-page, and its
-// /quiz route (docs/25-chapter-all-words-plan.md and its addendum, plus
-// docs/27-character-quiz-plan.md's Character tab) — five tabs: the real
+// /quiz route (docs/hold/25-chapter-all-words-plan.md and its addendum, plus
+// docs/hold/27-character-quiz-plan.md's Character tab) — five tabs: the real
 // dialog transcript, the flat All Words vocabulary list, and the three quiz
 // modes, all scoped to the same chapter. Same active/inactive pill styling
 // as the leaderboard pages' existing tabClasses, reused rather than
