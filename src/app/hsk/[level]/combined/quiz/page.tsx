@@ -53,7 +53,10 @@ export default async function CombinedQuizPage({
         <h1 className="mt-2 text-2xl font-bold">{level.name} — Combined Quiz</h1>
       </div>
 
+      {/* key forces a remount when the mode tab changes, so QuizModeGate's
+          internal state doesn't go stale — see docs/32 §2. */}
       <QuizModeGate
+        key={initialMode ?? "picker"}
         words={words}
         backHref={backHref}
         typeQuizKey={typeQuizKey}

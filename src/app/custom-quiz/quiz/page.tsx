@@ -97,7 +97,10 @@ export default async function CrossLevelCustomQuizPage({
         <p className="mt-1 text-sm text-muted-foreground">{summary}</p>
       </div>
 
+      {/* key forces a remount when the mode tab changes, so QuizModeGate's
+          internal state doesn't go stale — see docs/32 §2. */}
       <QuizModeGate
+        key={initialMode ?? "picker"}
         words={words}
         backHref={backHref}
         trackAttempt={false}

@@ -67,7 +67,10 @@ export default async function CustomQuizPage({
         </p>
       </div>
 
+      {/* key forces a remount when the mode tab changes, so QuizModeGate's
+          internal state doesn't go stale — see docs/32 §2. */}
       <QuizModeGate
+        key={initialMode ?? "picker"}
         words={words}
         backHref={backHref}
         trackAttempt={false}

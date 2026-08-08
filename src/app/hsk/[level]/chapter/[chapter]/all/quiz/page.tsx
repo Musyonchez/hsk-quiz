@@ -66,14 +66,21 @@ export default async function ChapterAllWordsQuizPage({
         }
       />
 
+      {/* docs/32: All Words is scaled like Combined/Custom (a full dialog's
+          vocabulary, not a curated ~15-word New Words list — e.g. HSK2 ch.6
+          has 61 All Words vs 13 New Words), so it gets the one-word-at-a-
+          time choice/candidate-picker flow, not the chapter-scale matching
+          board. `key` forces a remount when the mode tab changes so
+          QuizModeGate's internal state doesn't go stale (docs/32 §2). */}
       <QuizModeGate
+        key={initialMode ?? "picker"}
         words={dialogWords}
         backHref={backHref}
         typeQuizKey={typeQuizKey}
         meaningQuizKey={meaningQuizKey}
         characterQuizKey={characterQuizKey}
-        meaningVariant="match"
-        characterVariant="match"
+        meaningVariant="choice"
+        characterVariant="choice"
         allowDrillMissed
         durationSeconds={600}
         initialMode={initialMode}
