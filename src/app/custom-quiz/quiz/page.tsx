@@ -52,7 +52,9 @@ export default async function CrossLevelCustomQuizPage({
   await requireSession();
   const { picks, mode } = await searchParams;
   const initialMode =
-    mode === "type" || mode === "meaning" || mode === "character" ? mode : null;
+    mode === "type" || mode === "meaning" || mode === "character" || mode === "study"
+      ? mode
+      : null;
   const selections = parseSelections(picks);
   const backHref = "/custom-quiz";
 

@@ -54,6 +54,12 @@ export default async function CombinedLearnPage({
         >
           Character
         </Link>
+        <Link
+          href={`/hsk/${levelSlug}/combined/quiz?mode=study`}
+          className={pillClasses("secondary")}
+        >
+          Study
+        </Link>
       </div>
 
       <VocabTable words={words} grouped />

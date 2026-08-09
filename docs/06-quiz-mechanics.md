@@ -64,7 +64,7 @@ toggle, `SCORE 0/N`, `TIMER 10:00` (configurable, default matches reference).
   /api/leaderboard?quizKey=&scope=friends` instead. A link from here into the full leaderboard
   page — see [09-pages.md](09-pages.md).
 
-## Character mode (per docs/hold/27-character-quiz-plan.md)
+## Character mode (per docs/hold/27-character-quiz-plan.md, redesigned per docs/33-character-quiz-single-card-redesign-plan.md)
 
 A third quiz mode, reading recall instead of typing/meaning recall: the prompt shows a word's
 English meaning, the player types its pinyin (unlocking a small on-screen candidate row once it
@@ -75,6 +75,23 @@ docs/19 established for meaning-match. Chapter-scale quizzes get a click-to-pair
 (`MatchQuizRunner`'s `variant="character"`, English left / Chinese character right) instead of
 the candidate-picker flow, mirroring the existing chapter-vs-combined split for meaning-match.
 Tracked runs get a `-char` suffixed `quizKey`, its own leaderboard family.
+
+At combined/custom scale, `CharacterQuizRunner` is a single focused card (prompt, pinyin input,
+candidate row, a slim progress bar) — no answer-key table alongside it. That table pattern fits
+the typing quiz (it doubles as a live answer key) but not candidate-picking at 60-700+ word
+scale, where a table of mostly-irrelevant rows the player can't act on just crowds out the actual
+interaction. A consequence: there's no "click a row to jump back and review an answered word"
+affordance here (Prev/Next only ever visited *unanswered* words anyway) — accepted as a fair
+trade for the focus win.
+
+### Study mode (flashcards, per docs/33)
+
+A non-graded companion to Character mode, same word pool, offered everywhere Character mode is:
+a shuffled deck of flip cards (`CharacterStudy`) — tap to reveal a character's pinyin and
+meaning, Prev/Shuffle/Next through the deck, no timer, no score, no `Attempt` written (same
+practice-only treatment Custom Quiz already gets). Reachable via its own `Study` button anywhere
+`Character` is (Learn pages, `AllWordsTabs`, the Custom Quiz picker's quick-jump row, and
+`QuizModeGate`'s own picker screen) and its own `?mode=study`.
 
 ## Hard mode (optional, per docs/hold/28-progressive-difficulty-plan.md)
 

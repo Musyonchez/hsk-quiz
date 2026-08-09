@@ -36,17 +36,19 @@ function shuffle<T>(items: T[]): T[] {
   return copy;
 }
 
-// Combined/Custom-scale character quiz (docs/hold/27-character-quiz-plan.md).
-// Structurally a fork of ChoiceQuizRunner (same sticky-toolbar/answered-
-// table/bottom-prompt-bar shell) but the bottom bar's interaction is a
-// virtual IME rather than static buttons: the prompt shows the word's
-// English meaning, the player types the pinyin from memory (checked
-// tone-free, same as the typing quiz), and only once that matches does a
-// candidate row of Chinese-character options appear to click. No
-// right/wrong color on click either way — same no-reveal-until-the-end
-// rule docs/19 established for meaning-match, since candidate rows are
-// regenerated fresh per word and a wrong pick's distractors can overlap
-// another word's.
+// Combined/Custom-scale character quiz (docs/hold/27-character-quiz-plan.md,
+// redesigned per docs/33-character-quiz-single-card-redesign-plan.md). A
+// single focused card, not the table-plus-bottom-bar shell ChoiceQuizRunner
+// uses — that shell fits typing (the table doubles as a live answer key)
+// but not candidate-picking, where a 60-177 row table the player can't
+// act on just crowds out the actual interaction. The interaction itself is
+// a virtual IME: the prompt shows the word's English meaning, the player
+// types the pinyin from memory (checked tone-free, same as the typing
+// quiz), and only once that matches does a candidate row of Chinese-
+// character options appear to click. No right/wrong color on click either
+// way — same no-reveal-until-the-end rule docs/19 established for
+// meaning-match, since candidate rows are regenerated fresh per word and a
+// wrong pick's distractors can overlap another word's.
 export function CharacterQuizRunner({
   words,
   backHref,
@@ -139,9 +141,6 @@ function CharacterQuizRunnerInner({
   const [showStats, setShowStats] = useState(false);
   const statsDefaultSetRef = useRef(false);
   const submittedRef = useRef(false);
-  const containerRef = useRef<HTMLDivElement>(null);
-  const topStickyRef = useRef<HTMLDivElement>(null);
-  const bottomStickyRef = useRef<HTMLDivElement>(null);
   const pinyinInputRef = useRef<HTMLInputElement>(null);
 
   const currentWord = order[currentIndex];
@@ -208,25 +207,6 @@ function CharacterQuizRunnerInner({
 
   useEffect(() => {
     if (started && !finished && !paused) pinyinInputRef.current?.focus();
-  }, [currentIndex, started, finished, paused]);
-
-  // Same centering approach as ChoiceQuizRunner — the visible band is
-  // between the top toolbar and the bottom prompt/candidate bar.
-  useEffect(() => {
-    if (!started || finished || paused) return;
-    const container = containerRef.current;
-    const topSticky = topStickyRef.current;
-    if (!container || !topSticky) return;
-    const row = container.querySelector<HTMLElement>(`[data-row-index="${currentIndex}"]`);
-    if (!row) return;
-
-    const topBottom = topSticky.getBoundingClientRect().bottom;
-    const bottomTop = bottomStickyRef.current?.getBoundingClientRect().top ?? window.innerHeight;
-    const remainingSpace = bottomTop - topBottom;
-    const rowRect = row.getBoundingClientRect();
-    const rowCenter = rowRect.top + rowRect.height / 2;
-    const targetCenter = topBottom + remainingSpace / 2;
-    window.scrollBy({ top: rowCenter - targetCenter, behavior: "smooth" });
   }, [currentIndex, started, finished, paused]);
 
   function goTo(index: number) {
@@ -354,11 +334,8 @@ function CharacterQuizRunnerInner({
   const currentOptions = currentWord ? (choices.get(currentWord.id) ?? []) : [];
 
   return (
-    <div className="flex flex-col gap-6 pb-4" ref={containerRef}>
-      <div
-        className="sticky top-[var(--header-height)] z-5 flex flex-col gap-4 bg-background pb-4"
-        ref={topStickyRef}
-      >
+    <div className="flex flex-col gap-6 pb-4">
+      <div className="sticky top-[var(--header-height)] z-5 flex flex-col gap-4 bg-background pb-4">
         <div className="flex flex-wrap items-center justify-between gap-4 rounded-xl border border-border bg-surface px-5 py-4">
           <span className="text-sm font-semibold tabular-nums">
             ANSWERED {answeredCount}/{total}
@@ -439,53 +416,24 @@ function CharacterQuizRunnerInner({
         )}
       </div>
 
-      {/* See VocabTable.tsx's VocabTableGroup for why the scroll wrapper/
-          border split (docs/hold/24-responsive-design-plan.md). Character and
-          Pinyin stay masked until answered — they're what's being tested
-          here, unlike ChoiceQuizRunner where the given prompt (Chinese)
-          stays visible and only the meaning column is masked. */}
-      <div className="overflow-x-auto rounded-lg border border-border">
-        <table className="w-full min-w-lg text-sm">
-          <thead className="bg-surface-raised text-left text-xs uppercase tracking-wide text-muted-foreground">
-            <tr>
-              <th className="px-3 py-2">Chinese</th>
-              <th className="px-3 py-2">Pinyin</th>
-              <th className="px-3 py-2">English</th>
-            </tr>
-          </thead>
-          <tbody>
-            {order.map((word, index) => {
-              const isAnswered = answers.has(word.id);
-              const isCurrent = index === currentIndex;
-              return (
-                <tr
-                  key={word.id}
-                  data-row-index={index}
-                  onClick={() => started && goTo(index)}
-                  className={
-                    (started ? "cursor-pointer " : "") +
-                    (isCurrent
-                      ? "border-l-4 border-l-current-row bg-current-row-surface"
-                      : "border-l-4 border-l-transparent border-t border-border hover:bg-surface-raised")
-                  }
-                >
-                  <td className="px-3 py-2 font-medium">{isAnswered ? word.chinese : "—"}</td>
-                  <td className="px-3 py-2 text-muted-foreground">
-                    {isAnswered ? word.pinyin : "—"}
-                  </td>
-                  <td className="px-3 py-2">{word.meaning ?? "—"}</td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
-      </div>
-
+      {/* The single focused card — docs/33's redesign. No answer-key table:
+          at combined/custom scale (60-700+ words) a table the player can't
+          act on just crowds out the actual interaction, unlike the typing
+          quiz where the table doubles as a live answer key. */}
       {started && !finished && !paused && currentWord && (
-        <div
-          className="sticky bottom-0 z-5 flex flex-col gap-3 border-t border-border bg-surface p-5 shadow-lg shadow-background/50"
-          ref={bottomStickyRef}
-        >
+        <div className="mx-auto flex w-full max-w-md flex-col gap-5 rounded-xl border border-border bg-surface p-8 shadow-lg shadow-background/50">
+          <div
+            role="progressbar"
+            aria-valuenow={answeredCount}
+            aria-valuemin={0}
+            aria-valuemax={total}
+            className="h-1 overflow-hidden rounded-full bg-surface-raised"
+          >
+            <div
+              className="h-full rounded-full bg-accent-secondary transition-[width]"
+              style={{ width: `${total > 0 ? (answeredCount / total) * 100 : 0}%` }}
+            />
+          </div>
           <div className="text-center">
             <p className="text-lg font-medium">{currentWord.meaning ?? "—"}</p>
             <input
