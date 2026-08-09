@@ -19,7 +19,9 @@ export default async function CombinedQuizPage({
   if (!isLevelSlug(levelSlug)) notFound();
   const { mode } = await searchParams;
   const initialMode =
-    mode === "type" || mode === "meaning" || mode === "character" ? mode : null;
+    mode === "type" || mode === "meaning" || mode === "character" || mode === "study"
+      ? mode
+      : null;
 
   const [words, level, levels] = await Promise.all([
     getCombinedWords(levelSlug),

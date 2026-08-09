@@ -61,6 +61,12 @@ export default async function ChapterLearnPage({
         >
           Character
         </Link>
+        <Link
+          href={`/hsk/${levelSlug}/chapter/${chapterNumber}/quiz?mode=study`}
+          className={pillClasses("secondary")}
+        >
+          Study
+        </Link>
       </div>
 
       {/* Only shown once this chapter actually has dialog data — no dead

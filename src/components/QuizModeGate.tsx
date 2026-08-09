@@ -8,17 +8,24 @@ import { QuizRunner } from "@/components/QuizRunner";
 import { ChoiceQuizRunner } from "@/components/ChoiceQuizRunner";
 import { MatchQuizRunner } from "@/components/MatchQuizRunner";
 import { CharacterQuizRunner } from "@/components/CharacterQuizRunner";
+import { CharacterStudy } from "@/components/CharacterStudy";
 
 // Lets the player pick "Type pinyin" (the original quiz), "Match meaning"
-// (docs/hold/19-meaning-quiz-mode-plan.md), or "Character" (docs/27-character-
-// quiz-plan.md) before any words are shown, then renders the matching
+// (docs/hold/19-meaning-quiz-mode-plan.md), "Character" (docs/hold/27-
+// character-quiz-plan.md), or "Study" (docs/33-character-quiz-single-card
+// -redesign-plan.md, a flashcard companion to Character mode — same word
+// pool, not graded) before any words are shown, then renders the matching
 // runner. `meaningVariant`/`characterVariant` each pick which scale-specific
 // component fits the quiz's scale: chapters get a click-to-pair matching
 // board (MatchQuizRunner), combined/custom quizzes get the one-word-at-a-
 // time flow (ChoiceQuizRunner/CharacterQuizRunner) — see docs/19 and
-// docs/27 for why those differ. `characterQuizKey`/`characterVariant` are
-// both optional so pages can opt in incrementally without breaking callers
-// that haven't wired Character mode yet — omitting either hides the button.
+// docs/27 for why those differ. Study mode is scale-independent (it's just
+// a shuffled deck, not a quiz), so it's gated on the same
+// `characterVariant` presence Character mode uses rather than needing its
+// own prop. `characterQuizKey`/`characterVariant` are both optional so
+// pages can opt in incrementally without breaking callers that haven't
+// wired Character mode yet — omitting either hides both the Character and
+// Study buttons.
 export function QuizModeGate({
   words,
   backHref,
@@ -51,9 +58,11 @@ export function QuizModeGate({
   // screen entirely — one click from the Learn page straight into the quiz
   // instead of two. Falls back to the picker when absent (e.g. a bookmarked
   // /quiz URL with no ?mode=).
-  initialMode?: "type" | "meaning" | "character" | null;
+  initialMode?: "type" | "meaning" | "character" | "study" | null;
 }) {
-  const [mode, setMode] = useState<"type" | "meaning" | "character" | null>(initialMode);
+  const [mode, setMode] = useState<"type" | "meaning" | "character" | "study" | null>(
+    initialMode
+  );
   const characterModeAvailable = characterVariant !== undefined;
 
   // Play Next/Play Another should continue in the same mode the player just
@@ -87,13 +96,22 @@ export function QuizModeGate({
             Match meaning
           </button>
           {characterModeAvailable && (
-            <button
-              type="button"
-              onClick={() => setMode("character")}
-              className={pillClasses("secondary")}
-            >
-              Character
-            </button>
+            <>
+              <button
+                type="button"
+                onClick={() => setMode("character")}
+                className={pillClasses("secondary")}
+              >
+                Character
+              </button>
+              <button
+                type="button"
+                onClick={() => setMode("study")}
+                className={pillClasses("secondary")}
+              >
+                Study
+              </button>
+            </>
           )}
         </div>
       </div>
@@ -113,6 +131,10 @@ export function QuizModeGate({
         durationSeconds={durationSeconds}
       />
     );
+  }
+
+  if (mode === "study") {
+    return <CharacterStudy words={words} />;
   }
 
   if (mode === "character") {
