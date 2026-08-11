@@ -72,6 +72,7 @@ export default function ForgotPasswordPage() {
               onChange={(e) => setEmail(e.target.value)}
               autoFocus
               required
+              autoComplete="email"
               className="rounded border border-border bg-transparent px-3 py-2 outline-none focus:border-border-strong"
             />
           </label>

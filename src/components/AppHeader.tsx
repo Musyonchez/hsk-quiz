@@ -64,7 +64,9 @@ export async function AppHeader() {
               <Users size={16} />
               Friends
             </Link>
-            <UserBadge displayName={user.displayName} />
+            <Link href="/account" className="hover:opacity-80">
+              <UserBadge displayName={user.displayName} />
+            </Link>
             <LogoutButton />
           </div>
         ) : (
@@ -79,7 +81,11 @@ export async function AppHeader() {
         )}
 
         <div className="flex items-center gap-3 lg:hidden">
-          {user && <UserBadge displayName={user.displayName} />}
+          {user && (
+            <Link href="/account" className="hover:opacity-80">
+              <UserBadge displayName={user.displayName} />
+            </Link>
+          )}
           <MobileNav>
             {user ? (
               <>

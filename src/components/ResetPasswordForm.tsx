@@ -84,12 +84,14 @@ export function ResetPasswordForm({
             onChange={setPassword}
             minLength={8}
             hint="At least 8 characters."
+            autoComplete="new-password"
           />
           <PasswordField
             label="Confirm new password"
             value={confirmPassword}
             onChange={setConfirmPassword}
             minLength={8}
+            autoComplete="new-password"
           />
           {error && <p className="text-sm text-danger">{error}</p>}
           <button
