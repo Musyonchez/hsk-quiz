@@ -1,0 +1,30 @@
+name: CI
+
+# Runs the same checks this repo has run by hand before every commit all
+# along (docs/35-ci-cd-plan.md) — type-check + lint, no database involved.
+# Deliberately doesn't run `next build` here: that would need a real
+# DATABASE_URL and would just be a second copy of what Vercel's own preview
+# deploy already does for every PR.
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+
+      # postinstall runs `prisma generate`, which only reads schema.prisma —
+      # no DATABASE_URL/DB connection needed for that.
+      - run: npm ci
+
+      - run: npx tsc --noEmit
+
+      - run: npx eslint .
