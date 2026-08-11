@@ -60,3 +60,5 @@ gh pr create
 gh pr merge --merge --delete-branch
 git checkout main && git pull
 ```
+
+<!-- test/verify-preview-deploy: throwaway commit to confirm Vercel preview builds work again after the Neon Production-only reconnect -->
