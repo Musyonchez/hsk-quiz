@@ -9,7 +9,12 @@ export async function POST(request: Request) {
   }
 
   const body = await request.json().catch(() => null);
-  const username = typeof body?.username === "string" ? body.username.trim() : "";
+  // better-auth's username plugin lowercases usernames at signup by default
+  // (docs/36) — the stored column is always lowercase, so the lookup here
+  // needs the same normalization, or a friend request typed in a different
+  // case than the target registered with would 404.
+  const username =
+    typeof body?.username === "string" ? body.username.trim().toLowerCase() : "";
   if (!username) {
     return NextResponse.json({ error: "Username is required." }, { status: 400 });
   }

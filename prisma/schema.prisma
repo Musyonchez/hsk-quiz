@@ -87,25 +87,94 @@ model GrammarPattern {
   note            String?
 }
 
+// Auth moved to self-hosted better-auth (docs/36) — User/Session/Account/
+// Verification below follow better-auth's own schema exactly (confirmed
+// directly against the installed version's @better-auth/core/db/
+// get-tables.mjs, not just its docs, which lag the actual API). `id` stays
+// Int/autoincrement (`advanced.database.generateId: "serial"` in
+// src/lib/auth.ts) so Friendship/Attempt's existing Int foreign keys don't
+// need to change. `displayName` is the real column name for what
+// better-auth's own API calls `.name` (`user.fields.name: "displayName"` in
+// src/lib/auth.ts) — every query elsewhere in this app keeps reading
+// `displayName` unchanged.
 model User {
-  id           Int          @id @default(autoincrement())
-  username     String       @unique
-  passwordHash String
-  displayName  String
-  createdAt    DateTime     @default(now())
-  sessions     Session[]
-  attempts     Attempt[]
-  sentRequests Friendship[] @relation("FriendshipSender")
-  recvRequests Friendship[] @relation("FriendshipReceiver")
+  id              Int          @id @default(autoincrement())
+  username        String?      @unique
+  displayUsername String? // as-typed casing; `username` itself is lowercased by the plugin
+  displayName     String
+  email           String       @unique
+  emailVerified   Boolean      @default(false)
+  image           String? // better-auth core field, unused by this app's UI
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+  sessions        Session[]
+  accounts        Account[]
+  attempts        Attempt[]
+  sentRequests    Friendship[] @relation("FriendshipSender")
+  recvRequests    Friendship[] @relation("FriendshipReceiver")
 }
 
 model Session {
   id        Int      @id @default(autoincrement())
-  userId    Int
-  user      User     @relation(fields: [userId], references: [id])
-  tokenHash String   @unique
   expiresAt DateTime
+  token     String   @unique
   createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  ipAddress String?
+  userAgent String?
+  userId    Int
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+// Credential storage (password hash lives here, not on User) — also where
+// future OAuth accounts would attach, though none are wired up (docs/36
+// explicitly ruled out OAuth for this migration).
+model Account {
+  id                    Int       @id @default(autoincrement())
+  accountId             String
+  providerId            String
+  userId                Int
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  accessToken           String?
+  refreshToken          String?
+  idToken               String?
+  accessTokenExpiresAt  DateTime?
+  refreshTokenExpiresAt DateTime?
+  scope                 String?
+  password              String?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  @@index([userId])
+}
+
+// Reset-password (and any future email-verification) tokens.
+model Verification {
+  id         Int      @id @default(autoincrement())
+  identifier String
+  value      String
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([identifier])
+}
+
+// A minimal key/value store passed to better-auth as `secondaryStorage`
+// (src/lib/rate-limit-storage.ts) — scoped to exactly one job, durable
+// login/reset-password rate-limit counters, since Session/Verification are
+// explicitly forced back into their own tables above (see the comment in
+// src/lib/auth.ts). Replaces the old LoginFailure table + login-rate-
+// limit.ts with the equivalent durable-across-serverless-invocations
+// property (docs/hold/22-audit-pass-4.md), now backed by the library
+// instead of custom lockout logic.
+model RateLimit {
+  id        Int       @id @default(autoincrement())
+  key       String    @unique
+  value     String
+  expiresAt DateTime?
 }
 
 model Friendship {
@@ -131,18 +200,4 @@ model Attempt {
   createdAt       DateTime @default(now())
 
   @@index([userId, quizKey])
-}
-
-// One row per failed login attempt, per docs/hold/22-audit-pass-4.md — an
-// in-memory Map (the original approach) doesn't survive across Vercel's
-// serverless invocations, silently disabling the lockout in production.
-// Storing failures here instead of a count+window pair keeps the "reset
-// after 15 minutes" logic entirely in the WHERE clause (createdAt within
-// the window), no separate expiry bookkeeping needed.
-model LoginFailure {
-  id        Int      @id @default(autoincrement())
-  username  String
-  createdAt DateTime @default(now())
-
-  @@index([username, createdAt])
 }

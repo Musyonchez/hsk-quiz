@@ -4,9 +4,10 @@ import { useState } from "react";
 import Link from "next/link";
 import { pillClasses } from "@/components/pill-classes";
 import { PasswordField } from "@/components/PasswordField";
+import { authClient } from "@/lib/auth-client";
 
 export default function LoginPage() {
-  const [username, setUsername] = useState("");
+  const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -16,17 +17,17 @@ export default function LoginPage() {
     setError(null);
     setSubmitting(true);
 
-    const res = await fetch("/api/auth/login", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ username, password }),
-    });
+    // Same single field accepts either — a bare "@" is a decent enough
+    // signal, since "@" isn't in USERNAME_PATTERN (src/lib/auth.ts) so a
+    // real username could never contain one.
+    const { error: signInError } = identifier.includes("@")
+      ? await authClient.signIn.email({ email: identifier, password })
+      : await authClient.signIn.username({ username: identifier, password });
 
     setSubmitting(false);
 
-    if (!res.ok) {
-      const data = await res.json().catch(() => null);
-      setError(data?.error ?? "Login failed.");
+    if (signInError) {
+      setError(signInError.message ?? "Login failed.");
       return;
     }
 
@@ -59,17 +60,23 @@ export default function LoginPage() {
         className="flex flex-col gap-4 rounded-xl border border-border bg-surface p-6"
       >
         <label className="flex flex-col gap-1">
-          <span className="text-sm">Username</span>
+          <span className="text-sm">Username or email</span>
           <input
             type="text"
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
+            value={identifier}
+            onChange={(e) => setIdentifier(e.target.value)}
             autoFocus
             required
             className="rounded border border-border bg-transparent px-3 py-2 outline-none focus:border-border-strong"
           />
         </label>
         <PasswordField label="Password" value={password} onChange={setPassword} />
+        <Link
+          href="/forgot-password"
+          className="-mt-2 self-end text-xs text-muted-foreground underline"
+        >
+          Forgot password?
+        </Link>
         {error && <p className="text-sm text-danger">{error}</p>}
         <button
           type="submit"

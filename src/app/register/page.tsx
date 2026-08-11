@@ -4,9 +4,11 @@ import { useState } from "react";
 import Link from "next/link";
 import { pillClasses } from "@/components/pill-classes";
 import { PasswordField } from "@/components/PasswordField";
+import { authClient } from "@/lib/auth-client";
 
 export default function RegisterPage() {
   const [username, setUsername] = useState("");
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -23,17 +25,19 @@ export default function RegisterPage() {
 
     setSubmitting(true);
 
-    const res = await fetch("/api/auth/register", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ username, password }),
+    // `name` defaults to `username` — this app has no separate display-name
+    // field on registration, same as before this migration.
+    const { error: signUpError } = await authClient.signUp.email({
+      username,
+      email,
+      password,
+      name: username,
     });
 
     setSubmitting(false);
 
-    if (!res.ok) {
-      const data = await res.json().catch(() => null);
-      setError(data?.error ?? "Registration failed.");
+    if (signUpError) {
+      setError(signUpError.message ?? "Registration failed.");
       return;
     }
 
@@ -72,6 +76,17 @@ export default function RegisterPage() {
             required
             className="rounded border border-border bg-transparent px-3 py-2 outline-none focus:border-border-strong"
           />
+        </label>
+        <label className="flex flex-col gap-1">
+          <span className="text-sm">Email</span>
+          <input
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+            className="rounded border border-border bg-transparent px-3 py-2 outline-none focus:border-border-strong"
+          />
+          <span className="text-xs text-muted-foreground">Only used for password resets.</span>
         </label>
         <PasswordField
           label="Password"

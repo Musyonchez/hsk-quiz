@@ -21,7 +21,7 @@ under [`docs/hold/`](docs/hold/) once superseded, to keep the top-level folder s
 - **Chapter, Combined, or fully Custom** — drill one chapter, cram a whole level, or mix any
   chapters across HSK levels into your own quiz.
 - **Accounts, leaderboards, friends** — every tracked quiz has a global and a friends-only
-  leaderboard; self-service registration, no email required.
+  leaderboard; self-service registration by username, with a forgot-password flow via email.
 
 ## Getting started
 
@@ -33,7 +33,13 @@ npm run dev           # http://localhost:3000
 ```
 
 Requires a `DATABASE_URL` env var pointing at a Postgres database (dev and prod share the same
-Neon database today — see [`docs/05-architecture.md`](docs/05-architecture.md)).
+Neon database today — see [`docs/05-architecture.md`](docs/05-architecture.md)), plus auth env
+vars for [`better-auth`](https://better-auth.com) (self-hosted, per
+[`docs/36-better-auth-migration-plan.md`](docs/36-better-auth-migration-plan.md)) — see
+`.env.example`: `BETTER_AUTH_SECRET` (any random 32+ char string), `BETTER_AUTH_URL`
+(`http://localhost:3000` locally), and `GMAIL_USER`/`GMAIL_APP_PASSWORD` (a Gmail account + an
+[App Password](https://myaccount.google.com/apppasswords), used to send password-reset emails —
+not your normal Gmail password).
 
 Other scripts: `npm run db:studio` (browse the database), `npm run lint`, `npm run
 db:migrate:deploy` (apply a hand-written migration file without the interactive prompts

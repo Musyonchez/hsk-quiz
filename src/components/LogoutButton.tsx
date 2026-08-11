@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
+import { authClient } from "@/lib/auth-client";
 
 export function LogoutButton() {
   const [confirming, setConfirming] = useState(false);
@@ -25,7 +26,7 @@ export function LogoutButton() {
 
   async function handleLogout() {
     setLoggingOut(true);
-    await fetch("/api/auth/logout", { method: "POST" });
+    await authClient.signOut();
     // Real navigation, not router.push() — same reasoning as the login page:
     // a client-side push can replay a stale cached response from before logout.
     window.location.href = "/login";
