@@ -27,7 +27,23 @@ import { rateLimitStorage } from "@/lib/rate-limit-storage";
 // letters, numbers, underscore, hyphen, 3-20 chars.
 const USERNAME_PATTERN = /^[a-zA-Z0-9_-]{3,20}$/;
 
+// Every Preview deployment gets its own unique URL, so a single fixed
+// BETTER_AUTH_URL is wrong there — and better-auth does origin-checking on
+// some callback routes (e.g. the password-reset redirect), so a mismatched
+// baseURL can actively break those, not just warn. On Production, though,
+// VERCEL_URL is the unique *deployment* hash domain, not the stable
+// assigned domain (hsk-quiz-xi.vercel.app) users actually visit — using it
+// there would mismatch the opposite way. Same VERCEL_ENV-gating pattern as
+// scripts/maybe-migrate.mjs: stable BETTER_AUTH_URL in production,
+// deployment-specific VERCEL_URL for Preview, BETTER_AUTH_URL again as the
+// local-dev fallback where VERCEL_URL is unset.
+const baseURL =
+  process.env.VERCEL_ENV === "production" || !process.env.VERCEL_URL
+    ? process.env.BETTER_AUTH_URL
+    : `https://${process.env.VERCEL_URL}`;
+
 export const auth = betterAuth({
+  baseURL,
   database: prismaAdapter(prisma, { provider: "postgresql" }),
   advanced: {
     database: {
