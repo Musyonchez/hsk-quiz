@@ -35,8 +35,12 @@ npm run dev           # http://localhost:3000
 Requires a `DATABASE_URL` env var pointing at a Postgres database (dev and prod share the same
 Neon database today — see [`docs/05-architecture.md`](docs/05-architecture.md)).
 
-Other scripts: `npm run db:studio` (browse the database), `npm run lint`, `npm run build`
-(runs `prisma migrate deploy` before the Next.js build).
+Other scripts: `npm run db:studio` (browse the database), `npm run lint`, `npm run
+db:migrate:deploy` (apply a hand-written migration file without the interactive prompts
+`db:migrate` needs). `npm run build` only applies migrations on a real Vercel Production deploy
+(`VERCEL_ENV === "production"`, checked in `scripts/maybe-migrate.mjs`) — run
+`db:migrate:deploy` yourself first if you need a fresh migration applied locally before
+building; see [`docs/35-ci-cd-plan.md`](docs/35-ci-cd-plan.md) for why Preview builds skip it.
 
 ## Stack
 

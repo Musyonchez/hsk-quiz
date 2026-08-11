@@ -25,8 +25,15 @@ made.
 ## Deploy flow
 
 Vercel runs `npm install` then `npm run build` by default for a detected Next.js project — no
-custom build command needed. `npm run build` already chains `prisma migrate deploy && next build
---webpack` (see `package.json`), so pending migrations apply automatically on every deploy.
+custom build command needed. `npm run build` chains `node scripts/maybe-migrate.mjs && next build
+--webpack` (see `package.json`) — pending migrations apply automatically, but **only on a real
+Production deploy** (`VERCEL_ENV === "production"`, per
+[35-ci-cd-plan.md](35-ci-cd-plan.md)). Every Preview deployment (one per PR, and per push to an
+open PR's branch) skips that step and just builds against the schema that already exists —
+before this, every preview build ran the same migrate command against the one shared database
+every environment uses, which meant preview builds constantly raced Production's own deploys for
+the same Postgres advisory lock, and an unreviewed branch's migration could touch production
+before its PR was even approved.
 
 Seeding is **not** automatic here either, same reasoning as the Render setup — see
 [20](hold/20-postgres-vercel-migration-plan.md)'s "what actually happened." Not a concern for the

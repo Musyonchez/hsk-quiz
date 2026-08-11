@@ -8,10 +8,11 @@
   "scripts": {
     "postinstall": "prisma generate",
     "dev": "next dev --webpack",
-    "build": "prisma migrate deploy && next build --webpack",
+    "build": "node scripts/maybe-migrate.mjs && next build --webpack",
     "start": "next start",
     "lint": "eslint",
     "db:migrate": "prisma migrate dev",
+    "db:migrate:deploy": "prisma migrate deploy",
     "db:seed": "tsx prisma/seed.ts",
     "db:studio": "prisma studio"
   },
