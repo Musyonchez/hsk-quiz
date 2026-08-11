@@ -72,6 +72,11 @@ export const auth = betterAuth({
   emailAndPassword: {
     enabled: true,
     minPasswordLength: 8,
+    // OWASP's Forgot Password Cheat Sheet: after a reset, either ask the
+    // user whether to invalidate other sessions or do it automatically
+    // (docs/37). A password reset is exactly the moment a device the
+    // account owner doesn't control might hold a live session.
+    revokeSessionsOnPasswordReset: true,
     sendResetPassword: async ({ user, url }) => {
       // Not awaited on purpose: awaiting the email send would let response
       // timing distinguish "user exists, email sent" from "user doesn't

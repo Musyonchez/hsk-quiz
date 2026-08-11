@@ -74,6 +74,7 @@ export default function RegisterPage() {
             onChange={(e) => setUsername(e.target.value)}
             autoFocus
             required
+            autoComplete="username"
             className="rounded border border-border bg-transparent px-3 py-2 outline-none focus:border-border-strong"
           />
         </label>
@@ -84,6 +85,7 @@ export default function RegisterPage() {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
+            autoComplete="email"
             className="rounded border border-border bg-transparent px-3 py-2 outline-none focus:border-border-strong"
           />
           <span className="text-xs text-muted-foreground">Only used for password resets.</span>
@@ -94,12 +96,14 @@ export default function RegisterPage() {
           onChange={setPassword}
           minLength={8}
           hint="At least 8 characters."
+          autoComplete="new-password"
         />
         <PasswordField
           label="Confirm password"
           value={confirmPassword}
           onChange={setConfirmPassword}
           minLength={8}
+          autoComplete="new-password"
         />
         {error && <p className="text-sm text-danger">{error}</p>}
         <button

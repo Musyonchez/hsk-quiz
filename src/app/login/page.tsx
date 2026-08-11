@@ -67,10 +67,16 @@ export default function LoginPage() {
             onChange={(e) => setIdentifier(e.target.value)}
             autoFocus
             required
+            autoComplete="username"
             className="rounded border border-border bg-transparent px-3 py-2 outline-none focus:border-border-strong"
           />
         </label>
-        <PasswordField label="Password" value={password} onChange={setPassword} />
+        <PasswordField
+          label="Password"
+          value={password}
+          onChange={setPassword}
+          autoComplete="current-password"
+        />
         <Link
           href="/forgot-password"
           className="-mt-2 self-end text-xs text-muted-foreground underline"
