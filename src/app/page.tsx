@@ -1,5 +1,15 @@
 import Link from "next/link";
-import { Grid2x2, Keyboard, Layers, MessageSquare, Timer, Trophy } from "lucide-react";
+import {
+  EyeOff,
+  Grid2x2,
+  Keyboard,
+  Layers,
+  Lightbulb,
+  MessageSquare,
+  Timer,
+  Trophy,
+  Volume2,
+} from "lucide-react";
 import { getSessionUser } from "@/lib/auth";
 import {
   getLevelsOverview,
@@ -10,18 +20,37 @@ import { describeQuizKey } from "@/quiz/quiz-key";
 import { pillClasses } from "@/components/pill-classes";
 import { VocabTableGroup } from "@/components/VocabTable";
 
+// Rewritten (Aug 2026) — the previous copy only described the original
+// pinyin-typing + match-meanings pair of modes and a since-false "no email
+// required" claim (registration has needed an email for password reset
+// since the better-auth migration, docs/36). This reflects everything the
+// app actually does now: three quiz modes including Character mode, audio
+// pronunciation, per-word mnemonics, and Hard mode, on top of what was
+// already here.
 const FEATURES = [
   {
     icon: Keyboard,
     title: "Type it, don't just recognize it",
     body:
-      "Every word means typing its pinyin from memory — the same recall you need for the real exam, not multiple choice. Tone marks are optional: gongjin matches gōngjīn.",
+      "Pinyin mode means typing from memory — the same recall the real exam demands, not multiple choice. Tone marks are optional: gongjin matches gōngjīn.",
   },
   {
     icon: Grid2x2,
-    title: "Or match meanings instead",
+    title: "Or test it a different way",
     body:
-      "A second quiz mode for when you'd rather recognize than recall — click-to-pair a chapter's words, or a fast multiple-choice round for bigger word lists.",
+      "English mode: multiple-choice or click-to-pair matching. Character mode: the character alone, no pinyin shown, recall its pronunciation or meaning cold.",
+  },
+  {
+    icon: Volume2,
+    title: "Hear every word",
+    body:
+      "A speaker icon next to every word and every dialog sentence — click to actually hear it spoken, not just read the pinyin.",
+  },
+  {
+    icon: Lightbulb,
+    title: "A memory aid for every word",
+    body:
+      "Every single character comes with a mnemonic — a quick visual or sound hook to make it stick, not just another definition to memorize.",
   },
   {
     icon: Layers,
@@ -46,6 +75,12 @@ const FEATURES = [
     title: "Beat the clock",
     body:
       "A live timer and running score turn review into a game — replay instantly to chase a better time, or a better percentage.",
+  },
+  {
+    icon: EyeOff,
+    title: "Push yourself with Hard mode",
+    body:
+      "Every mode has an optional harder tier — hide the pinyin, hide the meaning, whatever the crutch is — and see what you actually remember.",
   },
 ] as const;
 
@@ -86,8 +121,9 @@ export default async function LandingPage() {
           <h1 className="text-4xl font-bold sm:text-5xl">HSK Quiz</h1>
           <p className="mx-auto mt-4 max-w-lg text-lg text-muted-foreground">
             Learn Chinese vocabulary the way you&rsquo;ll actually be tested on
-            it — type the pinyin, beat the clock, watch the row turn green.
-            Free, no email required.
+            it — type the pinyin, match the meaning, or read the character
+            cold. Every word comes with audio and a memory aid built in, and
+            every quiz has a leaderboard to race your friends on. Free to use.
           </p>
         </div>
         <AuthCta />
@@ -157,7 +193,7 @@ async function LoggedInHome({ userId }: { userId: number }) {
       <div>
         <h1 className="text-2xl font-bold">HSK Quiz</h1>
         <p className="mt-1 text-muted-foreground">
-          Type the pinyin for HSK vocabulary, by chapter or the full level.
+          Pinyin, meaning, or character mode — pick a level to jump back in.
         </p>
       </div>
 
