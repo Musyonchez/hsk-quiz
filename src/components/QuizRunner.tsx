@@ -5,8 +5,10 @@ import { ChevronLeft, ChevronRight, EyeOff, Flag, Pause, Play, Shuffle } from "l
 import { matchesPinyin } from "@/quiz/pinyin-match";
 import { formatDuration } from "@/quiz/format-time";
 import { withHardSuffix } from "@/quiz/quiz-key";
-import { submitAttempt } from "@/quiz/submit-attempt";
 import { shuffle } from "@/quiz/shuffle";
+import { useQuizRunLifecycle } from "@/quiz/use-quiz-run-lifecycle";
+import { useQuizAttemptSubmission, useStatsVisibility } from "@/quiz/use-quiz-attempt-submission";
+import { useQuizCountdown } from "@/quiz/use-quiz-countdown";
 import { useProgressiveReveal } from "@/lib/use-progressive-reveal";
 import type { QuizNavTarget } from "@/quiz/quiz-navigation";
 import type { QuizWord } from "@/quiz/types";
@@ -37,17 +39,14 @@ export function QuizRunner({
   anotherQuiz?: QuizNavTarget;
   durationSeconds?: number;
 }) {
-  const [runId, setRunId] = useState(0);
-  const [activeWords, setActiveWords] = useState(words);
-  const [activeTrackAttempt, setActiveTrackAttempt] = useState(trackAttempt);
-  const [activeDurationSeconds, setActiveDurationSeconds] = useState(durationSeconds);
-
-  function handleDrillMissed(missed: QuizWord[]) {
-    setActiveWords(missed);
-    setActiveTrackAttempt(false);
-    setActiveDurationSeconds(undefined);
-    setRunId((n) => n + 1);
-  }
+  const {
+    runId,
+    activeWords,
+    activeTrackAttempt,
+    activeDurationSeconds,
+    onReplay,
+    onDrillMissed,
+  } = useQuizRunLifecycle(words, trackAttempt, durationSeconds);
 
   return (
     <QuizRunnerInner
@@ -60,8 +59,8 @@ export function QuizRunner({
       nextQuiz={nextQuiz}
       anotherQuiz={anotherQuiz}
       durationSeconds={activeDurationSeconds}
-      onReplay={() => setRunId((n) => n + 1)}
-      onDrillMissed={handleDrillMissed}
+      onReplay={onReplay}
+      onDrillMissed={onDrillMissed}
     />
   );
 }
@@ -106,30 +105,10 @@ function QuizRunnerInner({
   // once a run begins this can't change mid-run — safe to read directly at
   // submit time without a separate "locked in" ref.
   const [hideSecondColumn, setHideSecondColumn] = useState(false);
-  const [secondsLeft, setSecondsLeft] = useState(durationSeconds ?? 0);
   const [paused, setPaused] = useState(false);
-  // Only the two user-triggered end states are stored — "timeup" is derived
-  // below from secondsLeft during render instead, since React's guidance is
-  // to compute derivable state at render time rather than mirror it into
-  // state via an effect (which causes an extra render and, if you're not
-  // careful with the dependency array, a setState-in-effect lint error).
-  const [finishedState, setFinishedState] = useState<
-    "completed" | "gaveup" | null
-  >(null);
-  const finished =
-    finishedState ?? (timed && started && secondsLeft === 0 ? "timeup" : null);
-  const [bestPercent, setBestPercent] = useState<number | null>(null);
-  const [avgGlobalPercent, setAvgGlobalPercent] = useState<number | null>(null);
-  const [avgFriendPercent, setAvgFriendPercent] = useState<number | null>(null);
-  // docs/44-audit-quiz-ux-gaps.md / docs/42-audit-frontend-components.md §3:
-  // the attempt POST used to be unchecked for res.ok, so a failed save was
-  // silently swallowed — the player saw a normal results screen with no clue
-  // their score wasn't recorded. submitAttempt (src/quiz/submit-attempt.ts)
-  // now reports that back explicitly.
-  const [saveFailed, setSaveFailed] = useState(false);
-  const [showStats, setShowStats] = useState(false);
-  const statsDefaultSetRef = useRef(false);
-  const submittedRef = useRef(false);
+  // Only the two user-triggered end states are stored here — "timeup" is
+  // derived from secondsLeft inside useQuizCountdown.
+  const [finishedState, setFinishedState] = useState<"completed" | "gaveup" | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const stickyRef = useRef<HTMLDivElement>(null);
@@ -137,41 +116,26 @@ function QuizRunnerInner({
   const currentWord = order[currentIndex];
   const score = correctIds.size;
   const total = order.length;
-
-  // Record the finished attempt exactly once per run (submittedRef survives
-  // re-renders but not a Replay, since QuizRunner remounts this component
-  // with a fresh key).
   const effectiveQuizKey = quizKey ? withHardSuffix(quizKey, hideSecondColumn) : quizKey;
 
-  useEffect(() => {
-    if (!finished || submittedRef.current || !trackAttempt || !effectiveQuizKey) return;
-    submittedRef.current = true;
-    const elapsedSeconds = (durationSeconds ?? 0) - secondsLeft;
-
-    submitAttempt(effectiveQuizKey, score, total, elapsedSeconds).then((result) => {
-      setBestPercent(result.bestPercent);
-      setAvgGlobalPercent(result.avgGlobalPercent);
-      setAvgFriendPercent(result.avgFriendPercent);
-      setSaveFailed(result.saveFailed);
+  const { secondsLeft, finished } = useQuizCountdown({
+    timed,
+    started,
+    paused,
+    finishedState,
+    durationSeconds,
+  });
+  const { bestPercent, avgGlobalPercent, avgFriendPercent, saveFailed } =
+    useQuizAttemptSubmission({
+      finished,
+      trackAttempt,
+      quizKey: effectiveQuizKey,
+      score,
+      total,
+      secondsLeft,
+      durationSeconds,
     });
-  }, [finished, trackAttempt, effectiveQuizKey, score, total, secondsLeft, durationSeconds]);
-
-  // Default Stats to open if anything was missed, closed on a perfect run —
-  // set once when the quiz finishes, not re-derived on every render, so a
-  // manual toggle afterward (via the Stats/Hide stats button) sticks.
-  useEffect(() => {
-    if (!finished || statsDefaultSetRef.current) return;
-    statsDefaultSetRef.current = true;
-    setShowStats(score < total);
-  }, [finished, score, total]);
-
-  useEffect(() => {
-    if (!timed || !started || finished || paused) return;
-    const timer = setInterval(() => {
-      setSecondsLeft((s) => Math.max(0, s - 1));
-    }, 1000);
-    return () => clearInterval(timer);
-  }, [timed, started, paused, finished]);
+  const { showStats, toggleStats } = useStatsVisibility({ finished, score, total });
 
   useEffect(() => {
     if (started && !finished && !paused) inputRef.current?.focus();
@@ -266,7 +230,7 @@ function QuizRunnerInner({
         onReplay={onReplay}
         onDrillMissed={onDrillMissed}
         showStats={showStats}
-        onToggleStats={() => setShowStats((v) => !v)}
+        onToggleStats={toggleStats}
         nextQuiz={nextQuiz}
         anotherQuiz={anotherQuiz}
       />
@@ -381,6 +345,7 @@ function QuizRunnerInner({
                 onChange={(e) => handleInputChange(e.target.value)}
                 autoFocus
                 placeholder="type the pinyin"
+                aria-label={`Type the pinyin for ${currentWord.chinese}`}
                 className="mt-4 w-full rounded border border-border bg-transparent px-3 py-2 outline-none focus:border-border-strong"
               />
             </div>

@@ -3,21 +3,13 @@
 import { useEffect, useRef, useState } from "react";
 import { ChevronLeft, ChevronRight, Eye, EyeOff, Shuffle, X } from "lucide-react";
 import type { QuizWord } from "@/quiz/types";
+import { shuffle } from "@/quiz/shuffle";
 import { useProgressiveReveal } from "@/lib/use-progressive-reveal";
 import { pillClasses } from "@/components/pill-classes";
 import { SpeakerButton } from "@/components/SpeakerButton";
 import { RevealMoreButton } from "@/components/RevealMoreButton";
 
 export type { QuizWord };
-
-function shuffle<T>(items: T[]): T[] {
-  const copy = [...items];
-  for (let i = copy.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [copy[i], copy[j]] = [copy[j], copy[i]];
-  }
-  return copy;
-}
 
 // Character island, part 1 (docs/38) — the word-dump view Character mode
 // opens on, replacing CharacterStudy's sequential tap-to-flip flashcard.
@@ -94,14 +86,14 @@ export function CharacterBrowse({
     <div className="flex flex-col gap-4">
       <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border bg-surface px-5 py-4">
         <div className="flex items-center gap-2">
-          <ToolbarButton onClick={() => setShowPinyin((v) => !v)} label="Toggle pinyin">
+          <BrowseToolbarButton onClick={() => setShowPinyin((v) => !v)} label="Toggle pinyin">
             {showPinyin ? <EyeOff size={16} /> : <Eye size={16} />}
             {showPinyin ? "Hide pinyin" : "Show pinyin"}
-          </ToolbarButton>
-          <ToolbarButton onClick={() => setOrder((prev) => shuffle(prev))} label="Shuffle">
+          </BrowseToolbarButton>
+          <BrowseToolbarButton onClick={() => setOrder((prev) => shuffle(prev))} label="Shuffle">
             <Shuffle size={16} />
             Shuffle
-          </ToolbarButton>
+          </BrowseToolbarButton>
         </div>
         <button type="button" onClick={onStartQuiz} className={pillClasses("primary")}>
           Start quiz
@@ -188,14 +180,14 @@ export function CharacterBrowse({
             </div>
 
             <div className="flex items-center gap-3">
-              <ToolbarButton onClick={() => step(-1)} label="Prev">
+              <BrowseToolbarButton onClick={() => step(-1)} label="Prev">
                 <ChevronLeft size={16} />
                 Prev
-              </ToolbarButton>
-              <ToolbarButton onClick={() => step(1)} label="Next">
+              </BrowseToolbarButton>
+              <BrowseToolbarButton onClick={() => step(1)} label="Next">
                 Next
                 <ChevronRight size={16} />
-              </ToolbarButton>
+              </BrowseToolbarButton>
             </div>
           </div>
         </div>
@@ -204,7 +196,12 @@ export function CharacterBrowse({
   );
 }
 
-function ToolbarButton({
+// Deliberately not the shared @/components/ToolbarButton (docs/50 full-sweep
+// audit §5): that one requires `disabled` and only supports the
+// default/danger/active variants the four quiz runners use. This is a
+// pillClasses-styled cousin with a smaller API, kept local and distinctly
+// named so it can't be mistaken for (or shadow) the real shared component.
+function BrowseToolbarButton({
   onClick,
   label,
   children,

@@ -5,8 +5,10 @@ import { ChevronLeft, ChevronRight, Flag, Pause, Play, Shuffle, SkipForward } fr
 import { matchesPinyin } from "@/quiz/pinyin-match";
 import { formatDuration } from "@/quiz/format-time";
 import { buildChoices } from "@/quiz/meaning-choices";
-import { submitAttempt } from "@/quiz/submit-attempt";
 import { shuffle } from "@/quiz/shuffle";
+import { useQuizRunLifecycle } from "@/quiz/use-quiz-run-lifecycle";
+import { useQuizAttemptSubmission, useStatsVisibility } from "@/quiz/use-quiz-attempt-submission";
+import { useQuizCountdown } from "@/quiz/use-quiz-countdown";
 import type { QuizNavTarget } from "@/quiz/quiz-navigation";
 import type { QuizWord } from "@/quiz/types";
 import { pillClasses } from "@/components/pill-classes";
@@ -45,17 +47,14 @@ export function CharacterQuizRunner({
   anotherQuiz?: QuizNavTarget;
   durationSeconds?: number;
 }) {
-  const [runId, setRunId] = useState(0);
-  const [activeWords, setActiveWords] = useState(words);
-  const [activeTrackAttempt, setActiveTrackAttempt] = useState(trackAttempt);
-  const [activeDurationSeconds, setActiveDurationSeconds] = useState(durationSeconds);
-
-  function handleDrillMissed(missed: QuizWord[]) {
-    setActiveWords(missed);
-    setActiveTrackAttempt(false);
-    setActiveDurationSeconds(undefined);
-    setRunId((n) => n + 1);
-  }
+  const {
+    runId,
+    activeWords,
+    activeTrackAttempt,
+    activeDurationSeconds,
+    onReplay,
+    onDrillMissed,
+  } = useQuizRunLifecycle(words, trackAttempt, durationSeconds);
 
   return (
     <CharacterQuizRunnerInner
@@ -68,8 +67,8 @@ export function CharacterQuizRunner({
       nextQuiz={nextQuiz}
       anotherQuiz={anotherQuiz}
       durationSeconds={activeDurationSeconds}
-      onReplay={() => setRunId((n) => n + 1)}
-      onDrillMissed={handleDrillMissed}
+      onReplay={onReplay}
+      onDrillMissed={onDrillMissed}
     />
   );
 }
@@ -113,20 +112,8 @@ function CharacterQuizRunnerInner({
   const [missedIds, setMissedIds] = useState<Set<number>>(new Set());
   // English format: same shape as ChoiceQuizRunner's answers map.
   const [pickedAnswers, setPickedAnswers] = useState<Map<number, number>>(new Map());
-  const [secondsLeft, setSecondsLeft] = useState(durationSeconds ?? 0);
   const [paused, setPaused] = useState(false);
   const [finishedState, setFinishedState] = useState<"completed" | "gaveup" | null>(null);
-  const finished = finishedState ?? (timed && answerFormat && secondsLeft === 0 ? "timeup" : null);
-  const [bestPercent, setBestPercent] = useState<number | null>(null);
-  const [avgGlobalPercent, setAvgGlobalPercent] = useState<number | null>(null);
-  const [avgFriendPercent, setAvgFriendPercent] = useState<number | null>(null);
-  // docs/44-audit-quiz-ux-gaps.md / docs/42-audit-frontend-components.md §3:
-  // see submit-attempt.ts's comment — a failed save used to be silently
-  // swallowed here.
-  const [saveFailed, setSaveFailed] = useState(false);
-  const [showStats, setShowStats] = useState(false);
-  const statsDefaultSetRef = useRef(false);
-  const submittedRef = useRef(false);
   const pinyinInputRef = useRef<HTMLInputElement>(null);
 
   const currentWord = order[currentIndex];
@@ -144,32 +131,29 @@ function CharacterQuizRunnerInner({
       ? missedIds.size
       : [...pickedAnswers.entries()].filter(([wordId, picked]) => picked !== wordId).length;
 
-  useEffect(() => {
-    if (!finished || submittedRef.current || !trackAttempt || !quizKey) return;
-    submittedRef.current = true;
-    const elapsedSeconds = (durationSeconds ?? 0) - secondsLeft;
-
-    submitAttempt(quizKey, score, total, elapsedSeconds).then((result) => {
-      setBestPercent(result.bestPercent);
-      setAvgGlobalPercent(result.avgGlobalPercent);
-      setAvgFriendPercent(result.avgFriendPercent);
-      setSaveFailed(result.saveFailed);
+  const { secondsLeft, finished } = useQuizCountdown({
+    timed,
+    started,
+    paused,
+    finishedState,
+    durationSeconds,
+  });
+  // Note: unlike the other three runners, this one never passes a
+  // withHardSuffix-adjusted quizKey — CharacterQuizRunner has no Hard-mode
+  // toggle (docs/50 full-sweep audit §10: character mode is already the
+  // harder variant of pinyin/English modes, so an additional hard tier
+  // wasn't added on top of it).
+  const { bestPercent, avgGlobalPercent, avgFriendPercent, saveFailed } =
+    useQuizAttemptSubmission({
+      finished,
+      trackAttempt,
+      quizKey,
+      score,
+      total,
+      secondsLeft,
+      durationSeconds,
     });
-  }, [finished, trackAttempt, quizKey, score, total, secondsLeft, durationSeconds]);
-
-  useEffect(() => {
-    if (!finished || statsDefaultSetRef.current) return;
-    statsDefaultSetRef.current = true;
-    setShowStats(score < total);
-  }, [finished, score, total]);
-
-  useEffect(() => {
-    if (!timed || !started || finished || paused) return;
-    const timer = setInterval(() => {
-      setSecondsLeft((s) => Math.max(0, s - 1));
-    }, 1000);
-    return () => clearInterval(timer);
-  }, [timed, started, paused, finished]);
+  const { showStats, toggleStats } = useStatsVisibility({ finished, score, total });
 
   useEffect(() => {
     if (started && answerFormat === "pinyin" && !finished && !paused) {
@@ -261,7 +245,7 @@ function CharacterQuizRunnerInner({
         onReplay={onReplay}
         onDrillMissed={onDrillMissed}
         showStats={showStats}
-        onToggleStats={() => setShowStats((v) => !v)}
+        onToggleStats={toggleStats}
         nextQuiz={nextQuiz}
         anotherQuiz={anotherQuiz}
       />
@@ -405,6 +389,7 @@ function CharacterQuizRunnerInner({
               onChange={(e) => handlePinyinChange(e.target.value)}
               autoFocus
               placeholder="type the pinyin"
+              aria-label={`Type the pinyin for ${currentWord.chinese}`}
               className="mx-auto mt-4 w-full max-w-xs rounded border border-border bg-transparent px-3 py-2 text-center outline-none focus:border-border-strong"
             />
           </div>

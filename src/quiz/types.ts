@@ -6,12 +6,14 @@ export type QuizWord = {
   chinese: string;
   pinyin: string;
   meaning: string | null;
-  // Optional ahead of docs/34's mnemonic dictionary landing (currently a
-  // paused WIP branch, feat/memory-aid-mnemonics) — no call site populates
-  // this yet, so it's always undefined today. Declared now, per docs/38, so
-  // Character mode's popup can render a conditional mnemonic line without a
-  // second migration once the dictionary lands; every existing QuizWord
-  // literal (queries.ts, seed data) stays valid untouched since the field is
+  // Optional ahead of docs/39's mnemonic dictionary wiring — the schema
+  // column, the per-level dictionaries (src/quiz/mnemonics/), and the
+  // backfill script have landed, but no queries.ts call site selects/maps
+  // Word.mnemonic into a QuizWord yet, so this is still always undefined at
+  // runtime today. Declared now, per docs/38, so Character mode's popup can
+  // render a conditional mnemonic line without a second migration once a
+  // call site starts populating it; every existing QuizWord literal
+  // (queries.ts, seed data) stays valid untouched since the field is
   // optional.
   mnemonic?: string | null;
 };
