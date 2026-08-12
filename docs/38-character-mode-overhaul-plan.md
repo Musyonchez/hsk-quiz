@@ -147,8 +147,9 @@ as it will for HSK2/HSK3 words until they're written.
 - `src/components/CharacterQuizRunner.tsx` — full rewrite, split typing/select answer formats.
 - `src/quiz/types.ts` — `QuizWord.mnemonic?: string | null` once docs/34 lands.
 - `prisma/schema.prisma` — `Word.mnemonic` (already drafted on the paused branch).
-- `docs/06-quiz-mechanics.md` — Character section rewritten once implemented, same as docs/33's
-  redesign updated it last time; drops the standalone "Study mode" subsection entirely.
+- `docs/06-quiz-mechanics.md` — Character section rewritten once implemented, same as
+  docs/hold/33's redesign updated it last time; drops the standalone "Study mode" subsection
+  entirely. **Done** — see its "Character mode (rebuilt per docs/38...)" section.
 
 ## Verification (at implementation time)
 
