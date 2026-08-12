@@ -4,6 +4,7 @@ import { requireSession } from "@/lib/require-session";
 import { getChapterDialogLines, getChapterWithWords } from "@/lib/queries";
 import { isLevelSlug } from "@/lib/hsk-level";
 import { AllWordsTabs } from "@/components/AllWordsTabs";
+import { SpeakerButton } from "@/components/SpeakerButton";
 
 // docs/hold/25-chapter-all-words-plan.md's addendum: the real "Dialog" tab — the
 // chapter's actual textbook conversation (speaker, Chinese, pinyin, English
@@ -78,7 +79,10 @@ export default async function ChapterDialogPage({
                       starting at the same left edge — right after the
                       speaker label, not the card's own left edge. */}
                   <div className="flex flex-col">
-                    <span className="font-medium">{line.chinese}</span>
+                    <span className="inline-flex items-center gap-1.5 font-medium">
+                      {line.chinese}
+                      <SpeakerButton text={line.chinese} kind="sentence" />
+                    </span>
                     <span className="text-muted-foreground">{line.pinyin}</span>
                     <span className="mt-1 text-sm text-muted-foreground">{line.english}</span>
                   </div>
