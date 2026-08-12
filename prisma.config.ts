@@ -9,7 +9,23 @@ export default defineConfig({
     path: "prisma/migrations",
     seed: "tsx prisma/seed.ts",
   },
+  // Only the Prisma CLI (generate/migrate/studio) reads this — the app's own
+  // runtime queries go through PrismaNeon (src/lib/db.ts), which reads
+  // process.env.DATABASE_URL directly and never touches this file, so
+  // pointing this at the *unpooled* connection doesn't change how the
+  // deployed app talks to the database.
+  //
+  // Prisma Migrate's advisory-lock-based locking is session-scoped, and
+  // Neon's pooled connection (DATABASE_URL, host has "-pooler") doesn't
+  // reliably keep one session alive for it — this repo hit repeated P1002
+  // "timed out trying to acquire a postgres advisory lock" build failures
+  // whenever multiple Production deploys landed within the same ~10s window
+  // of each other. The schema-level `directUrl` field Prisma <7 used for
+  // exactly this is no longer valid here (Prisma 7 moved connection URLs
+  // into this config file — see the datasource property in schema.prisma),
+  // so the unpooled URL goes here instead, with a fallback to DATABASE_URL
+  // for any environment that hasn't set DATABASE_URL_UNPOOLED.
   datasource: {
-    url: process.env["DATABASE_URL"],
+    url: process.env["DATABASE_URL_UNPOOLED"] ?? process.env["DATABASE_URL"],
   },
 });

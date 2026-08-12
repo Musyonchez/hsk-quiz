@@ -33,13 +33,26 @@ sixth. Six total, though only `CRON_SECRET` is Production-only (see below):
   **Production** deployment, so this one only strictly needs setting there — Preview builds never
   receive a cron invocation regardless.
 
+Additionally, **recommended but not strictly required** (has a safe fallback):
+
+- `DATABASE_URL_UNPOOLED` — the same database's *unpooled* connection. Only `prisma.config.ts`
+  reads it (which only the Prisma CLI — `migrate`/`generate`/`studio` — uses; the running app's own
+  queries go through `src/lib/db.ts`'s `PrismaNeon` adapter and are unaffected). Falls back to
+  `DATABASE_URL` if unset. Added after this repo hit repeated `P1002` "timed out trying to acquire a
+  postgres advisory lock" **Production build failures** — Prisma Migrate's advisory-lock-based
+  locking is session-scoped, and doesn't reliably survive Neon's pooled (PgBouncer-style)
+  connection, which is what plain `DATABASE_URL` points at. Auto-provided by Vercel's Neon
+  marketplace integration (see below) — no manual setup needed if that's how the database was
+  connected.
+
 No `NODE_ENV` needed — Vercel sets that automatically for production deployments (Render
 required it manually).
 
 If the Neon database was created via **Vercel's own marketplace integration** (Storage tab →
-Neon), connecting that existing resource to this project auto-injects `DATABASE_URL` (and a
-handful of other `POSTGRES_*`/`PG*` vars this app doesn't use) into the project's environment
-variables — no manual copy-paste needed. Only add it manually if that connection wasn't already
+Neon), connecting that existing resource to this project auto-injects `DATABASE_URL`,
+`DATABASE_URL_UNPOOLED` (see above), and a handful of other `POSTGRES_*`/`PG*` vars this app
+doesn't use, into the project's environment variables — no manual copy-paste needed. Only add
+`DATABASE_URL` manually if that connection wasn't already
 made.
 
 ## Deploy flow
