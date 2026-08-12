@@ -34,9 +34,22 @@ export function LogoutButton() {
 
   return (
     <>
+      {/* stopPropagation on every handler here: AppHeader's mobile drawer
+          (MobileNav.tsx) closes on any click that bubbles up through it,
+          which is right for plain nav Links (navigation already fires
+          before the unmount matters) but wrong for this button — closing
+          the drawer unmounts LogoutButton itself, discarding `confirming`
+          before the dialog ever gets a chance to render. Net effect before
+          this fix: tapping "Log out" in the mobile menu did nothing
+          visible. Portaled content still bubbles through the *React* tree
+          (not the DOM tree) up to that same drawer wrapper, so every
+          handler below needs it, not just the initial trigger. */}
       <button
         type="button"
-        onClick={() => setConfirming(true)}
+        onClick={(e) => {
+          e.stopPropagation();
+          setConfirming(true);
+        }}
         className="rounded-full bg-danger px-4 py-1.5 text-sm font-medium text-accent-foreground transition-colors hover:bg-danger/85"
       >
         Log out
@@ -47,7 +60,10 @@ export function LogoutButton() {
         createPortal(
           <div
             className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4"
-            onClick={() => !loggingOut && setConfirming(false)}
+            onClick={(e) => {
+              e.stopPropagation();
+              if (!loggingOut) setConfirming(false);
+            }}
           >
             <div
               role="dialog"
@@ -67,7 +83,10 @@ export function LogoutButton() {
               <div className="flex justify-end gap-3">
                 <button
                   type="button"
-                  onClick={() => setConfirming(false)}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setConfirming(false);
+                  }}
                   disabled={loggingOut}
                   className="rounded-full border border-border-strong px-4 py-1.5 text-sm font-medium text-foreground transition-colors hover:bg-surface-raised disabled:cursor-not-allowed disabled:opacity-60"
                 >
@@ -75,7 +94,10 @@ export function LogoutButton() {
                 </button>
                 <button
                   type="button"
-                  onClick={handleLogout}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleLogout();
+                  }}
                   disabled={loggingOut}
                   className="rounded-full bg-danger px-4 py-1.5 text-sm font-medium text-accent-foreground transition-colors hover:bg-danger/85 disabled:cursor-not-allowed disabled:opacity-60"
                 >
