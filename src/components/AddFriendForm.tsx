@@ -15,11 +15,23 @@ export function AddFriendForm() {
     setError(null);
     setSubmitting(true);
 
-    const res = await fetch("/api/friends/requests", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ username }),
-    });
+    // docs/44-audit-quiz-ux-gaps.md: this fetch used to be unguarded — a
+    // network failure (not just a non-OK response) threw here, skipped
+    // setSubmitting(false) below, and left the button stuck on "Sending…"
+    // forever with no error shown. Same try/catch FriendRequestRow.tsx
+    // already uses for exactly this scenario.
+    let res: Response;
+    try {
+      res = await fetch("/api/friends/requests", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username }),
+      });
+    } catch {
+      setSubmitting(false);
+      setError("Couldn't reach the server — try again.");
+      return;
+    }
 
     setSubmitting(false);
 

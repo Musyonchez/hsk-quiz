@@ -34,12 +34,24 @@ export function CharacterBrowse({
   const [showPinyin, setShowPinyin] = useState(true);
   const [openIndex, setOpenIndex] = useState<number | null>(null);
   const touchStartX = useRef<number | null>(null);
+  // docs/42-audit-frontend-components.md §5: this popup had no focus
+  // management at all — a keyboard/screen-reader user stayed focused on the
+  // grid tile behind it (defeating aria-modal) and never got focus back on
+  // close. `triggerRef` remembers which grid tile opened the popup so close()
+  // can return focus there; `closeButtonRef` is what receives focus on open.
+  const triggerRef = useRef<HTMLElement | null>(null);
+  const closeButtonRef = useRef<HTMLButtonElement>(null);
 
   const openWord = openIndex !== null ? order[openIndex] : null;
 
   function close() {
     setOpenIndex(null);
+    triggerRef.current?.focus();
   }
+
+  useEffect(() => {
+    if (openIndex !== null) closeButtonRef.current?.focus();
+  }, [openIndex]);
 
   function step(delta: 1 | -1) {
     setOpenIndex((current) => {
@@ -93,7 +105,10 @@ export function CharacterBrowse({
           <button
             key={word.id}
             type="button"
-            onClick={() => setOpenIndex(index)}
+            onClick={(e) => {
+              triggerRef.current = e.currentTarget;
+              setOpenIndex(index);
+            }}
             className="flex flex-col items-center gap-1 rounded-xl border border-border bg-surface p-4 text-center transition-colors hover:border-border-strong hover:bg-surface-raised"
           >
             <span className="text-3xl font-bold">{word.chinese}</span>
@@ -126,6 +141,7 @@ export function CharacterBrowse({
             className="relative flex w-full max-w-md flex-col items-center gap-5 rounded-xl border border-border bg-surface p-8 text-center shadow-lg shadow-background/50"
           >
             <button
+              ref={closeButtonRef}
               type="button"
               onClick={close}
               aria-label="Close"
