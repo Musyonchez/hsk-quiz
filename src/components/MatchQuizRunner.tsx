@@ -5,11 +5,14 @@ import { Flag, Pause, Play } from "lucide-react";
 import { formatDuration } from "@/quiz/format-time";
 import { submitAttempt } from "@/quiz/submit-attempt";
 import { shuffle } from "@/quiz/shuffle";
+import { useProgressiveReveal } from "@/lib/use-progressive-reveal";
 import type { QuizNavTarget } from "@/quiz/quiz-navigation";
 import type { QuizWord } from "@/quiz/types";
 import { pillClasses } from "@/components/pill-classes";
 import { ToolbarButton } from "@/components/ToolbarButton";
 import { QuizResultsScreen } from "@/components/QuizResultsScreen";
+import { SpeakerButton } from "@/components/SpeakerButton";
+import { RevealMoreButton } from "@/components/RevealMoreButton";
 
 export type { QuizWord };
 
@@ -109,6 +112,15 @@ function MatchQuizRunnerInner({
   const [rightBoard, setRightBoard] = useState(() => shuffle(words.map((w) => w.id)));
   const [selectedLeft, setSelectedLeft] = useState<number | null>(null);
   const [selectedRight, setSelectedRight] = useState<number | null>(null);
+  // Pre-start word list (docs/48's "info dump" fix, extended here per direct
+  // request): unlike Pinyin/Choice mode, nothing here needs hiding behind a
+  // dash — both a word's Chinese and its meaning are already fully visible
+  // on separate board tiles once the game starts (you just don't know the
+  // pairing), so a full preview table reveals nothing the actual match board
+  // wouldn't. Keyed off `words` (the stable full list), not `leftBoard`/
+  // `rightBoard`, which shrink as pairs resolve during play.
+  const { visible: visibleWords, hasMore: hasMoreWords, revealMore: revealMoreWords } =
+    useProgressiveReveal(words);
   // Tracked the whole time, never rendered with any indication until
   // `finished` — this IS the score, just not shown early.
   const [correctIds, setCorrectIds] = useState<Set<number>>(new Set());
@@ -281,6 +293,35 @@ function MatchQuizRunnerInner({
           </p>
         )}
       </div>
+
+      {!started && (
+        <div className="overflow-x-auto rounded-lg border border-border">
+          <table className="w-full min-w-lg text-sm">
+            <thead className="bg-surface-raised text-left text-xs uppercase tracking-wide text-muted-foreground">
+              <tr>
+                <th className="px-3 py-2">Chinese</th>
+                <th className="px-3 py-2">Pinyin</th>
+                <th className="px-3 py-2">Meaning</th>
+              </tr>
+            </thead>
+            <tbody>
+              {visibleWords.map((word) => (
+                <tr key={word.id} className="border-t border-border">
+                  <td className="px-3 py-2 font-medium">
+                    <span className="inline-flex items-center gap-1.5">
+                      {word.chinese}
+                      <SpeakerButton text={word.chinese} kind="word" />
+                    </span>
+                  </td>
+                  <td className="px-3 py-2 text-muted-foreground">{word.pinyin}</td>
+                  <td className="px-3 py-2">{word.meaning ?? "—"}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          <RevealMoreButton hasMore={hasMoreWords} onClick={revealMoreWords} />
+        </div>
+      )}
 
       {started && !paused && (
         // A single grid, not two independent flex-col columns — leftBoard[i]
