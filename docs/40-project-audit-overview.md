@@ -41,9 +41,9 @@ code (`src/lib/api-rate-limit.ts`, `src/quiz/submit-attempt.ts`, `scripts/confir
 header). Items are marked **✅ Fixed** inline below rather than rewritten out of the list, so this
 doc still reads as the original inventory. **1** (test suite) was explicitly decided against —
 not proportionate to a personal-scale app without multi-contributor churn — rather than deferred.
-**25** (`RateLimit` purge) was fixed in a follow-up pass (Vercel Cron). Still open: the
-results-screen/`ToolbarButton` half of **20** (the helper-function half — `shuffle`/
-`averagePercent` — *was* extracted).
+**25** (`RateLimit` purge) and **20** (the results-screen/`ToolbarButton` duplication) were both
+fixed in later follow-up passes — see [46-quiz-runner-duplication-refactor.md](46-quiz-runner-duplication-refactor.md)
+for #20. Every numbered finding in this doc is now resolved except #1.
 
 ## Prioritized action list (across all five audits)
 
@@ -124,12 +124,14 @@ Ranked by severity first, then by how cheap the fix is — cheap+high-severity f
     rebuild) and `MatchQuizRunner`'s `variant="character"` branch (unreachable — nothing ever
     passes it) (42 §1).
 19. **✅ Fixed** (removed). `getChapterDialogLineCount` in `queries.ts` is exported but has zero callers (40 §backend).
-20. **Partially fixed.** `shuffle`/`averagePercent` (✅ extracted into `submit-attempt.ts`) /`ToolbarButton`/the attempt-submission effect (✅ extracted)/the results-screen
+20. **✅ Fixed** — see [46-quiz-runner-duplication-refactor.md](46-quiz-runner-duplication-refactor.md).
+    `ToolbarButton` extracted to `src/components/ToolbarButton.tsx` (widened to support all three
+    variants `QuizRunner`'s Hard-mode toggle needs), the results-screen JSX extracted to
+    `src/components/QuizResultsScreen.tsx`, and `shuffle` (missed in the earlier pass) extracted to
+    `src/quiz/shuffle.ts`. `shuffle`/`averagePercent`/`ToolbarButton`/the attempt-submission effect/the results-screen
     JSX are all copy-pasted near-verbatim across the four quiz runners — the helpers are
     low-risk duplication, but the results-screen JSX and submission effect encode real per-mode
-    scoring semantics and are a much stronger case for extraction (42 §2). **`ToolbarButton` and the
-    results-screen JSX itself are still duplicated across all four runners** — deliberately held
-    over as its own dedicated refactor pass, riskier than the parts already extracted.
+    scoring semantics and are a much stronger case for extraction (42 §2).
 21. Still open, deliberately (low severity, unreachable today). A handful of latent `NaN`-on-empty-word-list landmines in the runners' `goTo()` — not reachable
     today (every caller guards `words.length === 0` upstream) but worth a defensive guard for the
     next caller that doesn't (44 §"Edge cases" 1-2).

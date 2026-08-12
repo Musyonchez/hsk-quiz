@@ -1,34 +1,18 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import {
-  ArrowRight,
-  ChevronLeft,
-  ChevronRight,
-  Flag,
-  Pause,
-  Play,
-  Shuffle,
-} from "lucide-react";
+import { ChevronLeft, ChevronRight, Flag, Pause, Play, Shuffle } from "lucide-react";
 import { formatDuration } from "@/quiz/format-time";
 import { buildChoices } from "@/quiz/meaning-choices";
 import { submitAttempt } from "@/quiz/submit-attempt";
+import { shuffle } from "@/quiz/shuffle";
 import type { QuizNavTarget } from "@/quiz/quiz-navigation";
 import type { QuizWord } from "@/quiz/types";
 import { pillClasses } from "@/components/pill-classes";
-import { QuizLinkCard } from "@/components/QuizLinkCard";
-import { VocabTableGroup } from "@/components/VocabTable";
+import { ToolbarButton } from "@/components/ToolbarButton";
+import { QuizResultsScreen } from "@/components/QuizResultsScreen";
 
 export type { QuizWord };
-
-function shuffle<T>(items: T[]): T[] {
-  const copy = [...items];
-  for (let i = copy.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [copy[i], copy[j]] = [copy[j], copy[i]];
-  }
-  return copy;
-}
 
 // Pinyin -> meaning, one word at a time, 5 clickable options instead of a
 // text field. See docs/hold/19-meaning-quiz-mode-plan.md for the full design —
@@ -227,95 +211,27 @@ function ChoiceQuizRunnerInner({
     const missedWords = order.filter((word) => answers.get(word.id) !== word.id);
 
     return (
-      <div className="flex flex-col gap-6">
-        {(nextQuiz || anotherQuiz) && (
-          <div className="grid gap-4 sm:grid-cols-2">
-            {nextQuiz && (
-              <QuizLinkCard
-                href={nextQuiz.href}
-                eyebrow={nextQuiz.eyebrow}
-                title={nextQuiz.title}
-                icon={ArrowRight}
-              />
-            )}
-            {anotherQuiz && (
-              <QuizLinkCard
-                href={anotherQuiz.href}
-                eyebrow={anotherQuiz.eyebrow}
-                title={anotherQuiz.title}
-                icon={Shuffle}
-              />
-            )}
-          </div>
-        )}
-
-        <div className="flex flex-col items-center gap-5 rounded-xl border border-border bg-surface p-6 text-center">
-          <div className="flex flex-col items-center gap-1">
-            <h2 className="text-lg font-bold">{heading}</h2>
-            <p className="text-4xl font-bold tabular-nums text-accent">{percent}%</p>
-            <p className="text-sm text-muted-foreground">
-              {score} / {total} correct
-              {bestPercent !== null && <> · your best: {bestPercent}%</>}
-            </p>
-            {(avgGlobalPercent !== null || avgFriendPercent !== null) && (
-              <p className="text-sm text-muted-foreground">
-                {avgGlobalPercent !== null && <>avg score: {avgGlobalPercent}% </>}
-                {avgFriendPercent !== null && <>· avg friend score: {avgFriendPercent}%</>}
-              </p>
-            )}
-            {saveFailed && trackAttempt && quizKey && (
-              <p className="text-sm text-danger">
-                Your score couldn&rsquo;t be saved — check your connection and try Replay.
-              </p>
-            )}
-          </div>
-          <div className="flex flex-wrap justify-center gap-3">
-            <button type="button" onClick={onReplay} className={pillClasses("primary")}>
-              Replay
-            </button>
-            {allowDrillMissed && missedWords.length > 0 && (
-              <button
-                type="button"
-                onClick={() => onDrillMissed(missedWords)}
-                className={pillClasses("secondary")}
-              >
-                Drill missed words
-              </button>
-            )}
-            <button
-              type="button"
-              onClick={() => setShowStats((v) => !v)}
-              className={pillClasses("secondary")}
-            >
-              {showStats ? "Hide stats" : "Stats"}
-            </button>
-            <a href={backHref} className={pillClasses("secondary")}>
-              Back
-            </a>
-          </div>
-          {trackAttempt && quizKey && (
-            <a
-              href={`/leaderboard/${encodeURIComponent(quizKey)}`}
-              className="text-sm text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
-            >
-              View leaderboard
-            </a>
-          )}
-
-          {showStats && (
-            <div className="w-full text-left">
-              <h3 className="mb-2 text-sm font-semibold text-danger">
-                Missed ({missedWords.length})
-              </h3>
-              {missedWords.length === 0 ? (
-                <p className="text-sm text-muted-foreground">None — you got every word.</p>
-              ) : (
-                <VocabTableGroup words={missedWords} />
-              )}
-            </div>
-          )}
-        </div>
-      </div>
+      <QuizResultsScreen
+        heading={heading}
+        percent={percent}
+        score={score}
+        total={total}
+        bestPercent={bestPercent}
+        avgGlobalPercent={avgGlobalPercent}
+        avgFriendPercent={avgFriendPercent}
+        saveFailed={saveFailed}
+        trackAttempt={trackAttempt}
+        quizKey={quizKey}
+        backHref={backHref}
+        allowDrillMissed={allowDrillMissed}
+        missedWords={missedWords}
+        onReplay={onReplay}
+        onDrillMissed={onDrillMissed}
+        showStats={showStats}
+        onToggleStats={() => setShowStats((v) => !v)}
+        nextQuiz={nextQuiz}
+        anotherQuiz={anotherQuiz}
+      />
     );
   }
 
@@ -482,33 +398,5 @@ function ChoiceQuizRunnerInner({
         </div>
       )}
     </div>
-  );
-}
-
-function ToolbarButton({
-  onClick,
-  disabled,
-  label,
-  variant = "default",
-  children,
-}: {
-  onClick: () => void;
-  disabled: boolean;
-  label: string;
-  variant?: "default" | "danger";
-  children: React.ReactNode;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      disabled={disabled}
-      aria-label={label}
-      className={`flex items-center gap-1.5 rounded-full border border-border-strong px-3 py-2.5 text-sm font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-40 ${
-        variant === "danger" ? "text-danger hover:bg-danger/10" : "text-foreground hover:bg-surface-raised"
-      }`}
-    >
-      {children}
-    </button>
   );
 }

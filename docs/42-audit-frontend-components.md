@@ -26,13 +26,17 @@ caller of either survives.
 
 ## 2. Runner-quartet duplication
 
-**Partially fixed.** `shuffle`/`averagePercent` and the entire attempt-submission effect are now
-extracted into `src/quiz/submit-attempt.ts`'s `submitAttempt()`, called identically by all four
-runners (also closes §3 below in the same change). **`ToolbarButton` and the results-screen JSX are
-still duplicated across all four files, unchanged** — deliberately held over as its own dedicated
-refactor pass rather than folded into this round's fixes; re-confirmed still present and still the
-stronger case for extraction on re-audit (file sizes are, if anything, slightly larger now that each
-runner independently gained the same `saveFailed` state + message line).
+**✅ Fully fixed** — see [46-quiz-runner-duplication-refactor.md](46-quiz-runner-duplication-refactor.md).
+`shuffle`/`averagePercent` and the attempt-submission effect were extracted in an earlier pass
+(into `src/quiz/submit-attempt.ts`, also closing §3 below). `ToolbarButton` (widened to a
+three-variant `src/components/ToolbarButton.tsx`, since `QuizRunner`'s Hard-mode toggle needs the
+`"active"` variant the other three never pass) and the results-screen JSX
+(`src/components/QuizResultsScreen.tsx`, taking each runner's already-computed
+`heading`/`percent`/`missedWords`/etc. as props — the per-mode "what counts as missed" logic
+correctly stays in each runner, only the display is shared) were extracted in a later pass. Runner
+file sizes dropped from ~2070 combined lines to ~1609, with the shared pieces now living in exactly
+one place each. Verified live across all four modes post-extraction: results screen, Hard mode's
+`"active"` toolbar button styling, and zero console errors, all confirmed unchanged.
 
 Confirmed: `QuizRunner.tsx`, `ChoiceQuizRunner.tsx`, `CharacterQuizRunner.tsx`,
 `MatchQuizRunner.tsx` each independently redefine `shuffle<T>`, `averagePercent`, and a local
