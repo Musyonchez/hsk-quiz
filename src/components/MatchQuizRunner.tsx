@@ -1,11 +1,13 @@
 "use client";
 
-import { Fragment, useEffect, useMemo, useRef, useState } from "react";
+import { Fragment, useMemo, useState } from "react";
 import { EyeOff, Flag, Pause, Play } from "lucide-react";
 import { formatDuration } from "@/quiz/format-time";
-import { submitAttempt } from "@/quiz/submit-attempt";
 import { shuffle } from "@/quiz/shuffle";
 import { withHardSuffix } from "@/quiz/quiz-key";
+import { useQuizRunLifecycle } from "@/quiz/use-quiz-run-lifecycle";
+import { useQuizAttemptSubmission, useStatsVisibility } from "@/quiz/use-quiz-attempt-submission";
+import { useQuizCountdown } from "@/quiz/use-quiz-countdown";
 import { useProgressiveReveal } from "@/lib/use-progressive-reveal";
 import type { QuizNavTarget } from "@/quiz/quiz-navigation";
 import type { QuizWord } from "@/quiz/types";
@@ -53,17 +55,14 @@ export function MatchQuizRunner({
   anotherQuiz?: QuizNavTarget;
   durationSeconds?: number;
 }) {
-  const [runId, setRunId] = useState(0);
-  const [activeWords, setActiveWords] = useState(words);
-  const [activeTrackAttempt, setActiveTrackAttempt] = useState(trackAttempt);
-  const [activeDurationSeconds, setActiveDurationSeconds] = useState(durationSeconds);
-
-  function handleDrillMissed(missed: QuizWord[]) {
-    setActiveWords(missed);
-    setActiveTrackAttempt(false);
-    setActiveDurationSeconds(undefined);
-    setRunId((n) => n + 1);
-  }
+  const {
+    runId,
+    activeWords,
+    activeTrackAttempt,
+    activeDurationSeconds,
+    onReplay,
+    onDrillMissed,
+  } = useQuizRunLifecycle(words, trackAttempt, durationSeconds);
 
   return (
     <MatchQuizRunnerInner
@@ -76,8 +75,8 @@ export function MatchQuizRunner({
       nextQuiz={nextQuiz}
       anotherQuiz={anotherQuiz}
       durationSeconds={activeDurationSeconds}
-      onReplay={() => setRunId((n) => n + 1)}
-      onDrillMissed={handleDrillMissed}
+      onReplay={onReplay}
+      onDrillMissed={onDrillMissed}
     />
   );
 }
@@ -132,53 +131,42 @@ function MatchQuizRunnerInner({
   // `finished` — this IS the score, just not shown early.
   const [correctIds, setCorrectIds] = useState<Set<number>>(new Set());
   const [started, setStarted] = useState(false);
-  const [secondsLeft, setSecondsLeft] = useState(durationSeconds ?? 0);
   const [paused, setPaused] = useState(false);
   const [finishedState, setFinishedState] = useState<"completed" | "gaveup" | null>(null);
-  const finished =
-    finishedState ??
-    (leftBoard.length === 0 ? "completed" : timed && started && secondsLeft === 0 ? "timeup" : null);
-  const [bestPercent, setBestPercent] = useState<number | null>(null);
-  const [avgGlobalPercent, setAvgGlobalPercent] = useState<number | null>(null);
-  const [avgFriendPercent, setAvgFriendPercent] = useState<number | null>(null);
-  // docs/44-audit-quiz-ux-gaps.md / docs/42-audit-frontend-components.md §3:
-  // see submit-attempt.ts's comment — a failed save used to be silently
-  // swallowed here.
-  const [saveFailed, setSaveFailed] = useState(false);
-  const [showStats, setShowStats] = useState(false);
-  const statsDefaultSetRef = useRef(false);
-  const submittedRef = useRef(false);
 
   const attemptedCount = total - leftBoard.length;
   const score = correctIds.size;
   const effectiveQuizKey = quizKey ? withHardSuffix(quizKey, hidePinyin) : quizKey;
 
-  useEffect(() => {
-    if (!finished || submittedRef.current || !trackAttempt || !effectiveQuizKey) return;
-    submittedRef.current = true;
-    const elapsedSeconds = (durationSeconds ?? 0) - secondsLeft;
+  // docs/50 full-sweep audit §9: `words.length > 0 &&` guards a 0-word quiz
+  // (e.g. a custom-quiz selection that resolves to zero words) from reading
+  // as "completed" on the very first render, before `started` is ever true
+  // — `leftBoard` is empty from the moment it's seeded off `words`, so
+  // without this a 0-word quiz would auto-finish before the player does
+  // anything. Folded into `finishedState` (rather than passed alongside it)
+  // so useQuizCountdown's own "timeup" derivation still layers on top
+  // correctly.
+  const effectiveFinishedState =
+    finishedState ?? (words.length > 0 && leftBoard.length === 0 ? "completed" : null);
 
-    submitAttempt(effectiveQuizKey, score, total, elapsedSeconds).then((result) => {
-      setBestPercent(result.bestPercent);
-      setAvgGlobalPercent(result.avgGlobalPercent);
-      setAvgFriendPercent(result.avgFriendPercent);
-      setSaveFailed(result.saveFailed);
+  const { secondsLeft, finished } = useQuizCountdown({
+    timed,
+    started,
+    paused,
+    finishedState: effectiveFinishedState,
+    durationSeconds,
+  });
+  const { bestPercent, avgGlobalPercent, avgFriendPercent, saveFailed } =
+    useQuizAttemptSubmission({
+      finished,
+      trackAttempt,
+      quizKey: effectiveQuizKey,
+      score,
+      total,
+      secondsLeft,
+      durationSeconds,
     });
-  }, [finished, trackAttempt, effectiveQuizKey, score, total, secondsLeft, durationSeconds]);
-
-  useEffect(() => {
-    if (!finished || statsDefaultSetRef.current) return;
-    statsDefaultSetRef.current = true;
-    setShowStats(score < total);
-  }, [finished, score, total]);
-
-  useEffect(() => {
-    if (!timed || !started || finished || paused) return;
-    const timer = setInterval(() => {
-      setSecondsLeft((s) => Math.max(0, s - 1));
-    }, 1000);
-    return () => clearInterval(timer);
-  }, [timed, started, paused, finished]);
+  const { showStats, toggleStats } = useStatsVisibility({ finished, score, total });
 
   // Resolves a guess pair the instant both sides are picked — both tiles
   // clear immediately, right or wrong, with no color either way (see
@@ -235,7 +223,7 @@ function MatchQuizRunnerInner({
         onReplay={onReplay}
         onDrillMissed={onDrillMissed}
         showStats={showStats}
-        onToggleStats={() => setShowStats((v) => !v)}
+        onToggleStats={toggleStats}
         nextQuiz={nextQuiz}
         anotherQuiz={anotherQuiz}
       />

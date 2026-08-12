@@ -3,16 +3,9 @@
 // framework-free like pinyin-match.ts/format-time.ts — called once per run
 // start (see docs/19), never regenerated on a mid-run revisit.
 
-export type ChoiceWord = { id: number; meaning: string | null };
+import { shuffle } from "./shuffle";
 
-function shuffle<T>(items: T[]): T[] {
-  const copy = [...items];
-  for (let i = copy.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [copy[i], copy[j]] = [copy[j], copy[i]];
-  }
-  return copy;
-}
+export type ChoiceWord = { id: number; meaning: string | null };
 
 // One target's shuffled option list (its own word among up to 4 distractors,
 // at a random position). Distractors are pulled from the rest of `pool`,
