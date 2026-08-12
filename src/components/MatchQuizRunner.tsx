@@ -113,12 +113,10 @@ function MatchQuizRunnerInner({
   const [selectedLeft, setSelectedLeft] = useState<number | null>(null);
   const [selectedRight, setSelectedRight] = useState<number | null>(null);
   // Pre-start word list (docs/48's "info dump" fix, extended here per direct
-  // request): unlike Pinyin/Choice mode, nothing here needs hiding behind a
-  // dash — both a word's Chinese and its meaning are already fully visible
-  // on separate board tiles once the game starts (you just don't know the
-  // pairing), so a full preview table reveals nothing the actual match board
-  // wouldn't. Keyed off `words` (the stable full list), not `leftBoard`/
-  // `rightBoard`, which shrink as pairs resolve during play.
+  // request) — Meaning is dashed out below to match Pinyin/Choice mode's own
+  // pre-start tables hiding their answer column, for consistency across all
+  // four runners. Keyed off `words` (the stable full list), not
+  // `leftBoard`/`rightBoard`, which shrink as pairs resolve during play.
   const { visible: visibleWords, hasMore: hasMoreWords, revealMore: revealMoreWords } =
     useProgressiveReveal(words);
   // Tracked the whole time, never rendered with any indication until
@@ -314,7 +312,11 @@ function MatchQuizRunnerInner({
                     </span>
                   </td>
                   <td className="px-3 py-2 text-muted-foreground">{word.pinyin}</td>
-                  <td className="px-3 py-2">{word.meaning ?? "—"}</td>
+                  {/* Dashed out to match Pinyin mode's own pre-start table
+                      hiding its answer column — consistency with that
+                      pattern, not a spoiler-prevention need specific to this
+                      mode (see docs/48-quiz-pre-start-progressive-reveal-plan.md). */}
+                  <td className="px-3 py-2 text-muted-foreground">—</td>
                 </tr>
               ))}
             </tbody>
