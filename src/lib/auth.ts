@@ -83,11 +83,20 @@ export const auth = betterAuth({
       // exist, nothing sent" — the same timing-attack concern the old
       // UNREACHABLE_PASSWORD_HASH decoy in the previous auth.ts existed to
       // close. better-auth's own docs recommend the same fire-and-forget
-      // pattern for this callback.
+      // pattern for this callback. That intentionally means the user never
+      // gets told if the send actually failed (a bad Gmail app-password, an
+      // SMTP outage) — but "no feedback to the user" shouldn't also mean "no
+      // record anywhere" (docs/45-audit-infra-security.md §6): without a
+      // .catch() here, a rejected promise from a `void`-called async
+      // function is just an unhandled rejection, easy to miss in logs. This
+      // only adds visibility for whoever's watching server logs — it
+      // doesn't change what the user sees, which is the whole point.
       void sendEmail({
         to: user.email,
         subject: "Reset your HSK Quiz password",
         html: `<p>Click the link below to reset your password. This link expires in 1 hour.</p><p><a href="${url}">${url}</a></p><p>If you didn't request this, you can ignore this email.</p>`,
+      }).catch((err) => {
+        console.error("Failed to send password-reset email:", err);
       });
     },
   },

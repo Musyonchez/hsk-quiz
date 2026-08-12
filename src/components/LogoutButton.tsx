@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { authClient } from "@/lib/auth-client";
 
@@ -24,6 +24,30 @@ export function LogoutButton() {
     setMounted(true);
   }, []);
 
+  // docs/42-audit-frontend-components.md §5: this dialog had no focus
+  // management (no initial focus, nothing restored to the trigger button on
+  // close) and no Escape handling — only click-outside and Cancel closed it.
+  const triggerButtonRef = useRef<HTMLButtonElement>(null);
+  const cancelButtonRef = useRef<HTMLButtonElement>(null);
+
+  useEffect(() => {
+    if (confirming) cancelButtonRef.current?.focus();
+  }, [confirming]);
+
+  function closeConfirm() {
+    setConfirming(false);
+    triggerButtonRef.current?.focus();
+  }
+
+  useEffect(() => {
+    if (!confirming) return;
+    function handleKey(e: KeyboardEvent) {
+      if (e.key === "Escape" && !loggingOut) closeConfirm();
+    }
+    window.addEventListener("keydown", handleKey);
+    return () => window.removeEventListener("keydown", handleKey);
+  }, [confirming, loggingOut]);
+
   async function handleLogout() {
     setLoggingOut(true);
     await authClient.signOut();
@@ -45,6 +69,7 @@ export function LogoutButton() {
           (not the DOM tree) up to that same drawer wrapper, so every
           handler below needs it, not just the initial trigger. */}
       <button
+        ref={triggerButtonRef}
         type="button"
         onClick={(e) => {
           e.stopPropagation();
@@ -62,7 +87,7 @@ export function LogoutButton() {
             className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4"
             onClick={(e) => {
               e.stopPropagation();
-              if (!loggingOut) setConfirming(false);
+              if (!loggingOut) closeConfirm();
             }}
           >
             <div
@@ -82,10 +107,11 @@ export function LogoutButton() {
               </div>
               <div className="flex justify-end gap-3">
                 <button
+                  ref={cancelButtonRef}
                   type="button"
                   onClick={(e) => {
                     e.stopPropagation();
-                    setConfirming(false);
+                    closeConfirm();
                   }}
                   disabled={loggingOut}
                   className="rounded-full border border-border-strong px-4 py-1.5 text-sm font-medium text-foreground transition-colors hover:bg-surface-raised disabled:cursor-not-allowed disabled:opacity-60"

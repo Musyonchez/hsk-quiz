@@ -3,6 +3,7 @@
 import { Fragment, useEffect, useMemo, useRef, useState } from "react";
 import { ArrowRight, Flag, Pause, Play, Shuffle } from "lucide-react";
 import { formatDuration } from "@/quiz/format-time";
+import { submitAttempt } from "@/quiz/submit-attempt";
 import type { QuizNavTarget } from "@/quiz/quiz-navigation";
 import type { QuizWord } from "@/quiz/types";
 import { pillClasses } from "@/components/pill-classes";
@@ -10,12 +11,6 @@ import { QuizLinkCard } from "@/components/QuizLinkCard";
 import { VocabTableGroup } from "@/components/VocabTable";
 
 export type { QuizWord };
-
-function averagePercent(rows: { score: number; total: number }[]): number | null {
-  if (rows.length === 0) return null;
-  const percents = rows.map((row) => (row.total > 0 ? (row.score / row.total) * 100 : 0));
-  return Math.round(percents.reduce((sum, p) => sum + p, 0) / percents.length);
-}
 
 function shuffle<T>(items: T[]): T[] {
   const copy = [...items];
@@ -139,6 +134,10 @@ function MatchQuizRunnerInner({
   const [bestPercent, setBestPercent] = useState<number | null>(null);
   const [avgGlobalPercent, setAvgGlobalPercent] = useState<number | null>(null);
   const [avgFriendPercent, setAvgFriendPercent] = useState<number | null>(null);
+  // docs/44-audit-quiz-ux-gaps.md / docs/42-audit-frontend-components.md §3:
+  // see submit-attempt.ts's comment — a failed save used to be silently
+  // swallowed here.
+  const [saveFailed, setSaveFailed] = useState(false);
   const [showStats, setShowStats] = useState(false);
   const statsDefaultSetRef = useRef(false);
   const submittedRef = useRef(false);
@@ -150,38 +149,13 @@ function MatchQuizRunnerInner({
     if (!finished || submittedRef.current || !trackAttempt || !quizKey) return;
     submittedRef.current = true;
     const elapsedSeconds = (durationSeconds ?? 0) - secondsLeft;
-    const encodedKey = encodeURIComponent(quizKey);
 
-    fetch("/api/attempts", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ quizKey, score, total, durationSeconds: elapsedSeconds }),
-    })
-      .then(() =>
-        Promise.all([
-          fetch(`/api/attempts/best?quizKey=${encodedKey}`).then((res) =>
-            res.ok ? res.json() : null
-          ),
-          fetch(`/api/leaderboard?quizKey=${encodedKey}&scope=global`).then((res) =>
-            res.ok ? res.json() : []
-          ),
-          fetch(`/api/leaderboard?quizKey=${encodedKey}&scope=friends`).then((res) =>
-            res.ok ? res.json() : []
-          ),
-        ])
-      )
-      .then(
-        ([best, globalRows, friendRows]: [
-          { score: number; total: number } | null,
-          { score: number; total: number }[],
-          { score: number; total: number }[],
-        ]) => {
-          if (best && best.total > 0) setBestPercent(Math.round((best.score / best.total) * 100));
-          setAvgGlobalPercent(averagePercent(globalRows));
-          setAvgFriendPercent(averagePercent(friendRows));
-        }
-      )
-      .catch((err) => console.error("Failed to record quiz attempt", err));
+    submitAttempt(quizKey, score, total, elapsedSeconds).then((result) => {
+      setBestPercent(result.bestPercent);
+      setAvgGlobalPercent(result.avgGlobalPercent);
+      setAvgFriendPercent(result.avgFriendPercent);
+      setSaveFailed(result.saveFailed);
+    });
   }, [finished, trackAttempt, quizKey, score, total, secondsLeft, durationSeconds]);
 
   useEffect(() => {
@@ -270,6 +244,11 @@ function MatchQuizRunnerInner({
               <p className="text-sm text-muted-foreground">
                 {avgGlobalPercent !== null && <>avg score: {avgGlobalPercent}% </>}
                 {avgFriendPercent !== null && <>· avg friend score: {avgFriendPercent}%</>}
+              </p>
+            )}
+            {saveFailed && trackAttempt && quizKey && (
+              <p className="text-sm text-danger">
+                Your score couldn&rsquo;t be saved — check your connection and try Replay.
               </p>
             )}
           </div>

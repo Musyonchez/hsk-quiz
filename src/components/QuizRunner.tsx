@@ -14,6 +14,7 @@ import {
 import { matchesPinyin } from "@/quiz/pinyin-match";
 import { formatDuration } from "@/quiz/format-time";
 import { withHardSuffix } from "@/quiz/quiz-key";
+import { submitAttempt } from "@/quiz/submit-attempt";
 import type { QuizNavTarget } from "@/quiz/quiz-navigation";
 import type { QuizWord } from "@/quiz/types";
 import { pillClasses } from "@/components/pill-classes";
@@ -21,19 +22,6 @@ import { QuizLinkCard } from "@/components/QuizLinkCard";
 import { VocabTableGroup } from "@/components/VocabTable";
 
 export type { QuizWord };
-
-// Client-side average since GET /api/leaderboard returns every ranked row
-// unpaginated — no separate aggregate endpoint needed at this app's scale
-// (see docs/06-quiz-mechanics.md).
-function averagePercent(
-  rows: { score: number; total: number }[],
-): number | null {
-  if (rows.length === 0) return null;
-  const percents = rows.map((row) =>
-    row.total > 0 ? (row.score / row.total) * 100 : 0,
-  );
-  return Math.round(percents.reduce((sum, p) => sum + p, 0) / percents.length);
-}
 
 function shuffle<T>(items: T[]): T[] {
   const copy = [...items];
@@ -143,6 +131,12 @@ function QuizRunnerInner({
   const [bestPercent, setBestPercent] = useState<number | null>(null);
   const [avgGlobalPercent, setAvgGlobalPercent] = useState<number | null>(null);
   const [avgFriendPercent, setAvgFriendPercent] = useState<number | null>(null);
+  // docs/44-audit-quiz-ux-gaps.md / docs/42-audit-frontend-components.md §3:
+  // the attempt POST used to be unchecked for res.ok, so a failed save was
+  // silently swallowed — the player saw a normal results screen with no clue
+  // their score wasn't recorded. submitAttempt (src/quiz/submit-attempt.ts)
+  // now reports that back explicitly.
+  const [saveFailed, setSaveFailed] = useState(false);
   const [showStats, setShowStats] = useState(false);
   const statsDefaultSetRef = useRef(false);
   const submittedRef = useRef(false);
@@ -156,52 +150,20 @@ function QuizRunnerInner({
 
   // Record the finished attempt exactly once per run (submittedRef survives
   // re-renders but not a Replay, since QuizRunner remounts this component
-  // with a fresh key). Fire-and-forget: a failed write shouldn't surface as
-  // a failed quiz to the player.
+  // with a fresh key).
   const effectiveQuizKey = quizKey ? withHardSuffix(quizKey, hideSecondColumn) : quizKey;
 
   useEffect(() => {
     if (!finished || submittedRef.current || !trackAttempt || !effectiveQuizKey) return;
     submittedRef.current = true;
     const elapsedSeconds = (durationSeconds ?? 0) - secondsLeft;
-    const encodedKey = encodeURIComponent(effectiveQuizKey);
 
-    fetch("/api/attempts", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        quizKey: effectiveQuizKey,
-        score,
-        total,
-        durationSeconds: elapsedSeconds,
-      }),
-    })
-      .then(() =>
-        Promise.all([
-          fetch(`/api/attempts/best?quizKey=${encodedKey}`).then((res) =>
-            res.ok ? res.json() : null,
-          ),
-          fetch(`/api/leaderboard?quizKey=${encodedKey}&scope=global`).then(
-            (res) => (res.ok ? res.json() : []),
-          ),
-          fetch(`/api/leaderboard?quizKey=${encodedKey}&scope=friends`).then(
-            (res) => (res.ok ? res.json() : []),
-          ),
-        ]),
-      )
-      .then(
-        ([best, globalRows, friendRows]: [
-          { score: number; total: number } | null,
-          { score: number; total: number }[],
-          { score: number; total: number }[],
-        ]) => {
-          if (best && best.total > 0)
-            setBestPercent(Math.round((best.score / best.total) * 100));
-          setAvgGlobalPercent(averagePercent(globalRows));
-          setAvgFriendPercent(averagePercent(friendRows));
-        },
-      )
-      .catch((err) => console.error("Failed to record quiz attempt", err));
+    submitAttempt(effectiveQuizKey, score, total, elapsedSeconds).then((result) => {
+      setBestPercent(result.bestPercent);
+      setAvgGlobalPercent(result.avgGlobalPercent);
+      setAvgFriendPercent(result.avgFriendPercent);
+      setSaveFailed(result.saveFailed);
+    });
   }, [finished, trackAttempt, effectiveQuizKey, score, total, secondsLeft, durationSeconds]);
 
   // Default Stats to open if anything was missed, closed on a perfect run —
@@ -337,6 +299,11 @@ function QuizRunnerInner({
                 {avgFriendPercent !== null && (
                   <>· avg friend score: {avgFriendPercent}%</>
                 )}
+              </p>
+            )}
+            {saveFailed && trackAttempt && effectiveQuizKey && (
+              <p className="text-sm text-danger">
+                Your score couldn&rsquo;t be saved — check your connection and try Replay.
               </p>
             )}
           </div>
