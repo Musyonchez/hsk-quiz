@@ -55,6 +55,14 @@ const nextConfig: NextConfig = {
               "img-src 'self' data:",
               "font-src 'self' data:",
               "connect-src 'self'",
+              // docs/45-audit-infra-security.md's re-audit flagged this as
+              // the one directive not explicitly set — falls back to
+              // default-src 'self' regardless (not actually open), but
+              // <object>/<embed>/<applet> have no legitimate use in this
+              // app and are a known legacy plugin/clickjacking vector, so
+              // 'none' here is strictly more correct than relying on the
+              // fallback.
+              "object-src 'none'",
               "frame-ancestors 'none'",
               "base-uri 'self'",
               "form-action 'self'",

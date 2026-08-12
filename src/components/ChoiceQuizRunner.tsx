@@ -379,6 +379,16 @@ function ChoiceQuizRunnerInner({
                   key={word.id}
                   data-row-index={index}
                   onClick={() => started && goTo(index)}
+                  // Same click target, reachable by keyboard too — see
+                  // QuizRunner's identical comment for why tabIndex +
+                  // onKeyDown are needed here.
+                  tabIndex={started ? 0 : undefined}
+                  onKeyDown={(e) => {
+                    if (started && (e.key === "Enter" || e.key === " ")) {
+                      e.preventDefault();
+                      goTo(index);
+                    }
+                  }}
                   className={
                     (started ? "cursor-pointer " : "") +
                     (isCurrent
@@ -411,8 +421,19 @@ function ChoiceQuizRunnerInner({
       </div>
 
       {started && !finished && !paused && currentWord && (
+        // docs/44-audit-quiz-ux-gaps.md flagged this bar's height (prompt
+        // text + up to 5 stacked options on narrow widths) as a possible
+        // overlap risk against the top sticky toolbar on short/landscape
+        // viewports — two independent `position: sticky` elements pinned to
+        // opposite edges don't reserve space for each other, so if their
+        // combined height ever exceeds the viewport, they visually overlap
+        // rather than squeezing the table between them to zero. `max-h-*` +
+        // `overflow-y-auto` is a pure safety net, not a visual change in the
+        // common case: it only constrains anything once content actually
+        // exceeds 45% of the viewport height, at which point the options
+        // scroll internally instead of overlapping the toolbar above.
         <div
-          className="sticky bottom-0 z-5 flex flex-col gap-3 border-t border-border bg-surface p-5 shadow-lg shadow-background/50"
+          className="sticky bottom-0 z-5 flex max-h-[45dvh] flex-col gap-3 overflow-y-auto border-t border-border bg-surface p-5 shadow-lg shadow-background/50"
           ref={bottomStickyRef}
         >
           <div className="text-center">

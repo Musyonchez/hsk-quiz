@@ -281,8 +281,14 @@ function CharacterQuizRunnerInner({
           {/* Live "Missed: N" counter, upper-right — docs/38, the one
               mechanic borrowed from the word-drill reference project this
               app didn't have before (existing runners only compute a missed
-              list at the very end). */}
-          <span className="text-sm font-semibold tabular-nums text-danger">
+              list at the very end). aria-live/aria-atomic so a screen-reader
+              user actually hears it update in real time too, not just sees
+              it — same reasoning the sighted-only version existed for. */}
+          <span
+            aria-live="polite"
+            aria-atomic="true"
+            className="text-sm font-semibold tabular-nums text-danger"
+          >
             Missed: {missedCount}
           </span>
           {timed && (

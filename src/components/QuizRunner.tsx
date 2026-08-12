@@ -412,6 +412,17 @@ function QuizRunnerInner({
                   key={word.id}
                   data-row-index={index}
                   onClick={() => started && goTo(index)}
+                  // Same click target, reachable by keyboard too — a <tr>
+                  // isn't natively focusable/actionable, so tabIndex +
+                  // onKeyDown are what actually make Tab+Enter/Space jump to
+                  // a word row, not just mouse/touch.
+                  tabIndex={started ? 0 : undefined}
+                  onKeyDown={(e) => {
+                    if (started && (e.key === "Enter" || e.key === " ")) {
+                      e.preventDefault();
+                      goTo(index);
+                    }
+                  }}
                   className={
                     (started ? "cursor-pointer " : "") +
                     (isCurrent
