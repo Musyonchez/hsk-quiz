@@ -14,7 +14,8 @@ fine.
 **Corrected per [43-audit-docs-consistency.md](43-audit-docs-consistency.md)** — this section
 originally said "just `DATABASE_URL`," which predates
 [36-better-auth-migration-plan.md](36-better-auth-migration-plan.md) adding four more required
-vars. Five total need setting in both Production and Preview environments:
+vars, and [45-audit-infra-security.md](45-audit-infra-security.md)'s `RateLimit`-purge fix adding a
+sixth. Six total, though only `CRON_SECRET` is Production-only (see below):
 
 - `DATABASE_URL` — the same Neon connection string already used for local dev (a single database
   serves both right now, per [20](hold/20-postgres-vercel-migration-plan.md)'s "what actually
@@ -26,6 +27,11 @@ vars. Five total need setting in both Production and Preview environments:
   unique URL and a mismatched `baseURL` actively breaks callback routes, not just warns.
 - `GMAIL_USER`, `GMAIL_APP_PASSWORD` — the Gmail SMTP account and app password
   `src/lib/send-email.ts` uses to send password-reset emails.
+- `CRON_SECRET` — authenticates Vercel Cron's daily call to
+  `/api/cron/purge-rate-limits` (`vercel.json`); Vercel injects it as an
+  `Authorization: Bearer` header automatically once set. Vercel Cron only ever triggers against the
+  **Production** deployment, so this one only strictly needs setting there — Preview builds never
+  receive a cron invocation regardless.
 
 No `NODE_ENV` needed — Vercel sets that automatically for production deployments (Render
 required it manually).
@@ -60,10 +66,11 @@ source data changes later.
 1. Sign up / log in at vercel.com, connect your GitHub account if not already connected.
 2. Add New → Project → import `Musyonchez/hsk-quiz`. Vercel auto-detects Next.js; no framework
    settings need changing.
-3. Before the first deploy, confirm all five env vars from "Env vars" above are set in the
-   project's Environment Variables (Settings → Environment Variables) for both Production and
-   Preview — `DATABASE_URL` may already be there via the Neon integration; the rest need adding
-   manually.
+3. Before the first deploy, confirm all six env vars from "Env vars" above are set in the
+   project's Environment Variables (Settings → Environment Variables) — `DATABASE_URL`,
+   `BETTER_AUTH_SECRET`, `BETTER_AUTH_URL`, `GMAIL_USER`, `GMAIL_APP_PASSWORD` for both Production
+   and Preview, `CRON_SECRET` for Production only. `DATABASE_URL` may already be there via the
+   Neon integration; the rest need adding manually.
 4. Deploy.
 
 ## Verifying a deploy worked
