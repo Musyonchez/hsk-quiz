@@ -118,7 +118,15 @@ combined state:
 
 ## Mnemonics: consistency across generation passes
 
-Mnemonics for the popup depend on finishing docs/34's "memory aid mnemonics" work — currently a
+**Historical note (per [43-audit-docs-consistency.md](43-audit-docs-consistency.md)): this
+section originally referenced "docs/34," a plan doc that never actually landed in the repo — it
+lived only on the `feat/memory-aid-mnemonics` WIP branch this section describes below, which was
+later deleted and redone from scratch as
+[39-memory-aid-mnemonics-plan.md](39-memory-aid-mnemonics-plan.md) instead. Kept here as-written
+for the historical record of what was known/decided at the time this doc was authored — see
+docs/39 for what actually shipped.**
+
+Mnemonics for the popup depend on finishing a separate "memory aid mnemonics" effort — currently a
 **paused, unmerged WIP branch** (`feat/memory-aid-mnemonics`, not yet on `main` — its own plan doc
 lives only on that branch) with a full HSK1 (177-word) dictionary already hand-written, not yet
 wired into `seed.ts`/`QuizWord`/any UI. HSK2/HSK3 remain unwritten. Direct instruction for
@@ -145,7 +153,8 @@ as it will for HSK2/HSK3 words until they're written.
 - `src/components/CharacterStudy.tsx` — removed, replaced by the browse grid/popup, now rendered
   as part of the Character flow rather than its own top-level branch.
 - `src/components/CharacterQuizRunner.tsx` — full rewrite, split typing/select answer formats.
-- `src/quiz/types.ts` — `QuizWord.mnemonic?: string | null` once docs/34 lands.
+- `src/quiz/types.ts` — `QuizWord.mnemonic?: string | null` once the mnemonics work above lands
+  (shipped as [docs/39](39-memory-aid-mnemonics-plan.md), not "docs/34" — see the note above).
 - `prisma/schema.prisma` — `Word.mnemonic` (already drafted on the paused branch).
 - `docs/06-quiz-mechanics.md` — Character section rewritten once implemented, same as
   docs/hold/33's redesign updated it last time; drops the standalone "Study mode" subsection

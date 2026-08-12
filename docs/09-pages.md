@@ -3,6 +3,14 @@
 The quiz screen ([06-quiz-mechanics.md](06-quiz-mechanics.md)) is one page among several. This
 doc lists every page so none of them get designed as an afterthought.
 
+**State of this doc (per [43-audit-docs-consistency.md](43-audit-docs-consistency.md)):** this
+was written up front, before most of the site existed, and — unlike some of the other early
+planning docs — was never kept current as real features shipped. The sections below have been
+corrected where they stated something now flatly false (forgot-password, `/dashboard`), but this
+is **not a complete sitemap** — see "Pages added since this doc was written" at the bottom for
+everything real that's missing from the numbered list below, with pointers to the docs that
+actually spec each one.
+
 Every page shares the `<AppHeader>` component from [08-ui-ux.md](08-ui-ux.md): site name/logo
 and a level switcher (one link per live `Level` row — currently `HSK 1` / `HSK 2` / `HSK 3`) on
 the left, `Leaderboard` / `Friends` links and the logged-in `<UserBadge>` (with a logout action)
@@ -22,19 +30,21 @@ handlers.
 
 ## 0. Login — `/login`
 
-- Username + password form, single `Log in` button, plus a link to `/register` for a new
-  visitor. No "forgot password" flow (see [01-overview.md](01-overview.md)'s non-goals — no
-  email is collected at all, so there's no address to send a reset link to).
-- On success, redirect to `/dashboard` or back to whatever page triggered the redirect.
+- Single field that accepts either username or email, plus password, single `Log in` button, a
+  link to `/register` for a new visitor, and a "Forgot password?" link into `/forgot-password`
+  (real flow, added by [36-better-auth-migration-plan.md](36-better-auth-migration-plan.md) —
+  this section originally said no such flow existed and no email was collected; both reversed).
+- On success, redirect to `/` (there is no `/dashboard` route — see §1.5 below), or back to
+  whatever page triggered the redirect.
 
 ## 0.5. Register — `/register`
 
-- Username + password (+ optional display name) form, single `Register` button. Same visual
-  treatment as Login — same card, same branding block above it — since they're one flow a
-  visitor bounces between, not two different-feeling pages.
+- Username + email + password form, single `Register` button. Same visual treatment as Login —
+  same card, same branding block above it. The email field was added by docs/36 specifically to
+  support the forgot-password flow above; this section originally said no email was collected at
+  all.
 - On success, the account is created *and* logged in immediately (no separate "now go log in"
-  step) — same redirect-to-`/dashboard` behavior as Login.
-- No email field, no verification step — see [01-overview.md](01-overview.md)'s non-goals.
+  step) — same redirect-to-`/` behavior as Login.
 
 ## 1. Landing — `/` (public, no session required)
 
@@ -42,19 +52,19 @@ handlers.
   `Log in` / `Register` calls to action. Vocabulary read routes are already
   public/unauthenticated (see [05-architecture.md](05-architecture.md)), so the landing page is
   the natural public front door instead of bouncing a first-time visitor straight to `/login`.
-- If a valid session already exists, swap the `Log in` / `Register` CTAs for a single `Go to
-  dashboard` link into `/dashboard` — the page itself still renders (no server redirect), it
-  just changes which CTA it shows.
+- If a valid session already exists, the same `/` route renders the logged-in view instead (see
+  §1.5) — there's no separate redirect to a dashboard route, because there is no dashboard route.
 
-## 1.5. Dashboard — `/dashboard`
+## 1.5. Logged-in home — `/` (same route as §1, different content when a session exists)
 
-- Everything the old "Home" page was: one large card per live level (currently HSK1-3), each
-  showing chapter count and, once a player has played anything, their most recent activity
-  (e.g. "Last played: Chapter 5 — 82%") pulled from `GET /api/attempts/recent` — a light
-  personal touch, not a full analytics dashboard.
-- Requires a session — redirects to `/login` if none (per the auth rule at the top of this
-  doc). This is the actual "pick a level" starting point once logged in; `/` is just the public
-  door in front of it.
+- **This replaces what used to be a separate `/dashboard` route.** Folded into `/` by
+  [docs/hold/29](hold/29-landing-page-trim-plan.md)'s landing-page update — `/` itself branches
+  on session state rather than redirecting to a second route.
+- One large card per live level (currently HSK1-3), each showing chapter count and, once a
+  player has played anything, their most recent activity (e.g. "Last played: Chapter 5 — 82%")
+  pulled from `getMostRecentAttempt` in `lib/queries.ts` directly (not a `GET /api/attempts/
+  recent` route — no such route exists, see [05-architecture.md](05-architecture.md)'s "API
+  surface") — a light personal touch, not a full analytics dashboard.
 
 ## 2. Level hub — `/hsk/[level]`
 
@@ -116,6 +126,28 @@ handlers.
 - A dedicated cross-quiz "progress/history" page — `GET /api/attempts/best` and the
   leaderboard endpoints answer every "where do I stand" question the pages above need. A full
   history view can be added later if wanted, but it's not blocking anything above.
-- A settings/preferences page — there are no user-configurable options at launch (tone-free
-  matching is fixed behavior per [06-quiz-mechanics.md](06-quiz-mechanics.md), not a toggle).
 - A friend-search/directory — see "Add a friend" above; username-only by design.
+
+## Pages added since this doc was written (not fully spec'd here — see each one's own doc)
+
+Per [43-audit-docs-consistency.md](43-audit-docs-consistency.md): roughly a third of the site's
+real routes are missing from the numbered sitemap above. Listed here rather than folded into the
+numbering, since giving each one the same level of design detail the sections above got would
+mean effectively rewriting this whole doc — the actual specs already live in their own docs.
+
+- **`/account`** — change-password form ([37-auth-hardening-and-ux-plan.md](37-auth-hardening-and-ux-plan.md)).
+  This is the one place a settings-page non-goal above ("no user-configurable options at launch")
+  is now slightly stale — it's not a general preferences page, but it is a real account-settings
+  page.
+- **`/forgot-password`, `/reset-password`** — the forgot-password flow referenced in §0/§0.5
+  above ([36-better-auth-migration-plan.md](36-better-auth-migration-plan.md)).
+- **`/custom-quiz`, `/custom-quiz/quiz`** — cross-level custom quiz picker/runner
+  ([docs/hold/17-custom-chapter-quiz-plan.md](hold/17-custom-chapter-quiz-plan.md)).
+- **`/hsk/[level]/custom/quiz`** — single-level, multi-chapter custom quiz (same doc as above).
+- **`/hsk/[level]/chapter/[chapter]/all`, `.../all/words`, `.../all/quiz`** — a chapter's full
+  dialog transcript, its flat "All Words" vocabulary list (broader than the curated New Words
+  table in §3), and a quiz over that larger word set
+  ([docs/hold/25-chapter-all-words-plan.md](hold/25-chapter-all-words-plan.md)).
+- **Character mode** — a third quiz mode/answer format alongside "type pinyin" and "match
+  meaning," reachable from the same quiz pages as §4 (`?mode=character`), with its own
+  browse-then-quiz flow ([38-character-mode-overhaul-plan.md](38-character-mode-overhaul-plan.md)).

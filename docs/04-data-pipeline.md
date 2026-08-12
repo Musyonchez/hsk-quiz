@@ -66,8 +66,9 @@ one of the `*-data.ts` files, or a whole category dropped).
 
 ## When it runs
 
-- `npm run db:seed`, manually, against whichever database `DATABASE_URL`/the Prisma
-  `schema.prisma` currently points at (SQLite in dev, Postgres in prod).
+- `npm run db:seed`, manually, against whichever database `DATABASE_URL` currently points at —
+  in practice the single shared Neon Postgres database dev and prod both use, there's no SQLite
+  involved at any point (see [05-architecture.md](05-architecture.md)).
 - Re-run whenever a `hsk{N}-chapters-data.ts` / `hsk{N}-combined-data.ts` file is edited, or a
   new chapter/correction is added, and once against prod after a content update ships.
 - Never runs automatically inside a request handler — kept strictly out of the API server's

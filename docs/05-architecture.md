@@ -50,8 +50,12 @@ Word         { id, chapterId? (null for combined-only words), levelId,
                source ("chapter" | "combined") }
 GrammarPattern { id, chapterId, label, pinyinSkeleton, note }
 
-User         { id, username, passwordHash, displayName, createdAt }
-Session      { id, userId, tokenHash, expiresAt, createdAt }
+User         { id, username, displayUsername, displayName, email, emailVerified, image, createdAt, updatedAt }
+Session      { id, token, expiresAt, ipAddress, userAgent, userId, createdAt, updatedAt }
+Account      { id, accountId, providerId, userId, password, accessToken/refreshToken/idToken (unused —
+               no OAuth wired up), createdAt, updatedAt }   -- better-auth's credential-storage table
+Verification { id, identifier, value, expiresAt, createdAt, updatedAt } -- reset-password tokens
+RateLimit    { id, key, value, expiresAt }               -- durable rate-limit counters, see below
 Friendship   { id, userId, friendId, status ("pending" | "accepted" | "ignored"), createdAt }
 Attempt      { id, userId, quizKey ("hsk1-chapter5" | "hsk1-combined" | ...),
                score, total, durationSeconds, createdAt }
@@ -70,20 +74,41 @@ new request to the same person (a repeat `POST /api/friends/requests` for a row 
 
 ## Accounts and auth
 
-- **Public self-service registration**: `POST /api/auth/register` creates a `User` row with a
-  hashed password (`scrypt`, via Node's built-in `node:crypto` — no extra dependency) and logs
-  the new user in immediately. No email, no verification step, no admin approval.
-- **Sessions**: a plain server-side session token in an HTTP-only, `Secure`, `SameSite=Lax`
-  cookie, hashed at rest in the `Session` table, checked in a small `getSession()` helper
-  called from Server Components and Route Handlers alike. No JWT, no `next-auth`/third-party
-  provider — the user set is small and static, so there's no reason to take on that complexity
-  or its extra config surface.
+**Rewritten as of [36-better-auth-migration-plan.md](36-better-auth-migration-plan.md) and
+hardened by [37-auth-hardening-and-ux-plan.md](37-auth-hardening-and-ux-plan.md)** — this section
+used to describe a hand-rolled scrypt+session-token system with no email/forgot-password support;
+that system is gone. Auth is now the self-hosted [better-auth](https://better-auth.com) library
+(`src/lib/auth.ts`), talking to the same Prisma/Neon database everything else uses, via the
+`prismaAdapter`:
+
+- **Public self-service registration**: username + password + **email** (the email exists solely
+  to support password reset — no verification step is required to use the account). `advanced.
+  database.generateId: "serial"` keeps `User.id` a plain Int autoincrement, so `Friendship`/
+  `Attempt`'s existing Int foreign keys needed no changes for the migration; a `user.fields.name`
+  mapping keeps the physical column named `displayName` so every other query in the app
+  (`queries.ts`, `LeaderboardTable`, `UserBadge`) reads it unchanged. The `username` plugin adds a
+  real, unique `username` column alongside email, so login stays username+password (or
+  email+password — both are accepted at the single login field) rather than switching to
+  email-only.
+- **Sessions**: better-auth's own `Session` table (httpOnly, `Secure`, `SameSite=Lax` cookie;
+  7-day expiry with a rolling 1-day refresh), checked via `getSessionUser()` in `src/lib/auth.ts`
+  — same name/signature the old hand-rolled helper had, so every call site (`requireSession()`,
+  API routes, `AppHeader`) needed no changes.
+- **Password reset**: a real forgot-password/reset-password flow, `POST /forget-password` sends a
+  reset email via Gmail SMTP (`src/lib/send-email.ts`, `GMAIL_USER`/`GMAIL_APP_PASSWORD` env
+  vars); `revokeSessionsOnPasswordReset: true` kills every other session on a successful reset.
+  `ChangePassword` (`/account`) does the equivalent for an already-logged-in user, rotating the
+  acting session's token while revoking every other one.
+- **Rate limiting**: a custom Postgres-backed `secondaryStorage` adapter
+  (`src/lib/rate-limit-storage.ts`) gives durable, atomic rate-limit counters that survive
+  serverless cold starts — `customRules` throttle `/sign-in/username`, `/sign-in/email` (3 per
+  10s), and `/forget-password` (3 per 60s); see
+  [45-audit-infra-security.md](45-audit-infra-security.md) for the one gap in this coverage
+  (registration itself has no dedicated rule, only better-auth's generous global default).
 - Every route that reads/writes `Attempt` or `Friendship` requires a valid session. Vocabulary
-  reads have no dedicated API routes at all — there's no public vocab REST API, and never has
-  been in the current codebase (an earlier draft of this doc planned one, see "API surface"
-  below); Server Components call `lib/queries.ts` directly, and since there's no reason to gate
-  looking at vocabulary behind login, those pages stay public/unauthenticated too — only
-  progress tracking and social features need an identity.
+  reads have no dedicated API routes at all — Server Components call `lib/queries.ts` directly,
+  and since there's no reason to gate looking at vocabulary behind login, those pages stay
+  public/unauthenticated too — only progress tracking and social features need an identity.
 
 ## Folder layout
 
@@ -104,22 +129,27 @@ website/
                                # what 09-pages.md §1.5 originally described)
       login/page.tsx
       register/page.tsx
+      forgot-password/page.tsx
+      reset-password/page.tsx
+      account/page.tsx                            # change-password (docs/37)
       hsk/[level]/page.tsx                       # Level hub
       hsk/[level]/chapter/[chapter]/page.tsx      # Learn page
-      hsk/[level]/chapter/[chapter]/quiz/page.tsx # Quiz + results, ?mode=type|meaning
+      hsk/[level]/chapter/[chapter]/quiz/page.tsx # Quiz + results, ?mode=type|meaning|character
+      hsk/[level]/chapter/[chapter]/all/page.tsx       # full dialog transcript (docs/hold/25)
+      hsk/[level]/chapter/[chapter]/all/words/page.tsx # flat "All Words" vocab list
+      hsk/[level]/chapter/[chapter]/all/quiz/page.tsx  # quiz over All Words instead of New Words
       hsk/[level]/combined/page.tsx
       hsk/[level]/combined/quiz/page.tsx
       hsk/[level]/custom/quiz/page.tsx            # single-level, multi-chapter custom quiz
       custom-quiz/page.tsx                        # cross-level custom quiz picker
       custom-quiz/quiz/page.tsx                   # cross-level custom quiz runner
-      leaderboard/page.tsx                        # level/chapter picker, Type/Match tabs
+      leaderboard/page.tsx                        # level/chapter picker, mode tabs
       leaderboard/[quizKey]/page.tsx
       friends/page.tsx
       api/
-        auth/login/route.ts
-        auth/register/route.ts
-        auth/logout/route.ts
-        auth/me/route.ts
+        auth/[...all]/route.ts    # better-auth's catch-all handler — replaces the old
+                                   # auth/{login,register,logout,me}/route.ts foursome
+                                   # entirely as of docs/36
         attempts/route.ts
         attempts/best/route.ts
         leaderboard/route.ts
@@ -129,10 +159,14 @@ website/
         friends/requests/[id]/ignore/route.ts
                                # no vocab API routes — vocab pages read lib/queries.ts
                                # directly from Server Components, see "Accounts and auth" above
-    components/               # AppHeader, VocabTable, QuizLinkCard, CustomQuizPicker,
-                               # QuizRunner, ChoiceQuizRunner, MatchQuizRunner, QuizModeGate,
-                               # PillButton, PercentBadge, LeaderboardTable, AddFriendForm,
-                               # FriendRequestRow, UserBadge — see 08-ui-ux.md
+    components/               # AppHeader, MobileNav, VocabTable, QuizLinkCard,
+                               # CustomQuizPicker, QuizModeGate, QuizRunner, ChoiceQuizRunner,
+                               # MatchQuizRunner, CharacterIsland, CharacterBrowse,
+                               # CharacterQuizRunner (docs/38), LeaderboardTable, AddFriendForm,
+                               # FriendRequestRow, UserBadge, LogoutButton, ChangePasswordForm,
+                               # ResetPasswordForm, PasswordField — see 08-ui-ux.md. Note:
+                               # pill-shaped buttons are a `pillClasses()` class-string helper
+                               # (`components/pill-classes.ts`), not a `<PillButton>` component.
     lib/
       extract/                # extract-combined.ts, extract-chapters.ts (dispatch by level
                                # slug to the right in-repo data file — no PDF/markdown I/O);
@@ -144,11 +178,17 @@ website/
                                # hsk-level.ts), each sourced from that book's own
                                # textbook appendix
       db.ts                   # Prisma client singleton (PrismaNeon driver adapter)
-      auth.ts                 # password hashing + session create/lookup
+      auth.ts                 # betterAuth() config + getSessionUser() (docs/36)
+      auth-client.ts           # createAuthClient() for Client Components (login/register/
+                               # forgot-password/reset-password/account forms)
+      send-email.ts            # nodemailer + Gmail SMTP, used by auth.ts's password-reset flow
+      rate-limit-storage.ts    # Postgres-backed secondaryStorage adapter for better-auth's
+                               # rate limiter (durable across serverless cold starts)
       require-session.ts      # Server Component guard: redirects to /login if unauthenticated
-      login-rate-limit.ts     # Postgres-backed per-username lockout for POST /api/auth/login
       queries.ts               # all read queries vocab pages/leaderboard/friends call directly
-    quiz/                     # quiz engine: input matching, scoring, timer (framework-free)
+    quiz/                     # quiz engine: input matching, scoring, timer, mnemonics
+                               # (framework-free) — see 06-quiz-mechanics.md,
+                               # 39-memory-aid-mnemonics-plan.md
   tailwind.config.ts
   next.config.ts
   package.json
@@ -158,11 +198,8 @@ website/
 
 | Method & path | Auth? | Returns |
 |---|---|---|
-| `POST /api/auth/login` | — | sets session cookie for `{ username, password }` |
-| `POST /api/auth/register` | — | creates a `User` + sets session cookie for `{ username, password }` |
-| `POST /api/auth/logout` | session | clears session |
-| `GET /api/auth/me` | session | current user's `{ username, displayName }` |
-| `POST /api/attempts` | session | records a finished quiz attempt `{ quizKey, score, total, durationSeconds }` |
+| `/api/auth/[...all]` | varies | better-auth's own catch-all handler — sign-in/sign-up/sign-out, forget/reset-password, change-password, session lookup, all live under this one route as of docs/36. Not a hand-maintained table of sub-paths here; see `better-auth`'s own docs for the exact endpoint list it exposes. |
+| `POST /api/attempts` | session | records a finished quiz attempt `{ quizKey, score, total, durationSeconds }` — **no rate limit on this route**, see [45-audit-infra-security.md](45-audit-infra-security.md) |
 | `GET /api/attempts/best?quizKey=` | session | current user's best score for one quiz, for the results page |
 | `GET /api/leaderboard?quizKey=&scope=global\|friends` | session | ranked `[{ displayName, score, total, createdAt }]` |
 | `GET /api/friends` | session | accepted friends + pending incoming/outgoing requests |

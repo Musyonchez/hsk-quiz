@@ -31,7 +31,9 @@ HSK2, 383 new at HSK3** — 774 total, matching the global distinct count.
 
 ## Authorship: one agent per level, not fanned out in parallel within a level
 
-Per the original docs/34 reasoning (still correct): generating a word's mnemonic content via
+Per the original docs/38 reasoning (still correct; that section originally cited a "docs/34" that
+never actually landed in the repo — see [43-audit-docs-consistency.md](43-audit-docs-consistency.md)
+and the note now in docs/38's own "Mnemonics" section): generating a word's mnemonic content via
 several agents working the same list in parallel risks inconsistent voice/format between
 batches. One agent gets one level's full bucket as one continuous pass. Each agent works from
 the same shared style guide (below) so tone stays consistent *across* levels too, not just
