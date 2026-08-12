@@ -25,9 +25,7 @@ export default async function ChapterAllWordsQuizPage({
   const { level: levelSlug, chapter: chapterParam } = await params;
   const { mode } = await searchParams;
   const initialMode =
-    mode === "type" || mode === "meaning" || mode === "character" || mode === "study"
-      ? mode
-      : null;
+    mode === "type" || mode === "meaning" || mode === "character" ? mode : null;
   const chapterNumber = Number(chapterParam);
   if (!isLevelSlug(levelSlug) || !Number.isInteger(chapterNumber)) notFound();
   if (String(chapterNumber) !== chapterParam) {
@@ -64,13 +62,7 @@ export default async function ChapterAllWordsQuizPage({
       <AllWordsTabs
         baseHref={backHref}
         active={
-          initialMode === "meaning"
-            ? "meaning"
-            : initialMode === "character"
-              ? "character"
-              : initialMode === "study"
-                ? "study"
-                : "type"
+          initialMode === "meaning" ? "meaning" : initialMode === "character" ? "character" : "type"
         }
       />
 

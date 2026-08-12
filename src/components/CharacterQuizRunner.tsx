@@ -9,10 +9,11 @@ import {
   Pause,
   Play,
   Shuffle,
+  SkipForward,
 } from "lucide-react";
 import { matchesPinyin } from "@/quiz/pinyin-match";
 import { formatDuration } from "@/quiz/format-time";
-import { buildCharacterChoices } from "@/quiz/character-choices";
+import { buildChoices } from "@/quiz/meaning-choices";
 import type { QuizNavTarget } from "@/quiz/quiz-navigation";
 import type { QuizWord } from "@/quiz/types";
 import { pillClasses } from "@/components/pill-classes";
@@ -20,6 +21,8 @@ import { QuizLinkCard } from "@/components/QuizLinkCard";
 import { VocabTableGroup } from "@/components/VocabTable";
 
 export type { QuizWord };
+
+type AnswerFormat = "pinyin" | "english";
 
 function averagePercent(rows: { score: number; total: number }[]): number | null {
   if (rows.length === 0) return null;
@@ -36,19 +39,14 @@ function shuffle<T>(items: T[]): T[] {
   return copy;
 }
 
-// Combined/Custom-scale character quiz (docs/hold/27-character-quiz-plan.md,
-// redesigned per docs/33-character-quiz-single-card-redesign-plan.md). A
-// single focused card, not the table-plus-bottom-bar shell ChoiceQuizRunner
-// uses — that shell fits typing (the table doubles as a live answer key)
-// but not candidate-picking, where a 60-177 row table the player can't
-// act on just crowds out the actual interaction. The interaction itself is
-// a virtual IME: the prompt shows the word's English meaning, the player
-// types the pinyin from memory (checked tone-free, same as the typing
-// quiz), and only once that matches does a candidate row of Chinese-
-// character options appear to click. No right/wrong color on click either
-// way — same no-reveal-until-the-end rule docs/19 established for
-// meaning-match, since candidate rows are regenerated fresh per word and a
-// wrong pick's distractors can overlap another word's.
+// Character island, part 2 (docs/38) — a from-scratch rewrite, no longer the
+// single fixed meaning->pinyin->candidate-row mechanic. The player picks one
+// of two mutually exclusive answer formats up front: type the pinyin from
+// the character (reuses matchesPinyin, gets a Skip button, same feel as the
+// Pinyin island even though the two stay separate per docs/38), or select
+// the English meaning from options (reuses buildChoices, pick-to-advance,
+// no Skip needed). Both formats get a live "Missed: N" counter, per the
+// word-drill reference project docs/38 cites for that mechanic.
 export function CharacterQuizRunner({
   words,
   backHref,
@@ -123,18 +121,23 @@ function CharacterQuizRunnerInner({
   const timed = durationSeconds !== undefined;
   const [order, setOrder] = useState(words);
   // Frozen for the whole run, same reasoning as ChoiceQuizRunner's `choices`
-  // — generated once at mount, never regenerated on Prev/Next/row-click.
-  const [choices] = useState(() => buildCharacterChoices(words));
-  const [started, setStarted] = useState(false);
+  // — generated once at mount regardless of which answer format ends up
+  // picked, since it costs nothing to have ready either way.
+  const [englishChoices] = useState(() => buildChoices(words));
+  const [answerFormat, setAnswerFormat] = useState<AnswerFormat | null>(null);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [typedPinyin, setTypedPinyin] = useState("");
-  // Right or wrong, right alongside it — same as ChoiceQuizRunner's
-  // `answers`, never rendered with any color/label until `finished`.
-  const [answers, setAnswers] = useState<Map<number, number>>(new Map());
+  // Pinyin format: two disjoint sets instead of ChoiceQuizRunner's single
+  // answers map, since typing has a third outcome multiple-choice doesn't —
+  // "given up on via Skip" isn't "correct" or "not yet answered".
+  const [correctIds, setCorrectIds] = useState<Set<number>>(new Set());
+  const [missedIds, setMissedIds] = useState<Set<number>>(new Set());
+  // English format: same shape as ChoiceQuizRunner's answers map.
+  const [pickedAnswers, setPickedAnswers] = useState<Map<number, number>>(new Map());
   const [secondsLeft, setSecondsLeft] = useState(durationSeconds ?? 0);
   const [paused, setPaused] = useState(false);
   const [finishedState, setFinishedState] = useState<"completed" | "gaveup" | null>(null);
-  const finished = finishedState ?? (timed && started && secondsLeft === 0 ? "timeup" : null);
+  const finished = finishedState ?? (timed && answerFormat && secondsLeft === 0 ? "timeup" : null);
   const [bestPercent, setBestPercent] = useState<number | null>(null);
   const [avgGlobalPercent, setAvgGlobalPercent] = useState<number | null>(null);
   const [avgFriendPercent, setAvgFriendPercent] = useState<number | null>(null);
@@ -145,13 +148,18 @@ function CharacterQuizRunnerInner({
 
   const currentWord = order[currentIndex];
   const total = order.length;
-  const answeredCount = answers.size;
-  const score = [...answers.entries()].filter(([wordId, picked]) => picked === wordId).length;
-  // The candidate row only appears once the typed pinyin actually matches —
-  // this is what makes it feel like a real IME's type-to-filter step rather
-  // than options being available from the start.
-  const candidatesUnlocked =
-    currentWord !== undefined && matchesPinyin(typedPinyin, currentWord.pinyin);
+  const started = answerFormat !== null;
+
+  const answeredCount =
+    answerFormat === "pinyin" ? correctIds.size + missedIds.size : pickedAnswers.size;
+  const score =
+    answerFormat === "pinyin"
+      ? correctIds.size
+      : [...pickedAnswers.entries()].filter(([wordId, picked]) => picked === wordId).length;
+  const missedCount =
+    answerFormat === "pinyin"
+      ? missedIds.size
+      : [...pickedAnswers.entries()].filter(([wordId, picked]) => picked !== wordId).length;
 
   useEffect(() => {
     if (!finished || submittedRef.current || !trackAttempt || !quizKey) return;
@@ -206,41 +214,76 @@ function CharacterQuizRunnerInner({
   }, [timed, started, paused, finished]);
 
   useEffect(() => {
-    if (started && !finished && !paused) pinyinInputRef.current?.focus();
-  }, [currentIndex, started, finished, paused]);
+    if (started && answerFormat === "pinyin" && !finished && !paused) {
+      pinyinInputRef.current?.focus();
+    }
+  }, [currentIndex, started, answerFormat, finished, paused]);
 
   function goTo(index: number) {
     setCurrentIndex(((index % total) + total) % total);
     setTypedPinyin("");
   }
 
-  // Same skip-already-done walk as ChoiceQuizRunner's nextIncompleteIndex.
-  function nextIncompleteIndex(from: number, step: 1 | -1): number {
+  function nextIncompleteIndex(from: number, step: 1 | -1, doneIds: Set<number>): number {
     for (let i = 1; i <= total; i++) {
       const index = (((from + step * i) % total) + total) % total;
-      if (!answers.has(order[index].id)) return index;
+      if (!doneIds.has(order[index].id)) return index;
     }
     return from;
   }
 
-  function pick(wordId: number, pickedId: number) {
-    if (answers.has(wordId)) return;
-    const updated = new Map(answers).set(wordId, pickedId);
-    setAnswers(updated);
+  const doneIds =
+    answerFormat === "pinyin"
+      ? new Set([...correctIds, ...missedIds])
+      : new Set(pickedAnswers.keys());
+
+  function handlePinyinChange(value: string) {
+    setTypedPinyin(value);
+    if (!currentWord || !matchesPinyin(value, currentWord.pinyin)) return;
+
+    const updated = new Set(correctIds).add(currentWord.id);
+    setCorrectIds(updated);
+    setTypedPinyin("");
+
+    if (updated.size + missedIds.size === total) {
+      setFinishedState("completed");
+      return;
+    }
+    goTo(nextIncompleteIndex(currentIndex, 1, new Set([...updated, ...missedIds])));
+  }
+
+  function skipCurrent() {
+    if (!currentWord || doneIds.has(currentWord.id)) return;
+    const updated = new Set(missedIds).add(currentWord.id);
+    setMissedIds(updated);
+
+    if (correctIds.size + updated.size === total) {
+      setFinishedState("completed");
+      return;
+    }
+    goTo(nextIncompleteIndex(currentIndex, 1, new Set([...correctIds, ...updated])));
+  }
+
+  function pickEnglish(wordId: number, pickedId: number) {
+    if (pickedAnswers.has(wordId)) return;
+    const updated = new Map(pickedAnswers).set(wordId, pickedId);
+    setPickedAnswers(updated);
 
     if (updated.size === total) {
       setFinishedState("completed");
       return;
     }
-
-    goTo(nextIncompleteIndex(currentIndex, 1));
+    goTo(nextIncompleteIndex(currentIndex, 1, new Set(updated.keys())));
   }
 
   if (finished) {
     const percent = total > 0 ? Math.round((score / total) * 100) : 0;
     const heading =
       finished === "timeup" ? "Time's up!" : finished === "gaveup" ? "Quiz ended" : "Quiz complete!";
-    const missedWords = order.filter((word) => answers.get(word.id) !== word.id);
+    const missedWords =
+      answerFormat === "pinyin"
+        ? order.filter((word) => !correctIds.has(word.id))
+        : order.filter((word) => pickedAnswers.get(word.id) !== word.id);
 
     return (
       <div className="flex flex-col gap-6">
@@ -330,8 +373,8 @@ function CharacterQuizRunnerInner({
     );
   }
 
-  const currentAnswer = currentWord ? answers.get(currentWord.id) : undefined;
-  const currentOptions = currentWord ? (choices.get(currentWord.id) ?? []) : [];
+  const currentEnglishAnswer = currentWord ? pickedAnswers.get(currentWord.id) : undefined;
+  const currentEnglishOptions = currentWord ? (englishChoices.get(currentWord.id) ?? []) : [];
 
   return (
     <div className="flex flex-col gap-6 pb-4">
@@ -340,6 +383,13 @@ function CharacterQuizRunnerInner({
           <span className="text-sm font-semibold tabular-nums">
             ANSWERED {answeredCount}/{total}
           </span>
+          {/* Live "Missed: N" counter, upper-right — docs/38, the one
+              mechanic borrowed from the word-drill reference project this
+              app didn't have before (existing runners only compute a missed
+              list at the very end). */}
+          <span className="text-sm font-semibold tabular-nums text-danger">
+            Missed: {missedCount}
+          </span>
           {timed && (
             <span className="text-sm font-semibold tabular-nums">
               {formatDuration(secondsLeft)}
@@ -347,7 +397,7 @@ function CharacterQuizRunnerInner({
           )}
           <div className="flex flex-wrap items-center gap-2">
             <ToolbarButton
-              onClick={() => goTo(nextIncompleteIndex(currentIndex, -1))}
+              onClick={() => goTo(nextIncompleteIndex(currentIndex, -1, doneIds))}
               disabled={!started}
               label="Prev"
             >
@@ -365,7 +415,7 @@ function CharacterQuizRunnerInner({
               </ToolbarButton>
             )}
             <ToolbarButton
-              onClick={() => goTo(nextIncompleteIndex(currentIndex, 1))}
+              onClick={() => goTo(nextIncompleteIndex(currentIndex, 1, doneIds))}
               disabled={!started}
               label="Next"
             >
@@ -390,13 +440,23 @@ function CharacterQuizRunnerInner({
               {total} words
               {timed && <> · {formatDuration(durationSeconds ?? 0)} on the clock</>}
             </p>
-            <div className="flex items-center gap-3">
+            {/* The answer-format picker — mutually exclusive, per docs/38.
+                Picking either starts the run immediately; there's no
+                separate generic "Start quiz" button once a format's chosen. */}
+            <div className="flex flex-wrap items-center justify-center gap-3">
               <button
                 type="button"
-                onClick={() => setStarted(true)}
+                onClick={() => setAnswerFormat("pinyin")}
                 className={pillClasses("primary")}
               >
-                Start quiz
+                Pinyin test
+              </button>
+              <button
+                type="button"
+                onClick={() => setAnswerFormat("english")}
+                className={pillClasses("primary")}
+              >
+                English test
               </button>
               <ToolbarButton
                 onClick={() => setOrder((prev) => shuffle(prev))}
@@ -416,11 +476,7 @@ function CharacterQuizRunnerInner({
         )}
       </div>
 
-      {/* The single focused card — docs/33's redesign. No answer-key table:
-          at combined/custom scale (60-700+ words) a table the player can't
-          act on just crowds out the actual interaction, unlike the typing
-          quiz where the table doubles as a live answer key. */}
-      {started && !finished && !paused && currentWord && (
+      {started && !finished && !paused && currentWord && answerFormat === "pinyin" && (
         <div className="mx-auto flex w-full max-w-md flex-col gap-5 rounded-xl border border-border bg-surface p-8 shadow-lg shadow-background/50">
           <div
             role="progressbar"
@@ -435,42 +491,62 @@ function CharacterQuizRunnerInner({
             />
           </div>
           <div className="text-center">
-            <p className="text-lg font-medium">{currentWord.meaning ?? "—"}</p>
+            <p className="text-4xl font-bold">{currentWord.chinese}</p>
             <input
               ref={pinyinInputRef}
               type="text"
               value={typedPinyin}
-              onChange={(e) => setTypedPinyin(e.target.value)}
+              onChange={(e) => handlePinyinChange(e.target.value)}
               autoFocus
-              placeholder="type the pinyin to unlock candidates"
-              className="mx-auto mt-2 w-full max-w-xs rounded border border-border bg-transparent px-3 py-2 text-center outline-none focus:border-border-strong"
+              placeholder="type the pinyin"
+              className="mx-auto mt-4 w-full max-w-xs rounded border border-border bg-transparent px-3 py-2 text-center outline-none focus:border-border-strong"
             />
           </div>
-          {/* The candidate row — a small on-screen IME, per docs/27's "Why
-              not a real text input" section. Only appears once the typed
-              pinyin actually matches, mirroring how a real IME narrows
-              candidates as you type. */}
-          {candidatesUnlocked && (
-            <div className="grid gap-2 sm:grid-cols-2">
-              {currentOptions.map((option) => (
-                <button
-                  key={option.id}
-                  type="button"
-                  disabled={currentAnswer !== undefined}
-                  onClick={() => pick(currentWord.id, option.id)}
-                  className={`rounded-lg border px-4 py-3 text-center text-lg font-medium transition-colors disabled:cursor-not-allowed ${
-                    currentAnswer === option.id
-                      ? "border-current-row bg-current-row-surface"
-                      : currentAnswer !== undefined
-                        ? "border-border opacity-50"
-                        : "border-border hover:border-border-strong hover:bg-surface-raised"
-                  }`}
-                >
-                  {option.chinese}
-                </button>
-              ))}
-            </div>
-          )}
+          <button
+            type="button"
+            onClick={skipCurrent}
+            className={pillClasses("secondary") + " mx-auto flex items-center gap-1.5"}
+          >
+            <SkipForward size={16} />
+            Skip
+          </button>
+        </div>
+      )}
+
+      {started && !finished && !paused && currentWord && answerFormat === "english" && (
+        <div className="mx-auto flex w-full max-w-md flex-col gap-5 rounded-xl border border-border bg-surface p-8 shadow-lg shadow-background/50">
+          <div
+            role="progressbar"
+            aria-valuenow={answeredCount}
+            aria-valuemin={0}
+            aria-valuemax={total}
+            className="h-1 overflow-hidden rounded-full bg-surface-raised"
+          >
+            <div
+              className="h-full rounded-full bg-accent-secondary transition-[width]"
+              style={{ width: `${total > 0 ? (answeredCount / total) * 100 : 0}%` }}
+            />
+          </div>
+          <p className="text-center text-4xl font-bold">{currentWord.chinese}</p>
+          <div className="grid gap-2 sm:grid-cols-2">
+            {currentEnglishOptions.map((option) => (
+              <button
+                key={option.id}
+                type="button"
+                disabled={currentEnglishAnswer !== undefined}
+                onClick={() => pickEnglish(currentWord.id, option.id)}
+                className={`rounded-lg border px-4 py-3 text-left text-sm transition-colors disabled:cursor-not-allowed ${
+                  currentEnglishAnswer === option.id
+                    ? "border-current-row bg-current-row-surface font-medium"
+                    : currentEnglishAnswer !== undefined
+                      ? "border-border opacity-50"
+                      : "border-border hover:border-border-strong hover:bg-surface-raised"
+                }`}
+              >
+                {option.meaning ?? "—"}
+              </button>
+            ))}
+          </div>
         </div>
       )}
     </div>

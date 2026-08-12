@@ -27,9 +27,7 @@ export default async function CustomQuizPage({
 
   const { chapters, mode } = await searchParams;
   const initialMode =
-    mode === "type" || mode === "meaning" || mode === "character" || mode === "study"
-      ? mode
-      : null;
+    mode === "type" || mode === "meaning" || mode === "character" ? mode : null;
   const chapterNumbers = parseChapterNumbers(chapters);
   const backHref = "/custom-quiz";
 

@@ -46,19 +46,13 @@ export default async function CombinedLearnPage({
           href={`/hsk/${levelSlug}/combined/quiz?mode=meaning`}
           className={pillClasses("secondary")}
         >
-          Match meaning
+          English
         </Link>
         <Link
           href={`/hsk/${levelSlug}/combined/quiz?mode=character`}
           className={pillClasses("secondary")}
         >
           Character
-        </Link>
-        <Link
-          href={`/hsk/${levelSlug}/combined/quiz?mode=study`}
-          className={pillClasses("secondary")}
-        >
-          Study
         </Link>
       </div>
 
