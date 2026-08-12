@@ -17,6 +17,7 @@ import {
   getMostRecentAttempt,
 } from "@/lib/queries";
 import { describeQuizKey } from "@/quiz/quiz-key";
+import { siteUrl } from "@/lib/site-url";
 import { pillClasses } from "@/components/pill-classes";
 import { VocabTableGroup } from "@/components/VocabTable";
 
@@ -106,6 +107,29 @@ export default async function LandingPage() {
 
   return (
     <main className="flex flex-col items-center px-4 sm:px-6">
+      {/* Structured data — only rendered on the logged-out marketing view,
+          which is the only version of this page a crawler ever actually
+          sees (a logged-in visitor gets LoggedInHome instead, and every
+          other route redirects an unauthenticated crawler to /login — see
+          robots.ts). WebApplication rather than a generic WebSite/
+          Organization schema since that's what this literally is: a free,
+          browser-based app, no download/install step. */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "WebApplication",
+            name: "HSK Quiz",
+            url: siteUrl,
+            description:
+              "Learn HSK vocabulary with typed pinyin recall, meaning quizzes, and character-only mode — audio and a memory aid for every word, by chapter, combined, or fully custom.",
+            applicationCategory: "EducationalApplication",
+            operatingSystem: "Any (web browser)",
+            offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
+          }),
+        }}
+      />
       {/* Hero — everything above the fold in one section, per
           docs/hold/29-landing-page-trim-plan.md: the stats strip folds in here
           instead of its own bordered section, and there's no second,
