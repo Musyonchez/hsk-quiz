@@ -157,6 +157,8 @@ website/
         friends/requests/route.ts
         friends/requests/[id]/accept/route.ts
         friends/requests/[id]/ignore/route.ts
+        cron/purge-rate-limits/route.ts  # Vercel Cron target (vercel.json), sweeps expired
+                                          # RateLimit rows — CRON_SECRET-gated, see 21-vercel-deploy.md
                                # no vocab API routes — vocab pages read lib/queries.ts
                                # directly from Server Components, see "Accounts and auth" above
     components/               # AppHeader, MobileNav, VocabTable, QuizLinkCard,
@@ -184,6 +186,8 @@ website/
       send-email.ts            # nodemailer + Gmail SMTP, used by auth.ts's password-reset flow
       rate-limit-storage.ts    # Postgres-backed secondaryStorage adapter for better-auth's
                                # rate limiter (durable across serverless cold starts)
+      api-rate-limit.ts        # same RateLimit table/upsert pattern, for this app's own routes
+                               # (/api/attempts) rather than better-auth's endpoints
       require-session.ts      # Server Component guard: redirects to /login if unauthenticated
       queries.ts               # all read queries vocab pages/leaderboard/friends call directly
     quiz/                     # quiz engine: input matching, scoring, timer, mnemonics
@@ -191,6 +195,7 @@ website/
                                # 39-memory-aid-mnemonics-plan.md
   tailwind.config.ts
   next.config.ts
+  vercel.json                 # Vercel Cron schedule for /api/cron/purge-rate-limits
   package.json
 ```
 
@@ -206,6 +211,7 @@ website/
 | `POST /api/friends/requests` | session | send a friend request `{ username }` |
 | `POST /api/friends/requests/:id/accept` | session | accept a pending request |
 | `POST /api/friends/requests/:id/ignore` | session | mark a pending request `ignored` |
+| `GET /api/cron/purge-rate-limits` | `CRON_SECRET` bearer token | deletes expired `RateLimit` rows; triggered by Vercel Cron only, see [45-audit-infra-security.md](45-audit-infra-security.md) §2 |
 
 There is no vocab REST API (an earlier draft of this doc planned `GET /api/levels` and similar
 routes; they were never built) and no `/api/attempts/recent` — the logged-in "/" view's "most

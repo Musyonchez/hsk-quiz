@@ -39,16 +39,21 @@ five parallel audits then re-checked every fix against the real code (not just r
 confirmed all of them genuinely landed, with no regressions and no new issues introduced by the new
 code (`src/lib/api-rate-limit.ts`, `src/quiz/submit-attempt.ts`, `scripts/confirm-write.ts`, the CSP
 header). Items are marked **✅ Fixed** inline below rather than rewritten out of the list, so this
-doc still reads as the original inventory. Still open, by explicit choice (too large/low-value for
-this pass): **1** (test suite), **25** (`RateLimit` purge), and the results-screen/`ToolbarButton`
-half of **20** (the helper-function half of 20 — `shuffle`/`averagePercent` — *was* extracted).
+doc still reads as the original inventory. **1** (test suite) was explicitly decided against —
+not proportionate to a personal-scale app without multi-contributor churn — rather than deferred.
+**25** (`RateLimit` purge) was fixed in a follow-up pass (Vercel Cron). Still open: the
+results-screen/`ToolbarButton` half of **20** (the helper-function half — `shuffle`/
+`averagePercent` — *was* extracted).
 
 ## Prioritized action list (across all five audits)
 
 Ranked by severity first, then by how cheap the fix is — cheap+high-severity first.
 
 ### Blocker
-1. **No automated tests at all** (45 §1). Not something to fully solve in one pass, but even a
+1. **Decided against, not deferred** (second pass, Aug 2026) — weighed against actual usage
+   (personal-scale, single/small-friends audience, no paying users or SLA) rather than pure
+   risk-hygiene, and judged not proportionate to the ongoing cost of writing and maintaining test
+   infra. **No automated tests at all** (45 §1). Not something to fully solve in one pass, but even a
    thin slice — a few Playwright smoke tests over the flows that have actually broken before
    (login/logout, one quiz mode start-to-finish, the mobile drawer) — would catch the next version
    of the bug class this audit exists because of.
@@ -134,8 +139,8 @@ Ranked by severity first, then by how cheap the fix is — cheap+high-severity f
 23. **✅ Fixed** (`/sign-up/email`: 5 per 60s). Registration (`/sign-up/email`) has no custom rate-limit rule, falling back to better-auth's
     generous 100-per-10s default (45 §7).
 24. **✅ Fixed** (`next.config.ts`, prod strips `unsafe-eval`). No `Content-Security-Policy` header (45 §8).
-25. Still open, deliberately (no cron infra, low value at current scale — now written to by two
-    code paths instead of one, see 41 §backend). `RateLimit` table rows are never purged — unbounded growth over a long production lifetime (40
+25. **✅ Fixed** — `/api/cron/purge-rate-limits` + Vercel Cron (`vercel.json`), see 41 §backend.
+    `RateLimit` table rows are never purged — unbounded growth over a long production lifetime (40
     §backend, schema section).
 26. Numbering gaps in `docs/`: no `docs/31`, and `docs/34` (see #15 above) — informational, only
     actually confusing where it manifests as the dangling references (43, "Numbering gaps").

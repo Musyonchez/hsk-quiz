@@ -21,12 +21,13 @@ No drift — all 6 migrations, traced forward, reconstruct the current `schema.p
   table scan on every friends-page/`/api/friends` load. Fix: `@@index([friendId, status])`. Low
   real-world impact today given table size, but it's the one genuinely unindexed
   frequently-queried column.
-- **Still open, deliberately held** (low, no cron infra). **`RateLimit` rows are never purged**. No index on `expiresAt`, nothing deletes expired
+- **✅ Fixed** — `GET /api/cron/purge-rate-limits`, triggered daily by Vercel Cron
+  (`vercel.json`), `CRON_SECRET`-gated, deletes rows where `expiresAt < now()` (correctly leaves
+  permanent `expiresAt: null` rows alone). **`RateLimit` rows are never purged**. No index on `expiresAt`, nothing deletes expired
   rows outside the one key being read/incremented. Unbounded growth over a long production
-  lifetime — not a correctness bug, just worth a cleanup job eventually. Now written to by two
-  code paths (`rate-limit-storage.ts` for better-auth, plus the new `api-rate-limit.ts` for this
-  app's own routes) instead of one, so the surface is marginally larger than when this was written
-  — still low severity, re-confirmed on re-audit.
+  lifetime — not a correctness bug, just worth a cleanup job eventually. Written to by two code
+  paths (`rate-limit-storage.ts` for better-auth, plus `api-rate-limit.ts` for this app's own
+  routes) — both now covered by the same purge sweep.
 - `Word`'s `@@unique([chapterId, chinese, source])` being nullable on `chapterId` is intentional
   (combined-only words have no chapterId, multiple can share `chinese`+`source: "combined"` across
   levels) — confirmed not an oversight, not flagged as a finding.
