@@ -21,16 +21,17 @@ function shuffle<T>(items: T[]): T[] {
   return copy;
 }
 
-// Chapter-scale matching board. Two variants share this exact mechanic:
-//   - "meaning" (default, docs/hold/19-meaning-quiz-mode-plan.md): left tiles are
-//     pinyin+character, right tiles are English meanings.
-//   - "character" (docs/hold/27-character-quiz-plan.md): left tiles are English
-//     meanings, right tiles are Chinese characters (pinyin withheld — see
-//     docs/27's chapter-scale section for why: showing it would give away
-//     the exact recall this mode exists to test).
-// Either way it's a closed N-to-N pool, not independently-sampled options
-// like ChoiceQuizRunner/CharacterQuizRunner — click one tile in each column
-// to make a guess pair. Both tiles clear from the board immediately on any
+// Chapter-scale matching board (docs/hold/19-meaning-quiz-mode-plan.md): left
+// tiles are pinyin+character, right tiles are English meanings. Used to have
+// a second "character" variant (docs/hold/27-character-quiz-plan.md, English
+// left / Chinese character right, pinyin withheld) — removed as dead code
+// once docs/38's Character mode rebuild replaced its only call site with
+// CharacterIsland's own browse-then-quiz flow (docs/42-audit-frontend-
+// components.md §1 flagged the variant as unreachable; nothing ever passed
+// it after that rebuild).
+// A closed N-to-N pool, not independently-sampled options like
+// ChoiceQuizRunner/CharacterQuizRunner — click one tile in each column to
+// make a guess pair. Both tiles clear from the board immediately on any
 // guess, right or wrong, with no color/feedback either way (see docs/19):
 // if only *correct* pairs disappeared, that disappearing-or-not would
 // itself be the exact reveal this mode exists to avoid. A real consequence
@@ -43,7 +44,6 @@ export function MatchQuizRunner({
   quizKey,
   trackAttempt = true,
   allowDrillMissed = false,
-  variant = "meaning",
   nextQuiz = null,
   anotherQuiz,
   durationSeconds,
@@ -53,7 +53,6 @@ export function MatchQuizRunner({
   quizKey?: string;
   trackAttempt?: boolean;
   allowDrillMissed?: boolean;
-  variant?: "meaning" | "character";
   nextQuiz?: QuizNavTarget | null;
   anotherQuiz?: QuizNavTarget;
   durationSeconds?: number;
@@ -78,7 +77,6 @@ export function MatchQuizRunner({
       quizKey={quizKey}
       trackAttempt={activeTrackAttempt}
       allowDrillMissed={allowDrillMissed}
-      variant={variant}
       nextQuiz={nextQuiz}
       anotherQuiz={anotherQuiz}
       durationSeconds={activeDurationSeconds}
@@ -94,7 +92,6 @@ function MatchQuizRunnerInner({
   quizKey,
   trackAttempt,
   allowDrillMissed,
-  variant,
   nextQuiz,
   anotherQuiz,
   durationSeconds,
@@ -106,7 +103,6 @@ function MatchQuizRunnerInner({
   quizKey?: string;
   trackAttempt: boolean;
   allowDrillMissed: boolean;
-  variant: "meaning" | "character";
   nextQuiz: QuizNavTarget | null;
   anotherQuiz?: QuizNavTarget;
   durationSeconds?: number;
@@ -357,9 +353,7 @@ function MatchQuizRunnerInner({
           </div>
         ) : (
           <p className="text-center text-sm text-muted-foreground">
-            {variant === "character"
-              ? "Click a meaning, then click its matching character."
-              : "Click a word, then click its meaning."}
+            Click a word, then click its meaning.
           </p>
         )}
       </div>
@@ -389,14 +383,8 @@ function MatchQuizRunnerInner({
                       : "border-border hover:border-border-strong hover:bg-surface-raised"
                   }`}
                 >
-                  {variant === "character" ? (
-                    (leftWord.meaning ?? "—")
-                  ) : (
-                    <>
-                      <span className="font-medium">{leftWord.chinese}</span>{" "}
-                      <span className="text-muted-foreground">{leftWord.pinyin}</span>
-                    </>
-                  )}
+                  <span className="font-medium">{leftWord.chinese}</span>{" "}
+                  <span className="text-muted-foreground">{leftWord.pinyin}</span>
                 </button>
                 <button
                   type="button"
@@ -407,9 +395,7 @@ function MatchQuizRunnerInner({
                       : "border-border hover:border-border-strong hover:bg-surface-raised"
                   }`}
                 >
-                  {/* Character variant deliberately omits pinyin here — see
-                      docs/27's chapter-scale section for why. */}
-                  {variant === "character" ? rightWord.chinese : (rightWord.meaning ?? "—")}
+                  {rightWord.meaning ?? "—"}
                 </button>
               </Fragment>
             );

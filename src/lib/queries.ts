@@ -126,12 +126,6 @@ export function getChapterDialogLines(slug: string, chapterNumber: number) {
   });
 }
 
-export function getChapterDialogLineCount(slug: string, chapterNumber: number) {
-  return prisma.dialogLine.count({
-    where: { chapter: { number: chapterNumber, level: { slug } } },
-  });
-}
-
 export function getCombinedWords(slug: string) {
   return prisma.word.findMany({
     where: { level: { slug }, source: "combined" },
