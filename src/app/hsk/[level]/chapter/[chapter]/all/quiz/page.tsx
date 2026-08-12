@@ -80,7 +80,7 @@ export default async function ChapterAllWordsQuizPage({
         meaningQuizKey={meaningQuizKey}
         characterQuizKey={characterQuizKey}
         meaningVariant="choice"
-        characterVariant="choice"
+        characterMode
         allowDrillMissed
         durationSeconds={600}
         initialMode={initialMode}

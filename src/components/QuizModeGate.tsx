@@ -14,15 +14,19 @@ import { CharacterIsland } from "@/components/CharacterIsland";
 // before any words are shown, then the matching runner takes over. There is
 // no separate "Study" mode: the word-browse grid/popup that used to be its
 // own button is folded entirely into Character mode's own flow (see
-// CharacterIsland). `meaningVariant`/`characterVariant` each pick which
-// scale-specific component fits the quiz's scale: chapters get a click-to-
-// pair matching board (MatchQuizRunner) for English mode, combined/custom
-// quizzes get the one-word-at-a-time flow (ChoiceQuizRunner) — see docs/19
-// for why those differ. Character mode doesn't have a `characterVariant`
-// match option (that only ever applied to the old fixed candidate-row
-// mechanic) — `characterQuizKey` alone gates whether the Character button
-// shows at all, so pages can opt in incrementally without breaking callers
-// that haven't wired Character mode yet.
+// CharacterIsland). `meaningVariant` picks which scale-specific component
+// fits English mode's scale: chapters get a click-to-pair matching board
+// (MatchQuizRunner), combined/custom quizzes get the one-word-at-a-time flow
+// (ChoiceQuizRunner) — see docs/19 for why those differ. Character mode has
+// no such split — every scale, chapter included, gets the same CharacterIsland
+// browse-then-quiz flow (the old chapter-scale click-to-pair board for
+// Character is gone; direct feedback after shipping docs/38 was that the new
+// flow should replace it everywhere, not just combined/custom/all-words) —
+// `characterMode` alone gates whether the Character button shows at all
+// (not `characterQuizKey` — the cross-level custom-quiz pages deliberately
+// pass no quiz keys at all, since `trackAttempt` is false there), so pages
+// can opt in incrementally without breaking callers that haven't wired
+// Character mode yet.
 export function QuizModeGate({
   words,
   backHref,
@@ -32,7 +36,7 @@ export function QuizModeGate({
   trackAttempt = true,
   allowDrillMissed = false,
   meaningVariant,
-  characterVariant,
+  characterMode = false,
   nextQuiz = null,
   anotherQuiz,
   durationSeconds,
@@ -46,7 +50,7 @@ export function QuizModeGate({
   trackAttempt?: boolean;
   allowDrillMissed?: boolean;
   meaningVariant: "choice" | "match";
-  characterVariant?: "choice" | "match";
+  characterMode?: boolean;
   nextQuiz?: QuizNavTarget | null;
   anotherQuiz?: QuizNavTarget;
   durationSeconds?: number;
@@ -58,7 +62,7 @@ export function QuizModeGate({
   initialMode?: "type" | "meaning" | "character" | null;
 }) {
   const [mode, setMode] = useState<"type" | "meaning" | "character" | null>(initialMode);
-  const characterModeAvailable = characterVariant !== undefined;
+  const characterModeAvailable = characterMode;
 
   // Play Next/Play Another should continue in the same mode the player just
   // used, not dump them back on the mode picker (docs/hold/22-audit-pass-4.md) —
@@ -120,23 +124,7 @@ export function QuizModeGate({
   }
 
   if (mode === "character") {
-    // The chapter-scale click-to-pair matching board (MatchQuizRunner's
-    // "character" variant) is a different, pre-existing quiz format outside
-    // docs/38's scope — untouched here. Every other scale gets the new
-    // browse-then-quiz Character island.
-    return characterVariant === "match" ? (
-      <MatchQuizRunner
-        words={words}
-        backHref={backHref}
-        quizKey={characterQuizKey}
-        trackAttempt={trackAttempt}
-        allowDrillMissed={allowDrillMissed}
-        variant="character"
-        nextQuiz={nextQuizWithMode}
-        anotherQuiz={anotherQuizWithMode}
-        durationSeconds={durationSeconds}
-      />
-    ) : (
+    return (
       <CharacterIsland
         words={words}
         backHref={backHref}

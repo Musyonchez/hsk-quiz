@@ -63,7 +63,7 @@ export default async function CombinedQuizPage({
         meaningQuizKey={meaningQuizKey}
         characterQuizKey={characterQuizKey}
         meaningVariant="choice"
-        characterVariant="choice"
+        characterMode
         allowDrillMissed
         nextQuiz={next}
         anotherQuiz={another}

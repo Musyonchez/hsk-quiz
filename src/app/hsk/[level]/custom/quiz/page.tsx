@@ -75,7 +75,7 @@ export default async function CustomQuizPage({
         backHref={backHref}
         trackAttempt={false}
         meaningVariant="choice"
-        characterVariant="choice"
+        characterMode
         allowDrillMissed
         initialMode={initialMode}
       />

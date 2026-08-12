@@ -66,7 +66,7 @@ export default async function ChapterQuizPage({
         meaningQuizKey={meaningQuizKey}
         characterQuizKey={characterQuizKey}
         meaningVariant="match"
-        characterVariant="match"
+        characterMode
         allowDrillMissed
         nextQuiz={next}
         anotherQuiz={another}

@@ -105,7 +105,7 @@ export default async function CrossLevelCustomQuizPage({
         backHref={backHref}
         trackAttempt={false}
         meaningVariant="choice"
-        characterVariant="choice"
+        characterMode
         allowDrillMissed
         initialMode={initialMode}
       />
