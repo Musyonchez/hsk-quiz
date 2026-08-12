@@ -22,6 +22,7 @@ import { headers } from "next/headers";
 import { prisma } from "@/lib/db";
 import { sendEmail } from "@/lib/send-email";
 import { rateLimitStorage } from "@/lib/rate-limit-storage";
+import { siteUrl } from "@/lib/site-url";
 
 // Matches the old USERNAME_PATTERN in the register route this replaces —
 // letters, numbers, underscore, hyphen, 3-20 chars.
@@ -33,14 +34,11 @@ const USERNAME_PATTERN = /^[a-zA-Z0-9_-]{3,20}$/;
 // baseURL can actively break those, not just warn. On Production, though,
 // VERCEL_URL is the unique *deployment* hash domain, not the stable
 // assigned domain (hsk-quiz-xi.vercel.app) users actually visit — using it
-// there would mismatch the opposite way. Same VERCEL_ENV-gating pattern as
-// scripts/maybe-migrate.mjs: stable BETTER_AUTH_URL in production,
-// deployment-specific VERCEL_URL for Preview, BETTER_AUTH_URL again as the
-// local-dev fallback where VERCEL_URL is unset.
-const baseURL =
-  process.env.VERCEL_ENV === "production" || !process.env.VERCEL_URL
-    ? process.env.BETTER_AUTH_URL
-    : `https://${process.env.VERCEL_URL}`;
+// there would mismatch the opposite way. This exact VERCEL_ENV-gating
+// pattern (also used by scripts/maybe-migrate.mjs) is shared via
+// src/lib/site-url.ts, since the metadata/sitemap/robots.ts SEO work needs
+// the identical logic.
+const baseURL = siteUrl;
 
 export const auth = betterAuth({
   baseURL,
