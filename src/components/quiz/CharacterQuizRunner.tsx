@@ -13,7 +13,7 @@ import type { QuizNavTarget } from "@/quiz/quiz-navigation";
 import type { QuizWord } from "@/quiz/types";
 import { pillClasses } from "@/components/pill-classes";
 import { ToolbarButton } from "@/components/ToolbarButton";
-import { QuizResultsScreen } from "@/components/QuizResultsScreen";
+import { QuizResultsScreen } from "@/components/quiz/QuizResultsScreen";
 import { SpeakerButton } from "@/components/SpeakerButton";
 
 export type { QuizWord };

@@ -7,7 +7,7 @@
 // rather than a dead/broken-looking button.
 import { useEffect, useState } from "react";
 import { Volume2 } from "lucide-react";
-import { isPlaying, onSharedAudioEnded, playAudio } from "@/lib/audio-player";
+import { isPlaying, onSharedAudioEnded, playAudio } from "@/quiz/audio-player";
 import { wordsAudio } from "@/quiz/audio/words";
 import { sentencesAudio } from "@/quiz/audio/sentences";
 

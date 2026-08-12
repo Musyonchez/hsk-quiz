@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { pillClasses } from "./pill-classes";
+import { pillClasses } from "@/components/pill-classes";
 
 export function AddFriendForm() {
   const router = useRouter();

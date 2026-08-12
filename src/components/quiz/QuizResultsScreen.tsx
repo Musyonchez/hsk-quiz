@@ -9,8 +9,8 @@ import { ArrowRight, Shuffle } from "lucide-react";
 import type { QuizNavTarget } from "@/quiz/quiz-navigation";
 import type { QuizWord } from "@/quiz/types";
 import { pillClasses } from "@/components/pill-classes";
-import { QuizLinkCard } from "@/components/QuizLinkCard";
-import { VocabTableGroup } from "@/components/VocabTable";
+import { QuizLinkCard } from "@/components/quiz/QuizLinkCard";
+import { VocabTableGroup } from "@/components/vocab/VocabTable";
 
 export function QuizResultsScreen({
   heading,

@@ -1,12 +1,12 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { MessageSquare } from "lucide-react";
-import { requireSession } from "@/lib/require-session";
+import { requireSession } from "@/lib/auth/require-session";
 import { getChapterDialogWordCount, getChapterWithWords } from "@/lib/queries";
 import { isLevelSlug } from "@/lib/hsk-level";
-import { VocabTable } from "@/components/VocabTable";
+import { VocabTable } from "@/components/vocab/VocabTable";
 import { pillClasses } from "@/components/pill-classes";
-import { QuizLinkCard } from "@/components/QuizLinkCard";
+import { QuizLinkCard } from "@/components/quiz/QuizLinkCard";
 
 export default async function ChapterLearnPage({
   params,

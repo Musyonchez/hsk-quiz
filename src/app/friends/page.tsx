@@ -1,9 +1,9 @@
 import { Users } from "lucide-react";
-import { requireSession } from "@/lib/require-session";
+import { requireSession } from "@/lib/auth/require-session";
 import { getFriendsData } from "@/lib/queries";
-import { UserBadge } from "@/components/UserBadge";
-import { FriendRequestRow } from "@/components/FriendRequestRow";
-import { AddFriendForm } from "@/components/AddFriendForm";
+import { UserBadge } from "@/components/friends/UserBadge";
+import { FriendRequestRow } from "@/components/friends/FriendRequestRow";
+import { AddFriendForm } from "@/components/friends/AddFriendForm";
 
 export default async function FriendsPage() {
   const user = await requireSession();

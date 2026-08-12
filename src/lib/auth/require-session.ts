@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
-import { getSessionUser } from "@/lib/auth";
-import type { SessionUser } from "@/lib/auth";
+import { getSessionUser } from "@/lib/auth/auth";
+import type { SessionUser } from "@/lib/auth/auth";
 
 export async function requireSession(): Promise<SessionUser> {
   const user = await getSessionUser();

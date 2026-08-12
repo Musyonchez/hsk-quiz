@@ -1,9 +1,9 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
-import { requireSession } from "@/lib/require-session";
+import { requireSession } from "@/lib/auth/require-session";
 import { getChapterDialogLines, getChapterWithWords } from "@/lib/queries";
 import { isLevelSlug } from "@/lib/hsk-level";
-import { AllWordsTabs } from "@/components/AllWordsTabs";
+import { AllWordsTabs } from "@/components/vocab/AllWordsTabs";
 import { SpeakerButton } from "@/components/SpeakerButton";
 
 // docs/hold/25-chapter-all-words-plan.md's addendum: the real "Dialog" tab — the

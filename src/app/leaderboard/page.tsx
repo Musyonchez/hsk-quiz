@@ -1,11 +1,11 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Trophy } from "lucide-react";
-import { requireSession } from "@/lib/require-session";
+import { requireSession } from "@/lib/auth/require-session";
 import { getLevelWithChapters, getLevelsOverview } from "@/lib/queries";
 import { isLevelSlug } from "@/lib/hsk-level";
 import { quizKeyFor } from "@/quiz/quiz-key";
-import { QuizLinkCard } from "@/components/QuizLinkCard";
+import { QuizLinkCard } from "@/components/quiz/QuizLinkCard";
 
 export default async function LeaderboardPickerPage({
   searchParams,
