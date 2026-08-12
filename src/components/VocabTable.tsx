@@ -1,3 +1,5 @@
+import { SpeakerButton } from "@/components/SpeakerButton";
+
 export type VocabWord = {
   id: number;
   chinese: string;
@@ -72,7 +74,12 @@ export function VocabTableGroup({
         <tbody>
           {words.map((word) => (
             <tr key={word.id} className="border-t border-border">
-              <td className="px-3 py-2 font-medium">{word.chinese}</td>
+              <td className="px-3 py-2 font-medium">
+                <span className="inline-flex items-center gap-1.5">
+                  {word.chinese}
+                  <SpeakerButton text={word.chinese} kind="word" />
+                </span>
+              </td>
               <td className="px-3 py-2 text-muted-foreground">{word.pinyin}</td>
               <td className="px-3 py-2">{word.meaning ?? "—"}</td>
             </tr>
