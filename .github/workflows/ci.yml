@@ -5,6 +5,14 @@ name: CI
 # Deliberately doesn't run `next build` here: that would need a real
 # DATABASE_URL and would just be a second copy of what Vercel's own preview
 # deploy already does for every PR.
+#
+# `npm audit` added per docs/45-audit-infra-security.md §4 — there was no
+# dependency-vulnerability scanning at all before this, so an update pulling
+# in a new high/critical CVE (like the postcss/sharp ones a routine `next`
+# bump surfaced once this was actually checked) would ship silently.
+# --audit-level=high: low/moderate advisories are common noise in a
+# personal-scale app's transitive tree and would make this flaky; high+ is
+# the bar worth failing a PR over.
 on:
   pull_request:
   push:
@@ -28,3 +36,5 @@ jobs:
       - run: npx tsc --noEmit
 
       - run: npx eslint .
+
+      - run: npm audit --audit-level=high

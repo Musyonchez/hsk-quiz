@@ -117,6 +117,12 @@ export const auth = betterAuth({
       // same limit on both paths.
       "/sign-in/email": { window: 10, max: 3 },
       "/forget-password": { window: 60, max: 3 },
+      // Registration had no rule at all, falling back to better-auth's
+      // generous global default (100 per 10s) — effectively no throttling
+      // on account-creation spam/automation (docs/45-audit-infra-security.md
+      // §7). 5 per 60s is loose enough for legitimate use (a household on
+      // one IP registering a few accounts) while actually capping a script.
+      "/sign-up/email": { window: 60, max: 5 },
     },
   },
   plugins: [
