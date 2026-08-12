@@ -5,6 +5,11 @@ Part of the [project audit](40-project-audit-overview.md) (Aug 2026). Scope: `sr
 
 ## 1. Confirmed dead code
 
+**✅ Both fixed** — `character-choices.ts` deleted, `MatchQuizRunner`'s `variant` prop (and both
+`"character"`-branch conditionals plus the pre-start text) removed entirely from both
+`MatchQuizRunner` and `MatchQuizRunnerInner`; re-confirmed via grep on re-audit that no importer/
+caller of either survives.
+
 - **`src/quiz/character-choices.ts` — the whole file (~78 lines) is dead.** Grepping for
   `buildCharacterChoices`/`character-choices` across the repo returns only the file's own internal
   self-references — no importers anywhere. Post-docs/38, `CharacterQuizRunner` uses `buildChoices`
@@ -20,6 +25,14 @@ Part of the [project audit](40-project-audit-overview.md) (Aug 2026). Scope: `sr
   trap that invites someone to "fix" a branch that can never run.
 
 ## 2. Runner-quartet duplication
+
+**Partially fixed.** `shuffle`/`averagePercent` and the entire attempt-submission effect are now
+extracted into `src/quiz/submit-attempt.ts`'s `submitAttempt()`, called identically by all four
+runners (also closes §3 below in the same change). **`ToolbarButton` and the results-screen JSX are
+still duplicated across all four files, unchanged** — deliberately held over as its own dedicated
+refactor pass rather than folded into this round's fixes; re-confirmed still present and still the
+stronger case for extraction on re-audit (file sizes are, if anything, slightly larger now that each
+runner independently gained the same `saveFailed` state + message line).
 
 Confirmed: `QuizRunner.tsx`, `ChoiceQuizRunner.tsx`, `CharacterQuizRunner.tsx`,
 `MatchQuizRunner.tsx` each independently redefine `shuffle<T>`, `averagePercent`, and a local
@@ -45,6 +58,12 @@ across all four files too.
 
 ## 3. Silent failure on attempt/leaderboard fetch (one bug, four copies)
 
+**✅ Fixed** — `submitAttempt()` now checks `postRes.ok` before chaining into best/leaderboard
+fetches and returns a `saveFailed` flag; all four runners show "Your score couldn't be saved — check
+your connection and try Replay." on the results screen when true. Re-confirmed placement/wording
+consistent and correctly scoped (silent for untracked Drill-missed reruns) across all four on
+re-audit.
+
 `QuizRunner.tsx` and the identical pattern in the other three runners: the submission effect does
 `fetch("/api/attempts", {POST...}).then(() => Promise.all([...]))` without ever checking `res.ok`
 on the POST before chaining into the best/leaderboard fetches. The trailing `.catch(err =>
@@ -58,6 +77,8 @@ fix all four at once).
 
 ## 4. Unhandled fetch rejection in `AddFriendForm` (inconsistent with its sibling)
 
+**✅ Fixed** — now wrapped in `try/catch` matching `FriendRequestRow.tsx`'s pattern.
+
 `AddFriendForm.tsx` has no `try/catch` around its `fetch` call. Compare `FriendRequestRow.tsx`,
 which wraps the same kind of call in `try { res = await fetch(...) } catch { ... }` specifically to
 handle network failures. If `fetch` throws in `AddFriendForm` (offline, DNS failure, CORS,
@@ -66,6 +87,10 @@ indefinitely, no error message, no retry short of a page reload. Real, user-reac
 and the fix pattern already exists two files away. Medium severity.
 
 ## 5. Accessibility: no focus management in two modal/popup components
+
+**✅ Both fixed** — both components now focus into the dialog on open and restore focus to the
+trigger on close; `LogoutButton` additionally gained Escape-to-close (it had none before).
+Re-confirmed on re-audit.
 
 - **`CharacterBrowse.tsx`'s character-detail popup** (`role="dialog" aria-modal="true"`) — no focus
   moves into the dialog on open (no `autoFocus`, no ref-focus in an effect keyed on the open

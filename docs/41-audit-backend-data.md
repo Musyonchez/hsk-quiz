@@ -14,16 +14,19 @@ route, no crash-on-error route, no injection risk found. Findings below are most
 
 No drift — all 6 migrations, traced forward, reconstruct the current `schema.prisma` exactly.
 
-- **`Friendship` has no index serving `friendId`-only lookups** (medium). Only index is the unique
+- **✅ Fixed** — `@@index([friendId, status])` added, migration applied live. **`Friendship` has no index serving `friendId`-only lookups** (medium). Only index is the unique
   composite `@@unique([userId, friendId])`, which Postgres can use for lookups on `userId` alone
   (leftmost-prefix) but not `friendId` alone. `getFriendsData` runs two of its four queries filtered
   by `friendId` only (`where: { friendId: userId, status: "accepted"/"pending" }`), forcing a full
   table scan on every friends-page/`/api/friends` load. Fix: `@@index([friendId, status])`. Low
   real-world impact today given table size, but it's the one genuinely unindexed
   frequently-queried column.
-- **`RateLimit` rows are never purged** (low). No index on `expiresAt`, nothing deletes expired
+- **Still open, deliberately held** (low, no cron infra). **`RateLimit` rows are never purged**. No index on `expiresAt`, nothing deletes expired
   rows outside the one key being read/incremented. Unbounded growth over a long production
-  lifetime — not a correctness bug, just worth a cleanup job eventually.
+  lifetime — not a correctness bug, just worth a cleanup job eventually. Now written to by two
+  code paths (`rate-limit-storage.ts` for better-auth, plus the new `api-rate-limit.ts` for this
+  app's own routes) instead of one, so the surface is marginally larger than when this was written
+  — still low severity, re-confirmed on re-audit.
 - `Word`'s `@@unique([chapterId, chinese, source])` being nullable on `chapterId` is intentional
   (combined-only words have no chapterId, multiple can share `chinese`+`source: "combined"` across
   levels) — confirmed not an oversight, not flagged as a finding.
@@ -36,7 +39,7 @@ Clean overall — no N+1 patterns (the `Promise.all` fan-outs are deliberate sma
 batches, not per-row loops); source-scoping filters (`chapter`/`dialog`/`combined`) applied
 consistently everywhere a word set is fetched.
 
-- **`getChapterDialogLineCount` is dead code** (low) — exported, zero call sites anywhere in
+- **✅ Fixed** — removed. **`getChapterDialogLineCount` is dead code** (low) — exported, zero call sites anywhere in
   `src/app` (its sibling `getChapterDialogWordCount` *is* used, at
   `src/app/hsk/[level]/chapter/[chapter]/page.tsx:27`). Either wire it up or delete it.
 - `getLeaderboard` dedupes to best-attempt-per-user in application code after fetching *all*
@@ -55,7 +58,10 @@ Next's own 500 on rejection — acceptable, not silent).
   to accept the same request could both pass the `status !== "pending"` check before either write
   commits. Outcome is still `status: "accepted"` either way — idempotent in effect, not
   exploitable for anything beyond a harmless double-write.
-- **No rate limiting on this app's own mutating routes** (medium for `/api/attempts`). Only
+- **✅ Fixed for `/api/attempts`** — `src/lib/api-rate-limit.ts`'s `checkRateLimit`, a per-user
+  20/60s cap, keyed off the authenticated session (not client input), using the same atomic
+  `INSERT ... ON CONFLICT` upsert pattern as `rate-limit-storage.ts` — re-verified race-free on
+  re-audit. **No rate limiting on this app's own mutating routes** (medium for `/api/attempts`). Only
   better-auth's own endpoints (sign-in, forgot-password) are rate-limited via
   `src/lib/auth.ts:99-112`. `/api/attempts` (POST) accepts client-supplied `score`/`total`/
   `quizKey`, checked only for internal consistency (`score <= total`, valid quizKey pattern), never
@@ -63,7 +69,8 @@ Next's own 500 on rejection — acceptable, not silent).
   leaderboard rows or pad another quizKey's leaderboard indefinitely, with no rate limit and no
   per-user-per-quizKey cooldown. Small blast radius (personal/friends app), but real and
   exploitable given the leaderboard is a stated feature. `/api/friends/requests` spam is lower
-  severity (self-limiting — duplicate requests are already no-ops).
+  severity (self-limiting — duplicate requests are already no-ops) and was **not** given a rate
+  limit this round — still open, same low-severity reasoning as before.
 - **`parseQuizKey` only validates string *format*, not that the level/chapter it names actually
   exists** (low) — `hsk9-chapter99` would pass the regex. Since there's no FK to Level/Chapter,
   this just means orphaned/junk quizKeys can accumulate in `Attempt`, not a security issue.
@@ -75,7 +82,8 @@ single atomic `INSERT ... ON CONFLICT DO UPDATE` with every dynamic value passed
 template parameterization, not interpolated into the SQL string. No injection risk, correctly
 closes the race its own comment describes.
 
-- **`sendEmail` has no try/catch, and its only caller fire-and-forgets it** (low, but see
+- **✅ Fixed** — `.catch(err => console.error(...))` added at the `sendResetPassword` call site.
+  **`sendEmail` has no try/catch, and its only caller fire-and-forgets it** (low, but see
   [45-audit-infra-security.md](45-audit-infra-security.md) §6 for the fuller operational picture)
   — `sendResetPassword` deliberately calls `void sendEmail(...)` to avoid a timing side-channel
   (documented, intentional). But a rejected promise from a `void`-called async function is an

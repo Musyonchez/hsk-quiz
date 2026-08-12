@@ -199,7 +199,7 @@ website/
 | Method & path | Auth? | Returns |
 |---|---|---|
 | `/api/auth/[...all]` | varies | better-auth's own catch-all handler — sign-in/sign-up/sign-out, forget/reset-password, change-password, session lookup, all live under this one route as of docs/36. Not a hand-maintained table of sub-paths here; see `better-auth`'s own docs for the exact endpoint list it exposes. |
-| `POST /api/attempts` | session | records a finished quiz attempt `{ quizKey, score, total, durationSeconds }` — **no rate limit on this route**, see [45-audit-infra-security.md](45-audit-infra-security.md) |
+| `POST /api/attempts` | session | records a finished quiz attempt `{ quizKey, score, total, durationSeconds }` — rate-limited per-user (`src/lib/api-rate-limit.ts`, 20/60s), see [45-audit-infra-security.md](45-audit-infra-security.md) §4 |
 | `GET /api/attempts/best?quizKey=` | session | current user's best score for one quiz, for the results page |
 | `GET /api/leaderboard?quizKey=&scope=global\|friends` | session | ranked `[{ displayName, score, total, createdAt }]` |
 | `GET /api/friends` | session | accepted friends + pending incoming/outgoing requests |
