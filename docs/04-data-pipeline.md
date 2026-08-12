@@ -5,19 +5,21 @@ Goal: turn the in-repo vocabulary data files into rows in the database described
 something the server parses live on each request — the frontend never sees these files at all,
 only the database (via the API).
 
-Every level's word list — chapter-scoped and combined — lives entirely inside `website/` as
+Every level's word list — chapter-scoped and combined — lives entirely inside this repo as
 plain TypeScript data (`src/lib/extract/hsk{N}-chapters-data.ts` and
 `hsk{N}-combined-data.ts`). There is no PDF or markdown parsing at seed time anymore, and no
-path outside `website/` is ever read — the repo is self-contained. See
+path outside the repo is ever read — it's self-contained. (✅ docs/50 full-sweep audit §20: this
+used to say "website/" — that was the app's folder name back when it lived nested inside a larger
+monorepo; it's the repo root now, so the `website/` prefix below is dropped.) See
 [02-data-sources.md](02-data-sources.md) for where each level's data originally came from
 before being baked into these files.
 
 ## Where extraction logic lives vs. where it's used
 
-- `website/src/lib/extract/extract-combined.ts` and `.../extract-chapters.ts` — pure functions
+- `src/lib/extract/extract-combined.ts` and `.../extract-chapters.ts` — pure functions
   that pick the right in-repo data file per level slug and return plain JS objects
   (`{ chinese, pinyin, ... }[]`). No database code in here.
-- `website/prisma/seed.ts` — calls those extraction functions and writes the results via the
+- `prisma/seed.ts` — calls those extraction functions and writes the results via the
   Prisma client into `Level` / `Chapter` / `Word` / `GrammarPattern` rows. This is the only
   place that talks to the database during seeding.
 

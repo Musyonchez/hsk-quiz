@@ -1,5 +1,12 @@
 # Audit: docs consistency
 
+✅ **All findings below fixed** (docs/50 full-sweep audit, second pass) — unlike its four sibling
+audits (41/42/44/45), this doc never got inline "✅ Fixed" annotations even after docs/40's status
+update said everything but #1 was resolved, so a reader opening it directly would wrongly believe
+these problems still exist. Every item below has since been corrected in place in the doc it names
+— confirmed by re-reading each one directly, not just re-reading this list. Kept here (rather than
+archived to `docs/hold/`) as the historical record of what was wrong and when it got fixed.
+
 Part of the [project audit](40-project-audit-overview.md) (Aug 2026). Scope: every file under
 `docs/*.md` (active docs — `docs/hold/` only as needed for cross-reference), `README.md`,
 `CLAUDE.md`, `AGENTS.md`, all cross-checked against the actual current code, not just read in

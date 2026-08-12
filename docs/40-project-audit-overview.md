@@ -124,20 +124,25 @@ Ranked by severity first, then by how cheap the fix is — cheap+high-severity f
     rebuild) and `MatchQuizRunner`'s `variant="character"` branch (unreachable — nothing ever
     passes it) (42 §1).
 19. **✅ Fixed** (removed). `getChapterDialogLineCount` in `queries.ts` is exported but has zero callers (40 §backend).
-20. **✅ Fixed** — see [46-quiz-runner-duplication-refactor.md](46-quiz-runner-duplication-refactor.md).
-    `ToolbarButton` extracted to `src/components/ToolbarButton.tsx` (widened to support all three
-    variants `QuizRunner`'s Hard-mode toggle needs), the results-screen JSX extracted to
-    `src/components/QuizResultsScreen.tsx`, and `shuffle` (missed in the earlier pass) extracted to
-    `src/quiz/shuffle.ts`. `shuffle`/`averagePercent`/`ToolbarButton`/the attempt-submission effect/the results-screen
-    JSX are all copy-pasted near-verbatim across the four quiz runners — the helpers are
-    low-risk duplication, but the results-screen JSX and submission effect encode real per-mode
-    scoring semantics and are a much stronger case for extraction (42 §2).
+20. **✅ Fixed** — see [46-quiz-runner-duplication-refactor.md](46-quiz-runner-duplication-refactor.md)
+    and [50-full-sweep-audit-2026-08.md](50-full-sweep-audit-2026-08.md) §6-7 (the second pass this
+    finding's own text called for). `ToolbarButton` extracted to `src/components/ToolbarButton.tsx`
+    (widened to support all three variants `QuizRunner`'s Hard-mode toggle needs), the
+    results-screen JSX extracted to `src/components/quiz/QuizResultsScreen.tsx`, `shuffle` extracted
+    to `src/quiz/shuffle.ts`, and — the part originally left open below — the entire replay/
+    lifecycle wrapper plus the attempt-submission/stats-default/countdown-timer effects extracted to
+    `src/quiz/use-quiz-run-lifecycle.ts`, `src/quiz/use-quiz-attempt-submission.ts`, and
+    `src/quiz/use-quiz-countdown.ts`. All four quiz runners now share one implementation of each.
 21. Still open, deliberately (low severity, unreachable today). A handful of latent `NaN`-on-empty-word-list landmines in the runners' `goTo()` — not reachable
     today (every caller guards `words.length === 0` upstream) but worth a defensive guard for the
     next caller that doesn't (44 §"Edge cases" 1-2).
-22. Still open, deliberately (each intentional per its own code comment, re-confirmed on re-audit). Mode inconsistencies a player would read as bugs even though each is individually intentional
-    per its own code comment: Hard mode only in Pinyin mode, live "Missed" counter only in
-    Character mode, no Shuffle button in `MatchQuizRunner` (44 §"Mode inconsistencies").
+22. **Partially fixed.** Hard mode was extended to English mode (`ChoiceQuizRunner`/
+    `MatchQuizRunner`) — see [50-full-sweep-audit-2026-08.md](50-full-sweep-audit-2026-08.md) §16;
+    `CharacterQuizRunner` remains the one runner without it, now a documented deliberate choice
+    (see docs/06). The other two items are still open, deliberately: live "Missed" counter only in
+    Character mode, no Shuffle button in `MatchQuizRunner` (confirmed intentional — its board
+    re-shuffles on every mount/Replay via a lazy `useState` initializer, so a manual Shuffle button
+    would be redundant) (44 §"Mode inconsistencies").
 23. **✅ Fixed** (`/sign-up/email`: 5 per 60s). Registration (`/sign-up/email`) has no custom rate-limit rule, falling back to better-auth's
     generous 100-per-10s default (45 §7).
 24. **✅ Fixed** (`next.config.ts`, prod strips `unsafe-eval`). No `Content-Security-Policy` header (45 §8).

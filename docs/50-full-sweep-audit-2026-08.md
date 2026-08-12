@@ -5,6 +5,14 @@ docs consistency, and infra/security against the current `main` (post-#38). This
 consolidated findings + fix plan. Each item below gets a ✅ once implemented and verified.
 
 ## Backend / data
+
+**Correction to the backend-audit agent's own finding**: it reported that no `queries.ts` call
+site selects/maps `Word.mnemonic` into a `QuizWord`, so mnemonics were "still always undefined at
+runtime." That's wrong — `queries.ts`'s word-fetching functions never `select`-narrow `Word`, so
+Prisma already returns the full row (mnemonic included), and it rides straight through unchanged.
+Verified live: `CharacterBrowse`'s popup renders a real mnemonic line today. Fixed the stale
+comment this had already propagated into `src/quiz/types.ts`.
+
 1. ✅ **`src/quiz/meaning-choices.ts` had its own private `shuffle`**, duplicating
    `src/quiz/shuffle.ts` (which was extracted specifically to kill this). Fixed: now imports the
    shared one.
