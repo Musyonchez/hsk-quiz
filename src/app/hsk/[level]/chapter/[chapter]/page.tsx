@@ -53,19 +53,13 @@ export default async function ChapterLearnPage({
           href={`/hsk/${levelSlug}/chapter/${chapterNumber}/quiz?mode=meaning`}
           className={pillClasses("secondary")}
         >
-          Match meaning
+          English
         </Link>
         <Link
           href={`/hsk/${levelSlug}/chapter/${chapterNumber}/quiz?mode=character`}
           className={pillClasses("secondary")}
         >
           Character
-        </Link>
-        <Link
-          href={`/hsk/${levelSlug}/chapter/${chapterNumber}/quiz?mode=study`}
-          className={pillClasses("secondary")}
-        >
-          Study
         </Link>
       </div>
 

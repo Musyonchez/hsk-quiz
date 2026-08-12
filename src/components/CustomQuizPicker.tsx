@@ -66,7 +66,7 @@ function summarize(selection: Selection | undefined): string | null {
 // even one chapter each is a genuinely new combination. See docs/17.
 function buildQuizHref(
   selections: Record<string, Selection>,
-  mode: "type" | "meaning" | "character" | "study"
+  mode: "type" | "meaning" | "character"
 ): string | null {
   const picked = Object.entries(selections).filter(
     ([, s]) => s.combined || s.chapters.size > 0
@@ -153,7 +153,6 @@ export function CustomQuizPicker({ levels }: { levels: LevelWithChapters[] }) {
   const typeHref = buildQuizHref(selections, "type");
   const meaningHref = buildQuizHref(selections, "meaning");
   const characterHref = buildQuizHref(selections, "character");
-  const studyHref = buildQuizHref(selections, "study");
   const anySingleChapterOnly =
     Object.values(selections).some((s) => !s.combined && s.chapters.size === 1) && !typeHref;
   const hasAnySelection = Object.values(selections).some(
@@ -183,7 +182,7 @@ export function CustomQuizPicker({ levels }: { levels: LevelWithChapters[] }) {
             disabled={!meaningHref}
             className={pillClasses("secondary", !meaningHref)}
           >
-            Match meaning
+            English
           </button>
           <button
             type="button"
@@ -192,14 +191,6 @@ export function CustomQuizPicker({ levels }: { levels: LevelWithChapters[] }) {
             className={pillClasses("secondary", !characterHref)}
           >
             Character
-          </button>
-          <button
-            type="button"
-            onClick={() => studyHref && router.push(studyHref)}
-            disabled={!studyHref}
-            className={pillClasses("secondary", !studyHref)}
-          >
-            Study
           </button>
           <button
             type="button"

@@ -18,9 +18,7 @@ export default async function ChapterQuizPage({
   const { level: levelSlug, chapter: chapterParam } = await params;
   const { mode } = await searchParams;
   const initialMode =
-    mode === "type" || mode === "meaning" || mode === "character" || mode === "study"
-      ? mode
-      : null;
+    mode === "type" || mode === "meaning" || mode === "character" ? mode : null;
   const chapterNumber = Number(chapterParam);
   if (!isLevelSlug(levelSlug) || !Number.isInteger(chapterNumber)) notFound();
   // Canonicalize e.g. "05" -> "5" so a chapter never has two live URLs.
@@ -68,7 +66,7 @@ export default async function ChapterQuizPage({
         meaningQuizKey={meaningQuizKey}
         characterQuizKey={characterQuizKey}
         meaningVariant="match"
-        characterVariant="match"
+        characterMode
         allowDrillMissed
         nextQuiz={next}
         anotherQuiz={another}

@@ -64,34 +64,52 @@ toggle, `SCORE 0/N`, `TIMER 10:00` (configurable, default matches reference).
   /api/leaderboard?quizKey=&scope=friends` instead. A link from here into the full leaderboard
   page — see [09-pages.md](09-pages.md).
 
-## Character mode (per docs/hold/27-character-quiz-plan.md, redesigned per docs/33-character-quiz-single-card-redesign-plan.md)
+## Character mode (rebuilt per docs/38-character-mode-overhaul-plan.md)
 
-A third quiz mode, reading recall instead of typing/meaning recall: the prompt shows a word's
-English meaning, the player types its pinyin (unlocking a small on-screen candidate row once it
-matches, same tone-free rule as typing mode), then clicks the correct Chinese character among
-2-5 ranked distractors (homophones first, then words with a similar-sounding start, then random
-fill — `character-choices.ts`). No right/wrong reveal until the results screen, same rule
-docs/19 established for meaning-match. Chapter-scale quizzes get a click-to-pair matching board
-(`MatchQuizRunner`'s `variant="character"`, English left / Chinese character right) instead of
-the candidate-picker flow, mirroring the existing chapter-vs-combined split for meaning-match.
-Tracked runs get a `-char` suffixed `quizKey`, its own leaderboard family.
+Character is one self-contained "island" (`CharacterIsland`), not a bare runner — it opens on a
+browse view, then hands off into its own quiz, with no separate mode needed to reach either half.
+There is no standalone Study mode anymore; the flashcard-style browsing it used to offer lives
+inside Character's own flow instead. Every scale that enables Character mode (Learn pages,
+`AllWordsTabs`, the Custom Quiz picker, `QuizModeGate`'s own picker) gets the exact same
+`CharacterIsland` flow — chapter-scale quizzes no longer fall back to a separate click-to-pair
+matching board the way meaning-match still does. Tracked runs get a `-char` suffixed `quizKey`,
+its own leaderboard family.
 
-At combined/custom scale, `CharacterQuizRunner` is a single focused card (prompt, pinyin input,
-candidate row, a slim progress bar) — no answer-key table alongside it. That table pattern fits
-the typing quiz (it doubles as a live answer key) but not candidate-picking at 60-700+ word
-scale, where a table of mostly-irrelevant rows the player can't act on just crowds out the actual
-interaction. A consequence: there's no "click a row to jump back and review an answered word"
-affordance here (Prev/Next only ever visited *unanswered* words anyway) — accepted as a fair
-trade for the focus win.
+### Browse (`CharacterBrowse`)
 
-### Study mode (flashcards, per docs/33)
+A grid of boxes, one per word — enlarged character and pinyin only, no English in the box. A
+"Show/hide pinyin" toggle (on by default) and a Shuffle button sit above the grid. Clicking a box
+opens a lightbox popup (not a route change) showing that word's character, pinyin, English
+meaning, and mnemonic when one exists (`QuizWord.mnemonic`, currently unpopulated everywhere —
+see "Mnemonics" below). The popup stays open while moving between words: Prev/Next buttons, left/
+right arrow keys, and touch swipe all advance within the same (possibly shuffled) grid order;
+Escape, the close button, or a backdrop click dismiss it. A "Start quiz" button in the toolbar
+moves from browsing into the quiz half below.
 
-A non-graded companion to Character mode, same word pool, offered everywhere Character mode is:
-a shuffled deck of flip cards (`CharacterStudy`) — tap to reveal a character's pinyin and
-meaning, Prev/Shuffle/Next through the deck, no timer, no score, no `Attempt` written (same
-practice-only treatment Custom Quiz already gets). Reachable via its own `Study` button anywhere
-`Character` is (Learn pages, `AllWordsTabs`, the Custom Quiz picker's quick-jump row, and
-`QuizModeGate`'s own picker screen) and its own `?mode=study`.
+### Quiz (`CharacterQuizRunner`)
+
+Two mutually exclusive answer formats, picked before the quiz starts — choosing one hides the
+other's controls entirely:
+
+- **Pinyin test** — prompt is the character, the player types the pinyin from memory
+  (`matchesPinyin`, same tone-free rule as Pinyin mode). Auto-advances silently on a correct
+  match; a **Skip** button marks the word missed and advances, since typing has no "give up on
+  this one" affordance otherwise.
+- **English test** — prompt is the character, the player picks the English meaning from 2-5
+  ranked options (`buildChoices`/`meaning-choices.ts`, the same infrastructure English mode
+  uses). No Skip needed — any pick immediately advances.
+
+Both formats show a live **"Missed: N"** counter next to the existing `ANSWERED n/total`
+indicator, updating in real time rather than only being computable at the end — the one mechanic
+borrowed from the `word-drill` reference project docs/38 cites. Everything else (sticky toolbar,
+Prev/Next/Pause/Give up, timed mode, end-of-quiz stats, drill-missed, leaderboard) is the same
+pattern every other runner in this app uses.
+
+### Mnemonics
+
+`QuizWord.mnemonic` is an optional field, ready for docs/34's mnemonic dictionary once it lands
+(currently a paused, unmerged branch — HSK1 written, HSK2/HSK3 not). No query populates it today,
+so the popup's mnemonic line simply doesn't render — not a placeholder, not an empty line.
 
 ## Hard mode (optional, per docs/hold/28-progressive-difficulty-plan.md)
 

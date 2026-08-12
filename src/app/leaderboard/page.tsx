@@ -70,7 +70,7 @@ export default async function LeaderboardPickerPage({
           href={`/leaderboard?level=${levelSlug}&mode=meaning`}
           className={tabClasses(mode === "meaning")}
         >
-          Match meaning
+          English
         </Link>
         <Link
           href={`/leaderboard?level=${levelSlug}&mode=character`}

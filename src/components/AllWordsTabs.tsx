@@ -2,17 +2,17 @@ import Link from "next/link";
 
 // Shared by /hsk/[level]/chapter/[chapter]/all, its /words sub-page, and its
 // /quiz route (docs/hold/25-chapter-all-words-plan.md and its addendum, plus
-// docs/hold/27-character-quiz-plan.md's Character tab and docs/33's Study
-// tab) — six tabs: the real dialog transcript, the flat All Words vocabulary
-// list, and the four quiz/study modes, all scoped to the same chapter. Same
-// active/inactive pill styling as the leaderboard pages' existing
-// tabClasses, reused rather than reinvented.
+// docs/38's exactly-3-modes Character/English rename) — five tabs: the real
+// dialog transcript, the flat All Words vocabulary list, and the 3 quiz
+// modes. No separate Study tab (docs/38) — the word-browse view lives inside
+// the Character tab's own flow now. Same active/inactive pill styling as the
+// leaderboard pages' existing tabClasses, reused rather than reinvented.
 export function AllWordsTabs({
   baseHref,
   active,
 }: {
   baseHref: string;
-  active: "dialog" | "words" | "type" | "meaning" | "character" | "study";
+  active: "dialog" | "words" | "type" | "meaning" | "character";
 }) {
   const tabClasses = (isActive: boolean) =>
     `rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
@@ -33,13 +33,10 @@ export function AllWordsTabs({
         Type pinyin
       </Link>
       <Link href={`${baseHref}/quiz?mode=meaning`} className={tabClasses(active === "meaning")}>
-        Match meaning
+        English
       </Link>
       <Link href={`${baseHref}/quiz?mode=character`} className={tabClasses(active === "character")}>
         Character
-      </Link>
-      <Link href={`${baseHref}/quiz?mode=study`} className={tabClasses(active === "study")}>
-        Study
       </Link>
     </div>
   );

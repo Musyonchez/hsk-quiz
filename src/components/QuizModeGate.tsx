@@ -7,25 +7,26 @@ import { pillClasses } from "@/components/pill-classes";
 import { QuizRunner } from "@/components/QuizRunner";
 import { ChoiceQuizRunner } from "@/components/ChoiceQuizRunner";
 import { MatchQuizRunner } from "@/components/MatchQuizRunner";
-import { CharacterQuizRunner } from "@/components/CharacterQuizRunner";
-import { CharacterStudy } from "@/components/CharacterStudy";
+import { CharacterIsland } from "@/components/CharacterIsland";
 
-// Lets the player pick "Type pinyin" (the original quiz), "Match meaning"
-// (docs/hold/19-meaning-quiz-mode-plan.md), "Character" (docs/hold/27-
-// character-quiz-plan.md), or "Study" (docs/33-character-quiz-single-card
-// -redesign-plan.md, a flashcard companion to Character mode — same word
-// pool, not graded) before any words are shown, then renders the matching
-// runner. `meaningVariant`/`characterVariant` each pick which scale-specific
-// component fits the quiz's scale: chapters get a click-to-pair matching
-// board (MatchQuizRunner), combined/custom quizzes get the one-word-at-a-
-// time flow (ChoiceQuizRunner/CharacterQuizRunner) — see docs/19 and
-// docs/27 for why those differ. Study mode is scale-independent (it's just
-// a shuffled deck, not a quiz), so it's gated on the same
-// `characterVariant` presence Character mode uses rather than needing its
-// own prop. `characterQuizKey`/`characterVariant` are both optional so
-// pages can opt in incrementally without breaking callers that haven't
-// wired Character mode yet — omitting either hides both the Character and
-// Study buttons.
+// Exactly 3 self-contained modes (docs/38) — Pinyin, Character, English
+// ("Match meaning", renamed for parity with the naming scheme) — picked
+// before any words are shown, then the matching runner takes over. There is
+// no separate "Study" mode: the word-browse grid/popup that used to be its
+// own button is folded entirely into Character mode's own flow (see
+// CharacterIsland). `meaningVariant` picks which scale-specific component
+// fits English mode's scale: chapters get a click-to-pair matching board
+// (MatchQuizRunner), combined/custom quizzes get the one-word-at-a-time flow
+// (ChoiceQuizRunner) — see docs/19 for why those differ. Character mode has
+// no such split — every scale, chapter included, gets the same CharacterIsland
+// browse-then-quiz flow (the old chapter-scale click-to-pair board for
+// Character is gone; direct feedback after shipping docs/38 was that the new
+// flow should replace it everywhere, not just combined/custom/all-words) —
+// `characterMode` alone gates whether the Character button shows at all
+// (not `characterQuizKey` — the cross-level custom-quiz pages deliberately
+// pass no quiz keys at all, since `trackAttempt` is false there), so pages
+// can opt in incrementally without breaking callers that haven't wired
+// Character mode yet.
 export function QuizModeGate({
   words,
   backHref,
@@ -35,7 +36,7 @@ export function QuizModeGate({
   trackAttempt = true,
   allowDrillMissed = false,
   meaningVariant,
-  characterVariant,
+  characterMode = false,
   nextQuiz = null,
   anotherQuiz,
   durationSeconds,
@@ -49,7 +50,7 @@ export function QuizModeGate({
   trackAttempt?: boolean;
   allowDrillMissed?: boolean;
   meaningVariant: "choice" | "match";
-  characterVariant?: "choice" | "match";
+  characterMode?: boolean;
   nextQuiz?: QuizNavTarget | null;
   anotherQuiz?: QuizNavTarget;
   durationSeconds?: number;
@@ -58,12 +59,10 @@ export function QuizModeGate({
   // screen entirely — one click from the Learn page straight into the quiz
   // instead of two. Falls back to the picker when absent (e.g. a bookmarked
   // /quiz URL with no ?mode=).
-  initialMode?: "type" | "meaning" | "character" | "study" | null;
+  initialMode?: "type" | "meaning" | "character" | null;
 }) {
-  const [mode, setMode] = useState<"type" | "meaning" | "character" | "study" | null>(
-    initialMode
-  );
-  const characterModeAvailable = characterVariant !== undefined;
+  const [mode, setMode] = useState<"type" | "meaning" | "character" | null>(initialMode);
+  const characterModeAvailable = characterMode;
 
   // Play Next/Play Another should continue in the same mode the player just
   // used, not dump them back on the mode picker (docs/hold/22-audit-pass-4.md) —
@@ -93,25 +92,16 @@ export function QuizModeGate({
             onClick={() => setMode("meaning")}
             className={pillClasses("secondary")}
           >
-            Match meaning
+            English
           </button>
           {characterModeAvailable && (
-            <>
-              <button
-                type="button"
-                onClick={() => setMode("character")}
-                className={pillClasses("secondary")}
-              >
-                Character
-              </button>
-              <button
-                type="button"
-                onClick={() => setMode("study")}
-                className={pillClasses("secondary")}
-              >
-                Study
-              </button>
-            </>
+            <button
+              type="button"
+              onClick={() => setMode("character")}
+              className={pillClasses("secondary")}
+            >
+              Character
+            </button>
           )}
         </div>
       </div>
@@ -133,25 +123,9 @@ export function QuizModeGate({
     );
   }
 
-  if (mode === "study") {
-    return <CharacterStudy words={words} />;
-  }
-
   if (mode === "character") {
-    return characterVariant === "match" ? (
-      <MatchQuizRunner
-        words={words}
-        backHref={backHref}
-        quizKey={characterQuizKey}
-        trackAttempt={trackAttempt}
-        allowDrillMissed={allowDrillMissed}
-        variant="character"
-        nextQuiz={nextQuizWithMode}
-        anotherQuiz={anotherQuizWithMode}
-        durationSeconds={durationSeconds}
-      />
-    ) : (
-      <CharacterQuizRunner
+    return (
+      <CharacterIsland
         words={words}
         backHref={backHref}
         quizKey={characterQuizKey}
