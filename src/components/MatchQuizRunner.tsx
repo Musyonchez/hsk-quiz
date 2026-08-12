@@ -1,10 +1,11 @@
 "use client";
 
 import { Fragment, useEffect, useMemo, useRef, useState } from "react";
-import { Flag, Pause, Play } from "lucide-react";
+import { EyeOff, Flag, Pause, Play } from "lucide-react";
 import { formatDuration } from "@/quiz/format-time";
 import { submitAttempt } from "@/quiz/submit-attempt";
 import { shuffle } from "@/quiz/shuffle";
+import { withHardSuffix } from "@/quiz/quiz-key";
 import { useProgressiveReveal } from "@/lib/use-progressive-reveal";
 import type { QuizNavTarget } from "@/quiz/quiz-navigation";
 import type { QuizWord } from "@/quiz/types";
@@ -112,6 +113,14 @@ function MatchQuizRunnerInner({
   const [rightBoard, setRightBoard] = useState(() => shuffle(words.map((w) => w.id)));
   const [selectedLeft, setSelectedLeft] = useState<number | null>(null);
   const [selectedRight, setSelectedRight] = useState<number | null>(null);
+  // docs/hold/28-progressive-difficulty-plan.md's opt-in harder tier, extended
+  // to this mode per direct request: pinyin is this mode's own equivalent of
+  // Pinyin mode's "second column" to hide (this mode's actual answer is
+  // meaning, which is already always visible on the right board — that's the
+  // whole mechanic — so pinyin is the one thing left that can be hidden for
+  // an extra challenge). Settable pre-start only, same as every other
+  // runner's hard-mode toggle.
+  const [hidePinyin, setHidePinyin] = useState(false);
   // Pre-start word list (docs/48's "info dump" fix, extended here per direct
   // request) — Meaning is dashed out below to match Pinyin/Choice mode's own
   // pre-start tables hiding their answer column, for consistency across all
@@ -142,19 +151,20 @@ function MatchQuizRunnerInner({
 
   const attemptedCount = total - leftBoard.length;
   const score = correctIds.size;
+  const effectiveQuizKey = quizKey ? withHardSuffix(quizKey, hidePinyin) : quizKey;
 
   useEffect(() => {
-    if (!finished || submittedRef.current || !trackAttempt || !quizKey) return;
+    if (!finished || submittedRef.current || !trackAttempt || !effectiveQuizKey) return;
     submittedRef.current = true;
     const elapsedSeconds = (durationSeconds ?? 0) - secondsLeft;
 
-    submitAttempt(quizKey, score, total, elapsedSeconds).then((result) => {
+    submitAttempt(effectiveQuizKey, score, total, elapsedSeconds).then((result) => {
       setBestPercent(result.bestPercent);
       setAvgGlobalPercent(result.avgGlobalPercent);
       setAvgFriendPercent(result.avgFriendPercent);
       setSaveFailed(result.saveFailed);
     });
-  }, [finished, trackAttempt, quizKey, score, total, secondsLeft, durationSeconds]);
+  }, [finished, trackAttempt, effectiveQuizKey, score, total, secondsLeft, durationSeconds]);
 
   useEffect(() => {
     if (!finished || statsDefaultSetRef.current) return;
@@ -218,7 +228,7 @@ function MatchQuizRunnerInner({
         avgFriendPercent={avgFriendPercent}
         saveFailed={saveFailed}
         trackAttempt={trackAttempt}
-        quizKey={quizKey}
+        quizKey={effectiveQuizKey}
         backHref={backHref}
         allowDrillMissed={allowDrillMissed}
         missedWords={missedWords}
@@ -273,13 +283,32 @@ function MatchQuizRunnerInner({
               {total} words to match
               {timed && <> · {formatDuration(durationSeconds ?? 0)} on the clock</>}
             </p>
-            <button
-              type="button"
-              onClick={() => setStarted(true)}
-              className={pillClasses("primary")}
-            >
-              Start quiz
-            </button>
+            <div className="flex flex-wrap items-center justify-center gap-3">
+              <button
+                type="button"
+                onClick={() => setStarted(true)}
+                className={pillClasses("primary")}
+              >
+                Start quiz
+              </button>
+              {/* Set once before Start quiz — see hidePinyin's state comment
+                  for why it's safe to read directly (no separate "locked in"
+                  value) once a run starts. */}
+              <ToolbarButton
+                onClick={() => setHidePinyin((v) => !v)}
+                disabled={false}
+                label="Toggle hard mode"
+                variant={hidePinyin ? "active" : "default"}
+              >
+                <EyeOff size={16} />
+                {hidePinyin ? "Hard mode: on" : "Hard mode"}
+              </ToolbarButton>
+            </div>
+            {hidePinyin && (
+              <p className="text-xs text-muted-foreground">
+                Pinyin stays hidden too — only the Chinese character shows on the board.
+              </p>
+            )}
           </div>
         ) : paused ? (
           <div className="rounded-xl border border-border bg-surface p-10 text-center text-muted-foreground shadow-lg shadow-background/50">
@@ -311,7 +340,9 @@ function MatchQuizRunnerInner({
                       <SpeakerButton text={word.chinese} kind="word" />
                     </span>
                   </td>
-                  <td className="px-3 py-2 text-muted-foreground">{word.pinyin}</td>
+                  <td className="px-3 py-2 text-muted-foreground">
+                    {hidePinyin ? "—" : word.pinyin}
+                  </td>
                   {/* Dashed out to match Pinyin mode's own pre-start table
                       hiding its answer column — consistency with that
                       pattern, not a spoiler-prevention need specific to this
@@ -350,8 +381,13 @@ function MatchQuizRunnerInner({
                       : "border-border hover:border-border-strong hover:bg-surface-raised"
                   }`}
                 >
-                  <span className="font-medium">{leftWord.chinese}</span>{" "}
-                  <span className="text-muted-foreground">{leftWord.pinyin}</span>
+                  <span className="font-medium">{leftWord.chinese}</span>
+                  {!hidePinyin && (
+                    <>
+                      {" "}
+                      <span className="text-muted-foreground">{leftWord.pinyin}</span>
+                    </>
+                  )}
                 </button>
                 <button
                   type="button"

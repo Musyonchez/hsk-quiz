@@ -1,11 +1,12 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { ChevronLeft, ChevronRight, Flag, Pause, Play, Shuffle } from "lucide-react";
+import { ChevronLeft, ChevronRight, EyeOff, Flag, Pause, Play, Shuffle } from "lucide-react";
 import { formatDuration } from "@/quiz/format-time";
 import { buildChoices } from "@/quiz/meaning-choices";
 import { submitAttempt } from "@/quiz/submit-attempt";
 import { shuffle } from "@/quiz/shuffle";
+import { withHardSuffix } from "@/quiz/quiz-key";
 import { useProgressiveReveal } from "@/lib/use-progressive-reveal";
 import type { QuizNavTarget } from "@/quiz/quiz-navigation";
 import type { QuizWord } from "@/quiz/types";
@@ -107,6 +108,13 @@ function ChoiceQuizRunnerInner({
   // Drill, since those remount this component with a fresh key.
   const [choices] = useState(() => buildChoices(words));
   const [started, setStarted] = useState(false);
+  // docs/hold/28-progressive-difficulty-plan.md's opt-in harder tier, now
+  // extended to English mode per direct request: QuizRunner's Hard mode
+  // hides its "second column" (English, the thing you're not being tested
+  // on directly) — this mode's own answer is the meaning, so Pinyin is the
+  // analogous "second column" to hide instead. Same "settable pre-start
+  // only" rule and reasoning as QuizRunner's hideSecondColumn.
+  const [hidePinyin, setHidePinyin] = useState(false);
   const [currentIndex, setCurrentIndex] = useState(0);
   // Right or wrong, right alongside it — this IS the answer key, just never
   // rendered with any color/label until `finished`.
@@ -133,19 +141,20 @@ function ChoiceQuizRunnerInner({
   const total = order.length;
   const answeredCount = answers.size;
   const score = [...answers.entries()].filter(([wordId, picked]) => picked === wordId).length;
+  const effectiveQuizKey = quizKey ? withHardSuffix(quizKey, hidePinyin) : quizKey;
 
   useEffect(() => {
-    if (!finished || submittedRef.current || !trackAttempt || !quizKey) return;
+    if (!finished || submittedRef.current || !trackAttempt || !effectiveQuizKey) return;
     submittedRef.current = true;
     const elapsedSeconds = (durationSeconds ?? 0) - secondsLeft;
 
-    submitAttempt(quizKey, score, total, elapsedSeconds).then((result) => {
+    submitAttempt(effectiveQuizKey, score, total, elapsedSeconds).then((result) => {
       setBestPercent(result.bestPercent);
       setAvgGlobalPercent(result.avgGlobalPercent);
       setAvgFriendPercent(result.avgFriendPercent);
       setSaveFailed(result.saveFailed);
     });
-  }, [finished, trackAttempt, quizKey, score, total, secondsLeft, durationSeconds]);
+  }, [finished, trackAttempt, effectiveQuizKey, score, total, secondsLeft, durationSeconds]);
 
   useEffect(() => {
     if (!finished || statsDefaultSetRef.current) return;
@@ -228,7 +237,7 @@ function ChoiceQuizRunnerInner({
         avgFriendPercent={avgFriendPercent}
         saveFailed={saveFailed}
         trackAttempt={trackAttempt}
-        quizKey={quizKey}
+        quizKey={effectiveQuizKey}
         backHref={backHref}
         allowDrillMissed={allowDrillMissed}
         missedWords={missedWords}
@@ -305,7 +314,7 @@ function ChoiceQuizRunnerInner({
               {total} words
               {timed && <> · {formatDuration(durationSeconds ?? 0)} on the clock</>}
             </p>
-            <div className="flex items-center gap-3">
+            <div className="flex flex-wrap items-center justify-center gap-3">
               <button
                 type="button"
                 onClick={() => setStarted(true)}
@@ -321,7 +330,24 @@ function ChoiceQuizRunnerInner({
                 <Shuffle size={16} />
                 Shuffle
               </ToolbarButton>
+              {/* Set once before Start quiz like Shuffle above — see
+                  hidePinyin's state comment for why it's safe to read
+                  directly (no separate "locked in" value) once a run starts. */}
+              <ToolbarButton
+                onClick={() => setHidePinyin((v) => !v)}
+                disabled={false}
+                label="Toggle hard mode"
+                variant={hidePinyin ? "active" : "default"}
+              >
+                <EyeOff size={16} />
+                {hidePinyin ? "Hard mode: on" : "Hard mode"}
+              </ToolbarButton>
             </div>
+            {hidePinyin && (
+              <p className="text-xs text-muted-foreground">
+                Pinyin stays hidden too — only the Chinese character shows until you answer.
+              </p>
+            )}
           </div>
         )}
         {started && paused && (
@@ -366,7 +392,9 @@ function ChoiceQuizRunnerInner({
                       <SpeakerButton text={word.chinese} kind="word" />
                     </span>
                   </td>
-                  <td className="px-3 py-2 text-muted-foreground">{word.pinyin}</td>
+                  <td className="px-3 py-2 text-muted-foreground">
+                    {!hidePinyin || isAnswered ? word.pinyin : "—"}
+                  </td>
                   {/* Meaning stays hidden until the whole quiz finishes, not just
                       until this one word is answered — showing the real answer
                       the moment it's answered would itself reveal right/wrong
@@ -389,7 +417,7 @@ function ChoiceQuizRunnerInner({
         >
           <div className="text-center">
             <p className="text-2xl font-bold">{currentWord.chinese}</p>
-            <p className="text-muted-foreground">{currentWord.pinyin}</p>
+            {!hidePinyin && <p className="text-muted-foreground">{currentWord.pinyin}</p>}
           </div>
           <div className="grid gap-2 sm:grid-cols-2">
             {currentOptions.map((option) => (
