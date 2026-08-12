@@ -3,8 +3,10 @@
 import { useEffect, useRef, useState } from "react";
 import { ChevronLeft, ChevronRight, Eye, EyeOff, Shuffle, X } from "lucide-react";
 import type { QuizWord } from "@/quiz/types";
+import { useProgressiveReveal } from "@/lib/use-progressive-reveal";
 import { pillClasses } from "@/components/pill-classes";
 import { SpeakerButton } from "@/components/SpeakerButton";
+import { RevealMoreButton } from "@/components/RevealMoreButton";
 
 export type { QuizWord };
 
@@ -32,6 +34,11 @@ export function CharacterBrowse({
   onStartQuiz: () => void;
 }) {
   const [order, setOrder] = useState(words);
+  // docs/48-quiz-pre-start-progressive-reveal-plan.md — see the grid comment
+  // below for why this is unconditional here (unlike QuizRunner/
+  // ChoiceQuizRunner, this whole component is pre-quiz browsing).
+  const { visible: visibleWords, hasMore: hasMoreWords, revealMore: revealMoreWords } =
+    useProgressiveReveal(order);
   const [showPinyin, setShowPinyin] = useState(true);
   const [openIndex, setOpenIndex] = useState<number | null>(null);
   const touchStartX = useRef<number | null>(null);
@@ -102,7 +109,12 @@ export function CharacterBrowse({
       </div>
 
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
-        {order.map((word, index) => (
+        {/* docs/48 — this whole component is a pre-quiz browse screen (no
+            "started" state to gate on, unlike QuizRunner/ChoiceQuizRunner),
+            so the tile grid is always progressively revealed. The popup's
+            own Prev/Next still steps through the full `order`, independent
+            of how many tiles are currently shown here. */}
+        {visibleWords.map((word, index) => (
           <button
             key={word.id}
             type="button"
@@ -117,6 +129,7 @@ export function CharacterBrowse({
           </button>
         ))}
       </div>
+      <RevealMoreButton hasMore={hasMoreWords} onClick={revealMoreWords} />
 
       {openWord && (
         <div

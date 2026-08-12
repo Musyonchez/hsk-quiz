@@ -7,12 +7,14 @@ import { formatDuration } from "@/quiz/format-time";
 import { withHardSuffix } from "@/quiz/quiz-key";
 import { submitAttempt } from "@/quiz/submit-attempt";
 import { shuffle } from "@/quiz/shuffle";
+import { useProgressiveReveal } from "@/lib/use-progressive-reveal";
 import type { QuizNavTarget } from "@/quiz/quiz-navigation";
 import type { QuizWord } from "@/quiz/types";
 import { pillClasses } from "@/components/pill-classes";
 import { ToolbarButton } from "@/components/ToolbarButton";
 import { QuizResultsScreen } from "@/components/QuizResultsScreen";
 import { SpeakerButton } from "@/components/SpeakerButton";
+import { RevealMoreButton } from "@/components/RevealMoreButton";
 
 export type { QuizWord };
 
@@ -89,6 +91,10 @@ function QuizRunnerInner({
 }) {
   const timed = durationSeconds !== undefined;
   const [order, setOrder] = useState(words);
+  // docs/48-quiz-pre-start-progressive-reveal-plan.md — only used pre-start,
+  // see the tbody comment below.
+  const { visible: visibleWords, hasMore: hasMoreWords, revealMore: revealMoreWords } =
+    useProgressiveReveal(order);
   const [started, setStarted] = useState(false);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [input, setInput] = useState("");
@@ -394,7 +400,11 @@ function QuizRunnerInner({
             </tr>
           </thead>
           <tbody>
-            {order.map((word, index) => {
+            {/* docs/48: only the pre-start list gets progressively revealed
+                — once started, every row needs to stay clickable/visible for
+                Prev/Next-via-row-click and the current-row highlight to keep
+                working, so the full list renders unconditionally there. */}
+            {(started ? order : visibleWords).map((word, index) => {
               const isCorrect = correctIds.has(word.id);
               const isCurrent = index === currentIndex;
               return (
@@ -428,6 +438,7 @@ function QuizRunnerInner({
             })}
           </tbody>
         </table>
+        {!started && <RevealMoreButton hasMore={hasMoreWords} onClick={revealMoreWords} />}
       </div>
     </div>
   );

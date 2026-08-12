@@ -6,12 +6,14 @@ import { formatDuration } from "@/quiz/format-time";
 import { buildChoices } from "@/quiz/meaning-choices";
 import { submitAttempt } from "@/quiz/submit-attempt";
 import { shuffle } from "@/quiz/shuffle";
+import { useProgressiveReveal } from "@/lib/use-progressive-reveal";
 import type { QuizNavTarget } from "@/quiz/quiz-navigation";
 import type { QuizWord } from "@/quiz/types";
 import { pillClasses } from "@/components/pill-classes";
 import { ToolbarButton } from "@/components/ToolbarButton";
 import { QuizResultsScreen } from "@/components/QuizResultsScreen";
 import { SpeakerButton } from "@/components/SpeakerButton";
+import { RevealMoreButton } from "@/components/RevealMoreButton";
 
 export type { QuizWord };
 
@@ -96,6 +98,10 @@ function ChoiceQuizRunnerInner({
 }) {
   const timed = durationSeconds !== undefined;
   const [order, setOrder] = useState(words);
+  // docs/48-quiz-pre-start-progressive-reveal-plan.md — only used pre-start,
+  // see the tbody comment below.
+  const { visible: visibleWords, hasMore: hasMoreWords, revealMore: revealMoreWords } =
+    useProgressiveReveal(order);
   // Frozen for the whole run — generated once here (a lazy initializer, run
   // exactly once per mount) and never touched again, including on Replay/
   // Drill, since those remount this component with a fresh key.
@@ -337,7 +343,9 @@ function ChoiceQuizRunnerInner({
             </tr>
           </thead>
           <tbody>
-            {order.map((word, index) => {
+            {/* docs/48 — full list once started (rows must stay clickable/
+                navigable), progressively revealed only pre-start. */}
+            {(started ? order : visibleWords).map((word, index) => {
               const isAnswered = answers.has(word.id);
               const isCurrent = index === currentIndex;
               return (
@@ -371,6 +379,7 @@ function ChoiceQuizRunnerInner({
             })}
           </tbody>
         </table>
+        {!started && <RevealMoreButton hasMore={hasMoreWords} onClick={revealMoreWords} />}
       </div>
 
       {started && !finished && !paused && currentWord && (
