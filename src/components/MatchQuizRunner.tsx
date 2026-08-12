@@ -375,6 +375,7 @@ function MatchQuizRunnerInner({
                 <button
                   type="button"
                   onClick={() => pickLeft(leftId)}
+                  aria-pressed={selectedLeft === leftId}
                   className={`rounded-lg border px-4 py-3 text-left text-sm transition-colors ${
                     selectedLeft === leftId
                       ? "border-current-row bg-current-row-surface font-medium"
@@ -392,6 +393,7 @@ function MatchQuizRunnerInner({
                 <button
                   type="button"
                   onClick={() => pickRight(rightId)}
+                  aria-pressed={selectedRight === rightId}
                   className={`rounded-lg border px-4 py-3 text-left text-sm transition-colors ${
                     selectedRight === rightId
                       ? "border-current-row bg-current-row-surface font-medium"
