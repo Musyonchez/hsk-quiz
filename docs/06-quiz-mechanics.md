@@ -119,13 +119,24 @@ mnemonic line rather than rendering a placeholder.
 
 ## Hard mode (optional, per docs/hold/28-progressive-difficulty-plan.md)
 
-An opt-in toggle on the pre-quiz "Start quiz" screen (`QuizRunner`, Type pinyin mode first —
-see docs/28 for why the other modes come later), set the same way Shuffle already is: before
-starting, not mid-run. With it on, the English column is blanked too, alongside the pinyin
-column the typing quiz already blanks — the player recalls from the Chinese character alone
-instead of Chinese+English, revealing both hidden columns for a row once it's answered. Tracked
-runs get a `-hard` suffixed `quizKey` (`withHardSuffix` in `quiz-key.ts`), so hard-mode scores
-never mix into a normal run's leaderboard.
+✅ Updated (docs/50 full-sweep audit §16): originally shipped in `QuizRunner` (Type pinyin) only
+— now universal across all three choice-style runners, extended by the Hard-mode-for-English work
+(see below). `CharacterQuizRunner` is the one deliberate exception, not an oversight — see its
+own note.
+
+An opt-in toggle on the pre-quiz "Start quiz" screen, set the same way Shuffle already is: before
+starting, not mid-run. Tracked runs get a `-hard` suffixed `quizKey` (`withHardSuffix` in
+`quiz-key.ts`), so hard-mode scores never mix into a normal run's leaderboard.
+
+- **`QuizRunner` (Type pinyin)**: the English column is blanked too, alongside the pinyin column
+  the typing quiz already blanks — the player recalls from the Chinese character alone instead of
+  Chinese+English, revealing both hidden columns for a row once it's answered.
+- **`ChoiceQuizRunner` / `MatchQuizRunner` (English)**: the analogous "second column" to blank is
+  Pinyin (English mode's actual answer is the meaning, already the thing being tested) — same
+  reveal-on-answer behavior, same pre-start-only toggle, same `-hard` suffix.
+- **`CharacterQuizRunner`**: no Hard-mode toggle exists here, on purpose — Character mode is
+  already the harder variant of the other two (no English/pinyin ever shown alongside the
+  character to begin with), so there's no "second column" left to blank as an extra tier.
 
 ## Grammar-pattern items (optional, from Rule 2 of extraction)
 

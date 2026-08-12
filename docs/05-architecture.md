@@ -47,7 +47,14 @@ Level        { id, slug (unique — "1"|"2"|"3"|"4a"|"4b"|"5a"|"5b"|"6a"|"6b"),
 Chapter      { id, levelId, number, title }
 Word         { id, chapterId? (null for combined-only words), levelId,
                chinese, pinyin, wordType, meaning, category (nullable, PDF word-class),
-               source ("chapter" | "combined") }
+               source ("chapter" | "combined" | "dialog"),
+               mnemonic (nullable — 39-memory-aid-mnemonics-plan.md's backfilled memory aid) }
+DialogLine   { id, chapterId, order, dialogNumber, dialogLabel?, speaker, chinese, pinyin,
+               english — a chapter's full dialog transcript in reading order
+               (docs/hold/25-chapter-all-words-plan.md's "All Words" feature); separate from
+               the "dialog"-source Word rows the same chapter also gets (those exist so the
+               dialog's vocabulary can appear in the All Words quiz — this table is purely the
+               transcript, with speaker/scene context Word rows don't carry) }
 GrammarPattern { id, chapterId, label, pinyinSkeleton, note }
 
 User         { id, username, displayUsername, displayName, email, emailVerified, image, createdAt, updatedAt }
@@ -78,8 +85,9 @@ new request to the same person (a repeat `POST /api/friends/requests` for a row 
 hardened by [37-auth-hardening-and-ux-plan.md](37-auth-hardening-and-ux-plan.md)** — this section
 used to describe a hand-rolled scrypt+session-token system with no email/forgot-password support;
 that system is gone. Auth is now the self-hosted [better-auth](https://better-auth.com) library
-(`src/lib/auth.ts`), talking to the same Prisma/Neon database everything else uses, via the
-`prismaAdapter`:
+(`src/lib/auth/auth.ts` — moved into its own subfolder alongside `auth-client.ts`/
+`require-session.ts`/`send-email.ts` per docs/50's full-sweep audit), talking to the same
+Prisma/Neon database everything else uses, via the `prismaAdapter`:
 
 - **Public self-service registration**: username + password + **email** (the email exists solely
   to support password reset — no verification step is required to use the account). `advanced.
@@ -95,16 +103,16 @@ that system is gone. Auth is now the self-hosted [better-auth](https://better-au
   — same name/signature the old hand-rolled helper had, so every call site (`requireSession()`,
   API routes, `AppHeader`) needed no changes.
 - **Password reset**: a real forgot-password/reset-password flow, `POST /forget-password` sends a
-  reset email via Gmail SMTP (`src/lib/send-email.ts`, `GMAIL_USER`/`GMAIL_APP_PASSWORD` env
+  reset email via Gmail SMTP (`src/lib/auth/send-email.ts`, `GMAIL_USER`/`GMAIL_APP_PASSWORD` env
   vars); `revokeSessionsOnPasswordReset: true` kills every other session on a successful reset.
   `ChangePassword` (`/account`) does the equivalent for an already-logged-in user, rotating the
   acting session's token while revoking every other one.
 - **Rate limiting**: a custom Postgres-backed `secondaryStorage` adapter
   (`src/lib/rate-limit-storage.ts`) gives durable, atomic rate-limit counters that survive
   serverless cold starts — `customRules` throttle `/sign-in/username`, `/sign-in/email` (3 per
-  10s), and `/forget-password` (3 per 60s); see
-  [45-audit-infra-security.md](45-audit-infra-security.md) for the one gap in this coverage
-  (registration itself has no dedicated rule, only better-auth's generous global default).
+  10s), `/sign-up/email` (5 per 60s), and `/forget-password` (3 per 60s). ✅ The registration gap
+  [45-audit-infra-security.md](45-audit-infra-security.md) originally flagged here is closed —
+  sign-up now has its own explicit rule too, not just the generous global default.
 - Every route that reads/writes `Attempt` or `Friendship` requires a valid session. Vocabulary
   reads have no dedicated API routes at all — Server Components call `lib/queries.ts` directly,
   and since there's no reason to gate looking at vocabulary behind login, those pages stay
@@ -112,94 +120,112 @@ that system is gone. Auth is now the self-hosted [better-auth](https://better-au
 
 ## Folder layout
 
+✅ Corrected (docs/50 full-sweep audit §20): earlier drafts of this doc were written when the app
+lived nested inside a `website/` folder in a larger monorepo (`docs/02-data-sources.md` still
+covers that history). That nesting is gone — `website/`'s former contents *are* the repo root
+today, so read every path below relative to the repo root, not under a `website/` prefix. Also
+updated for the `src/components`/`src/lib` reorg (docs/50 §11-12) and the SEO layer (docs/36/37).
+
 ```
-website/
-  docs/                      # planning docs (this folder)
-  prisma/
-    schema.prisma
-    migrations/
-    seed.ts                  # calls lib/extract/* and writes rows via Prisma
-  src/
-    app/
-      layout.tsx             # <AppHeader> + Tailwind globals
-      page.tsx                # "/" — marketing landing page when logged out,
+docs/                        # planning docs (this folder)
+prisma/
+  schema.prisma
+  migrations/
+  seed.ts                    # calls lib/extract/* and writes rows via Prisma
+src/
+  app/
+    layout.tsx               # <AppHeader> + Tailwind globals + SEO metadata (metadataBase,
+                               # OpenGraph/Twitter, JSON-LD — docs/37's SEO-layer PRs)
+    page.tsx                 # "/" — marketing landing page when logged out,
                                # last-played + level grid when logged in (no
                                # separate /dashboard route; folded in here as
                                # of docs/25's landing-page update, replacing
                                # what 09-pages.md §1.5 originally described)
-      login/page.tsx
-      register/page.tsx
-      forgot-password/page.tsx
-      reset-password/page.tsx
-      account/page.tsx                            # change-password (docs/37)
-      hsk/[level]/page.tsx                       # Level hub
-      hsk/[level]/chapter/[chapter]/page.tsx      # Learn page
-      hsk/[level]/chapter/[chapter]/quiz/page.tsx # Quiz + results, ?mode=type|meaning|character
-      hsk/[level]/chapter/[chapter]/all/page.tsx       # full dialog transcript (docs/hold/25)
-      hsk/[level]/chapter/[chapter]/all/words/page.tsx # flat "All Words" vocab list
-      hsk/[level]/chapter/[chapter]/all/quiz/page.tsx  # quiz over All Words instead of New Words
-      hsk/[level]/combined/page.tsx
-      hsk/[level]/combined/quiz/page.tsx
-      hsk/[level]/custom/quiz/page.tsx            # single-level, multi-chapter custom quiz
-      custom-quiz/page.tsx                        # cross-level custom quiz picker
-      custom-quiz/quiz/page.tsx                   # cross-level custom quiz runner
-      leaderboard/page.tsx                        # level/chapter picker, mode tabs
-      leaderboard/[quizKey]/page.tsx
-      friends/page.tsx
-      api/
-        auth/[...all]/route.ts    # better-auth's catch-all handler — replaces the old
-                                   # auth/{login,register,logout,me}/route.ts foursome
-                                   # entirely as of docs/36
-        attempts/route.ts
-        attempts/best/route.ts
-        leaderboard/route.ts
-        friends/route.ts
-        friends/requests/route.ts
-        friends/requests/[id]/accept/route.ts
-        friends/requests/[id]/ignore/route.ts
-        cron/purge-rate-limits/route.ts  # Vercel Cron target (vercel.json), sweeps expired
-                                          # RateLimit rows — CRON_SECRET-gated, see 21-vercel-deploy.md
-                               # no vocab API routes — vocab pages read lib/queries.ts
-                               # directly from Server Components, see "Accounts and auth" above
-    components/               # AppHeader, MobileNav, VocabTable, QuizLinkCard,
-                               # CustomQuizPicker, QuizModeGate, QuizRunner, ChoiceQuizRunner,
-                               # MatchQuizRunner, CharacterIsland, CharacterBrowse,
-                               # CharacterQuizRunner (docs/38), LeaderboardTable, AddFriendForm,
-                               # FriendRequestRow, UserBadge, LogoutButton, ChangePasswordForm,
-                               # ResetPasswordForm, PasswordField — see 08-ui-ux.md. Note:
-                               # pill-shaped buttons are a `pillClasses()` class-string helper
-                               # (`components/pill-classes.ts`), not a `<PillButton>` component.
-                               # ToolbarButton.tsx / QuizResultsScreen.tsx: shared by all four quiz
-                               # runners above (docs/46), extracted out of each runner's own
-                               # near-identical copy.
-    lib/
-      extract/                # extract-combined.ts, extract-chapters.ts (dispatch by level
-                               # slug to the right in-repo data file — no PDF/markdown I/O);
-                               # hsk{1,2,3}-chapters-data.ts / hsk{1,2,3}-combined-data.ts
-                               # hold each level's word lists as plain TS data, fully
-                               # self-contained inside website/; hsk4a/4b-*-data.ts hold
-                               # HSK4A's and HSK4B's word lists the same way — HSK4/5/6
-                               # are split into independent per-book Level rows (see
-                               # hsk-level.ts), each sourced from that book's own
-                               # textbook appendix
-      db.ts                   # Prisma client singleton (PrismaNeon driver adapter)
-      auth.ts                 # betterAuth() config + getSessionUser() (docs/36)
-      auth-client.ts           # createAuthClient() for Client Components (login/register/
-                               # forgot-password/reset-password/account forms)
-      send-email.ts            # nodemailer + Gmail SMTP, used by auth.ts's password-reset flow
-      rate-limit-storage.ts    # Postgres-backed secondaryStorage adapter for better-auth's
-                               # rate limiter (durable across serverless cold starts)
-      api-rate-limit.ts        # same RateLimit table/upsert pattern, for this app's own routes
-                               # (/api/attempts) rather than better-auth's endpoints
-      require-session.ts      # Server Component guard: redirects to /login if unauthenticated
-      queries.ts               # all read queries vocab pages/leaderboard/friends call directly
-    quiz/                     # quiz engine: input matching, scoring, timer, mnemonics
-                               # (framework-free) — see 06-quiz-mechanics.md,
-                               # 39-memory-aid-mnemonics-plan.md
-  tailwind.config.ts
-  next.config.ts
-  vercel.json                 # Vercel Cron schedule for /api/cron/purge-rate-limits
-  package.json
+    robots.ts                # MetadataRoute.Robots — public routes only, points at sitemap.xml
+    sitemap.ts               # MetadataRoute.Sitemap — same 4 public routes as robots.ts
+    opengraph-image.tsx      # next/og ImageResponse — Latin "HSK" text, not the icon's "词"
+                               # glyph (Satori has no CJK fallback font, see docs comment there)
+    login/page.tsx
+    register/page.tsx
+    forgot-password/page.tsx
+    reset-password/page.tsx
+    account/page.tsx                            # change-password (docs/37)
+    hsk/[level]/page.tsx                       # Level hub
+    hsk/[level]/chapter/[chapter]/page.tsx      # Learn page
+    hsk/[level]/chapter/[chapter]/quiz/page.tsx # Quiz + results, ?mode=type|meaning|character
+    hsk/[level]/chapter/[chapter]/all/page.tsx       # full dialog transcript (docs/hold/25)
+    hsk/[level]/chapter/[chapter]/all/words/page.tsx # flat "All Words" vocab list
+    hsk/[level]/chapter/[chapter]/all/quiz/page.tsx  # quiz over All Words instead of New Words
+    hsk/[level]/combined/page.tsx
+    hsk/[level]/combined/quiz/page.tsx
+    hsk/[level]/custom/quiz/page.tsx            # single-level, multi-chapter custom quiz
+    custom-quiz/page.tsx                        # cross-level custom quiz picker
+    custom-quiz/quiz/page.tsx                   # cross-level custom quiz runner
+    leaderboard/page.tsx                        # level/chapter picker, mode tabs
+    leaderboard/[quizKey]/page.tsx
+    friends/page.tsx
+    api/
+      auth/[...all]/route.ts    # better-auth's catch-all handler — replaces the old
+                                 # auth/{login,register,logout,me}/route.ts foursome
+                                 # entirely as of docs/36
+      attempts/route.ts
+      attempts/best/route.ts
+      leaderboard/route.ts
+      friends/route.ts
+      friends/requests/route.ts
+      friends/requests/[id]/accept/route.ts
+      friends/requests/[id]/ignore/route.ts
+      cron/purge-rate-limits/route.ts  # Vercel Cron target (vercel.json), sweeps expired
+                                        # RateLimit rows — CRON_SECRET-gated, see 21-vercel-deploy.md
+                             # no vocab API routes — vocab pages read lib/queries.ts
+                             # directly from Server Components, see "Accounts and auth" above
+  components/                 # reorganized into subfolders by concern (docs/50 §11):
+    quiz/                      # QuizRunner, ChoiceQuizRunner, MatchQuizRunner,
+                               # CharacterQuizRunner (docs/38), QuizModeGate, QuizResultsScreen,
+                               # QuizLinkCard, CustomQuizPicker, CharacterBrowse, CharacterIsland
+    auth/                      # PasswordField, ChangePasswordForm, ResetPasswordForm, LogoutButton
+    friends/                   # AddFriendForm, FriendRequestRow, UserBadge
+    layout/                    # AppHeader, MobileNav, HeaderHeightVar
+    vocab/                     # VocabTable, AllWordsTabs, LeaderboardTable
+    ToolbarButton.tsx          # shared ui atoms, used across multiple groups above — stay at
+    SpeakerButton.tsx          # the top level rather than owned by any one subfolder. Note:
+    RevealMoreButton.tsx       # pill-shaped buttons are a `pillClasses()` class-string helper
+    pill-classes.ts            # (`components/pill-classes.ts`), not a `<PillButton>` component.
+  lib/
+    extract/                # extract-combined.ts, extract-chapters.ts (dispatch by level
+                             # slug to the right in-repo data file — no PDF/markdown I/O);
+                             # hsk{1,2,3}-chapters-data.ts / hsk{1,2,3}-combined-data.ts
+                             # hold each level's word lists as plain TS data, fully
+                             # self-contained in-repo; hsk4a/4b-*-data.ts hold HSK4A's and
+                             # HSK4B's word lists the same way — HSK4/5/6 are split into
+                             # independent per-book Level rows (see hsk-level.ts), each
+                             # sourced from that book's own textbook appendix
+    auth/                    # betterAuth() config + getSessionUser() (auth.ts, docs/36),
+                             # createAuthClient() for Client Components (auth-client.ts),
+                             # Server Component session guard (require-session.ts), Gmail
+                             # SMTP sender for password-reset emails (send-email.ts) —
+                             # grouped per docs/50 §12
+    db.ts                    # Prisma client singleton (PrismaNeon driver adapter)
+    rate-limit-storage.ts    # Postgres-backed secondaryStorage adapter for better-auth's
+                             # rate limiter (durable across serverless cold starts)
+    api-rate-limit.ts        # same RateLimit table/upsert pattern, for this app's own routes
+                             # (/api/attempts) rather than better-auth's endpoints
+    queries.ts               # all read queries vocab pages/leaderboard/friends call directly
+    site-url.ts               # VERCEL_ENV-gated base-URL resolution, shared by auth/layout/
+                             # robots.ts/sitemap.ts/page.tsx's JSON-LD
+    use-progressive-reveal.ts # tiered pre-start reveal (docs/48), shared by quiz tables +
+                             # CharacterBrowse's tile grid
+  quiz/                      # quiz engine: input matching, scoring, timer, mnemonics
+                             # (framework-free) — see 06-quiz-mechanics.md,
+                             # 39-memory-aid-mnemonics-plan.md. Also home to the shared
+                             # use-quiz-run-lifecycle.ts / use-quiz-attempt-submission.ts /
+                             # use-quiz-countdown.ts hooks the four runners all use (docs/50
+                             # §6-7) and audio-player.ts (moved from lib/, docs/50 §12) +
+                             # audio/{words,sentences}.ts manifests (docs/47)
+tailwind.config.ts
+next.config.ts
+vercel.json                 # Vercel Cron schedule for /api/cron/purge-rate-limits
+package.json
 ```
 
 ## API surface (outline)

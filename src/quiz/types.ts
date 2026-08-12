@@ -6,14 +6,13 @@ export type QuizWord = {
   chinese: string;
   pinyin: string;
   meaning: string | null;
-  // Optional ahead of docs/39's mnemonic dictionary wiring — the schema
-  // column, the per-level dictionaries (src/quiz/mnemonics/), and the
-  // backfill script have landed, but no queries.ts call site selects/maps
-  // Word.mnemonic into a QuizWord yet, so this is still always undefined at
-  // runtime today. Declared now, per docs/38, so Character mode's popup can
-  // render a conditional mnemonic line without a second migration once a
-  // call site starts populating it; every existing QuizWord literal
-  // (queries.ts, seed data) stays valid untouched since the field is
-  // optional.
+  // docs/39's mnemonic dictionary — schema column, per-level dictionaries
+  // (src/quiz/mnemonics/), and backfill are all live, and this flows
+  // through today: queries.ts's word-fetching functions never `select`-
+  // narrow Word, so Prisma returns the full row (mnemonic included) and it
+  // rides straight through as a QuizWord's `.mnemonic` with no extra
+  // mapping needed. Verified live — CharacterBrowse's popup renders it.
+  // Optional only because some QuizWord literals (older seed/test data
+  // shapes, if any) may not carry it; every real DB-backed call site does.
   mnemonic?: string | null;
 };

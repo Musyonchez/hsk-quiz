@@ -57,9 +57,12 @@ Each of these is individually intentional per its own code comment — flagged b
 switching between modes would likely read them as bugs rather than design choices, not because
 any of them is wrong in isolation.
 
-5. **Hard mode (hide-second-column) exists only in `QuizRunner` (Pinyin)** — a player who finds it
-   there and switches to English/Character mode on the same chapter finds no equivalent toggle,
-   with nothing explaining why. **Low** — works as coded, likely to read as a missing feature.
+5. ✅ **Fixed for English mode** — Hard mode (hide-second-column) originally existed only in
+   `QuizRunner` (Pinyin); now `ChoiceQuizRunner`/`MatchQuizRunner` (English) both have the
+   equivalent toggle too (see docs/06-quiz-mechanics.md's Hard mode section). `CharacterQuizRunner`
+   remains the one runner without it, but that's now a documented deliberate choice (Character
+   mode is already the harder variant, with no "second column" left to hide), not an unexplained
+   gap. **Was Low** — works as coded, likely to read as a missing feature.
 6. **Shuffle exists on the pre-start screen of every runner except `MatchQuizRunner`.** Given the
    match-board mechanic already shuffles both boards independently per run, this is likely
    intentional (re-ordering underlying `words` wouldn't change anything visible) — but it's the one

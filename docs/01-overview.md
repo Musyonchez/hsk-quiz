@@ -57,12 +57,18 @@ reproduced, not skipped:
 
 ## Non-goals (for now)
 
-- No listening/audio component (separate from [hsk2-listening-plan](../../hsk2-listening-plan/plan.md)).
 - No mobile app — a responsive web page is enough.
 
 (Previously this section also listed "no email collection or forgot-password flow" as a
 non-goal — reversed by [36-better-auth-migration-plan.md](36-better-auth-migration-plan.md):
-registration collects an email specifically to support a real forgot-password flow now.)
+registration collects an email specifically to support a real forgot-password flow now.
+
+It also listed "no listening/audio component" — reversed by
+[47-word-sentence-audio-plan.md](47-word-sentence-audio-plan.md): every word and dialog sentence
+now has a speaker-icon pronunciation button, via pre-generated TTS audio files rather than a live
+listening-quiz mode. The [hsk2-listening-plan](../../hsk2-listening-plan/plan.md) this line used
+to point at describes a different, still-unbuilt listening *quiz* mode — that part of the
+non-goal still stands; only the "no audio at all" framing was wrong.)
 
 ## Why two data sources instead of one
 
