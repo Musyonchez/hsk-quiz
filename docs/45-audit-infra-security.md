@@ -23,7 +23,18 @@ with nothing catching it first.
 
 **Severity: blocker** (as a process-risk finding, not a bug in itself).
 
+**Still fully open on re-audit** — re-confirmed zero test infrastructure (no `vitest`/`jest`/
+`playwright.config`, no `__tests__` dirs, no test script in `package.json`, only transitive
+`package-lock.json` mentions). Deliberately held over — too large/undefined-scope for this session's
+discretionary fixes.
+
 ## 2. Shared dev/prod database
+
+**✅ Fixed** — `scripts/confirm-write.ts` now gates `prisma/seed.ts` and `backfill-mnemonics.ts`
+(requires typed "yes" interactively, or `--yes`/`CONFIRM_WRITE=1` non-interactively, before any
+write runs). `prisma studio`/`prisma migrate dev` are unchanged (better-auth/Prisma's own tools, out
+of scope for a custom guard) — this closes the two homegrown scripts' accidental-run risk
+specifically, not the broader shared-DB architecture itself.
 
 Confirmed still true, per docs/05 and docs/21: one Neon Postgres database serves local dev and
 production alike via a single `DATABASE_URL`, no branch/environment split.
@@ -57,7 +68,8 @@ on a new migration. Documented and intentional, relies on developer memory. **Lo
 
 ## 4. CI gaps beyond "no tests"
 
-- **No dependency vulnerability scanning** — no `npm audit` step in CI, no Dependabot/Renovate
+- **✅ Fixed** — `npm audit --audit-level=high` added as a CI step; confirmed currently passing
+  (0 vulnerabilities) on re-audit. **No dependency vulnerability scanning** — no `npm audit` step in CI, no Dependabot/Renovate
   config anywhere in `.github/`. **Medium.**
 - CI doesn't run `next build` (by explicit design — Vercel's own preview deploy covers that,
   documented tradeoff). Reasonable, just means a build-only failure surfaces on Vercel's preview
@@ -71,7 +83,7 @@ Via `npm outdated` (read-only):
 |---|---|---|---|
 | `typescript` | 5.9.3 | 7.0.2 | Two majors behind. |
 | `eslint` | 9.39.5 | 10.8.1 | One major behind. |
-| `@types/node` | 20.x | 26.2.0 | Pinned to Node 20 types while `engines.node` requires `>=22` and CI runs Node 22 — type defs don't match the actual runtime, which can mask real Node-22-only API issues or falsely permit Node-20-removed APIs. |
+| `@types/node` | ~~20.x~~ **✅ `^22`** | 26.2.0 | Fixed — now aligned with `engines.node` and CI's Node 22. Still a couple majors behind latest, low severity. |
 | `next` | 16.2.12 | 16.3.0 | Minor behind, low risk. |
 | `eslint-config-next` | 16.2.12 | 16.3.0 | Tracks `next`. |
 | `react`/`react-dom` | 19.2.4 | 19.2.8 | Patch behind. |
@@ -85,6 +97,10 @@ Via `npm outdated` (read-only):
 used as the safer read-only signal, so no CVE data was collected, only version staleness.)
 
 ## 6. `send-email.ts` / `auth.ts` — SMTP failure handling
+
+**✅ Fixed** — `.catch((err) => console.error("Failed to send password-reset email:", err))` added
+at the `sendResetPassword` call site. User-facing behavior (no feedback, by design) is unchanged;
+this only adds server-log visibility for a failed send.
 
 `sendResetPassword` calls `void sendEmail({...})` — deliberately not awaited, to avoid a timing
 side-channel revealing whether an email address exists (documented, intentional). But `sendEmail`
@@ -103,6 +119,8 @@ transient Gmail failure gets zero feedback, and no operator is likely to notice 
 but concretely breaks account-recovery UX with zero observability.
 
 ## 7. Rate limiting — bypass/gap scenarios
+
+**✅ Fixed** — `/sign-up/email` now has its own rule (5 per 60s).
 
 `customRules` in `auth.ts` covers `/sign-in/username`, `/sign-in/email` (3 per 10s), and
 `/forget-password` (3 per 60s). **Registration (`/sign-up/email`) has no custom rule**, falling
@@ -124,7 +142,14 @@ Cross-checked against docs/37: session cookies are `httpOnly`, `Secure` (auto-de
 `X-Content-Type-Options: nosniff`, `Referrer-Policy: strict-origin-when-cross-origin` as
 defense-in-depth. **Solid, no findings.**
 
-One gap not addressed anywhere: **no `Content-Security-Policy` header.** Given `X-Frame-Options:
+**✅ Fixed** — `next.config.ts` now adds a `Content-Security-Policy` header (`default-src 'self'`,
+`script-src`/`connect-src` scoped to `'self'`, prod strips `'unsafe-eval'` since only webpack's dev
+Fast Refresh needs it, `frame-ancestors 'none'`, etc.), verified working via both a full production
+build/start run and a separate dev-mode run. Re-audited directive-by-directive: no gap beyond one
+low-severity nitpick — `object-src` isn't explicitly set to `'none'` (falls back to `default-src
+'self'` per spec, so not actually open, just not best-practice-explicit).
+
+~~One gap not addressed anywhere: **no `Content-Security-Policy` header.**~~ Given `X-Frame-Options:
 DENY` already covers clickjacking, the marginal risk is limited to XSS mitigation depth (no known
 XSS surface found in this audit) — but a CSP is otherwise entirely absent. **Low.**
 
@@ -152,12 +177,27 @@ XSS surface found in this audit) — but a CSP is otherwise entirely absent. **L
 
 ## Summary by severity
 
-- **Blocker**: no automated test suite (project-wide, §1).
-- **High**: shared dev/prod database with no environment guard on any write-capable script (§2).
-- **Medium**: no dependency vulnerability scanning (§4); `@types/node` mismatched against the
-  required Node 22 runtime (§5); silent/unhandled SMTP failure path with zero observability (§6).
-- **Low**: `typescript`/`eslint` behind (§5); no CSP header (§8); registration lacks a specific
-  rate-limit rule (§7); local `npm run build` silently skips migrations by design (§3).
-- **Nitpick**: `next build` not in CI, by design (§4); minor/patch dependency drift (§5).
+- **Blocker**: no automated test suite (project-wide, §1) — **still fully open**, deliberately held.
+- **High**: shared dev/prod database with no environment guard on any write-capable script (§2) —
+  **✅ fixed** for the two homegrown scripts (`confirm-write.ts`); the broader shared-DB
+  architecture itself is unchanged/out of scope.
+- **Medium**: no dependency vulnerability scanning (§4) — **✅ fixed**; `@types/node` mismatched
+  against the required Node 22 runtime (§5) — **✅ fixed**; silent/unhandled SMTP failure path with
+  zero observability (§6) — **✅ fixed**.
+- **Low**: `typescript`/`eslint` behind (§5, still open); no CSP header (§8) — **✅ fixed**;
+  registration lacks a specific rate-limit rule (§7) — **✅ fixed**; local `npm run build` silently
+  skips migrations by design (§3, unchanged, working as intended).
+- **Nitpick**: `next build` not in CI, by design (§4); minor/patch dependency drift (§5); CSP
+  missing an explicit `object-src 'none'` (§8, new on re-audit, not actually exploitable).
 - **Clean, no findings**: `maybe-migrate.mjs` gating logic, env var hygiene, session/cookie
-  security flags, rate-limit storage atomicity, TODO/FIXME hygiene.
+  security flags, rate-limit storage atomicity, TODO/FIXME hygiene. Re-audit additionally checked
+  this session's new code (`api-rate-limit.ts`, `confirm-write.ts`, the CSP header, the `npm audit`
+  CI step itself) and found no new issues introduced by any of it.
+
+## Re-audit summary (second pass)
+
+All 6 previously-fixed items in this doc (§2 write-guard, §4 npm audit, §5 `@types/node`, §6 SMTP
+`.catch()`, §7 registration rate limit, §8 CSP) were re-verified against the actual current code —
+genuinely fixed and correctly wired, not just superficially present. §1 (no test suite) remains
+fully open with zero mitigation, confirmed accurately described. No new security issues found from
+this session's new code.

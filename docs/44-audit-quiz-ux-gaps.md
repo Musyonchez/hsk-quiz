@@ -72,7 +72,7 @@ any of them is wrong in isolation.
 
 ## Forms / error-display gaps
 
-9. **`AddFriendForm.tsx` has an unguarded `fetch`** — see
+9. **✅ Fixed** — see [42-audit-frontend-components.md](42-audit-frontend-components.md) §4. **`AddFriendForm.tsx` has an unguarded `fetch`** — see
    [42-audit-frontend-components.md](42-audit-frontend-components.md) §4 for the full writeup. If
    the network request itself fails (not just a non-OK response), the submit button gets stuck
    disabled forever with no error shown — `setSubmitting(false)` never runs because there's no
@@ -100,7 +100,28 @@ any of them is wrong in isolation.
 
 ## Summary of confident, actionable items
 
-- **Medium**: `AddFriendForm.tsx` unguarded fetch (#9).
-- **Low**: latent `NaN`/zero-word landmines in three runners, unreachable today (#1-2).
-- **Low/nitpick**: the three mode inconsistencies (#5-7), the All Words tab-default mismatch (#4).
-- **Unconfirmed, worth a look**: `ChoiceQuizRunner`'s dual-sticky-bar layout on short viewports (#12).
+- **Medium**: `AddFriendForm.tsx` unguarded fetch (#9) — **✅ Fixed**.
+- **Low**: latent `NaN`/zero-word landmines in three runners, unreachable today (#1-2) — still open,
+  deliberately held (unreachable, defense-in-depth only).
+- **Low/nitpick**: the three mode inconsistencies (#5-7), the All Words tab-default mismatch (#4) —
+  still open, each re-confirmed intentional per its own code comment.
+- **Unconfirmed, worth a look**: `ChoiceQuizRunner`'s dual-sticky-bar layout on short viewports
+  (#12) — re-examined on re-audit with a sharper verdict: the CSS mechanics (two independent
+  `position: sticky` elements pinned to opposite viewport edges, same `z-5`, no shared height
+  budget) combined with realistic element heights make an actual visual overlap on short/landscape
+  viewports likely, not just suspicious — still not visually confirmed live, still not fixed.
+
+## Re-audit notes (second pass)
+
+- The `submitAttempt`/`saveFailed` extraction (this session, see 42 §3) introduced no UX
+  regression — the "couldn't be saved" message is consistently worded, placed, and scoped
+  (`trackAttempt && quizKey`-gated) across all four runners.
+- No new instance of the PR #19 "state discarded by parent/sibling effect" bug class found
+  anywhere in the quiz flow on re-check, including around the new `submittedRef`/`saveFailed` state.
+- `MatchQuizRunner`'s empty-board landmine (#2 above) was re-confirmed still present and unreachable
+  — flagged again only because it's the sharper version of the `NaN` bug class (an effect firing a
+  real `submitAttempt` POST with zero user interaction), not because it's changed.
+- A few additional low-severity a11y gaps surfaced on this pass, not previously called out: the
+  "Missed: N" counter (`CharacterQuizRunner`) has no `aria-live`, `MatchQuizRunner`'s selected tile
+  has no `aria-pressed`, and table-row navigation in three runners is mouse/touch-only (no
+  `tabIndex`/`onKeyDown` on the `<tr>`). All low/nitpick, none blocking, none regressions.
