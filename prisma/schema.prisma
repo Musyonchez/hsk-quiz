@@ -194,6 +194,12 @@ model Friendship {
   createdAt DateTime @default(now())
 
   @@unique([userId, friendId])
+  // getFriendsData (queries.ts) runs two of its four queries filtered on
+  // friendId alone (incoming accepted/pending) — the unique index above
+  // only serves lookups on userId (or userId+friendId together), not
+  // friendId by itself, so those two queries were doing a full table scan
+  // without this (docs/41-audit-backend-data.md).
+  @@index([friendId, status])
 }
 
 model Attempt {

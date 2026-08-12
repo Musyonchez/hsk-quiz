@@ -5,6 +5,7 @@ import { extractAllChapters } from "@/lib/extract/extract-chapters";
 import { extractAllDialogWords } from "@/lib/extract/extract-dialog";
 import { extractAllTranscripts } from "@/lib/extract/extract-transcripts";
 import { ALL_LEVELS, type LevelSlug } from "@/lib/hsk-level";
+import { confirmWrite } from "../scripts/confirm-write";
 
 async function ensureLevels(): Promise<Record<LevelSlug, number>> {
   const ids = {} as Record<LevelSlug, number>;
@@ -269,6 +270,7 @@ async function seedTranscripts(levelIds: Record<LevelSlug, number>) {
 }
 
 async function main() {
+  await confirmWrite("prisma/seed.ts");
   const levelIds = await ensureLevels();
   await seedCombinedLevels(levelIds);
   await seedChapters(levelIds);

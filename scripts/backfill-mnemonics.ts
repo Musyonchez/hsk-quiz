@@ -7,8 +7,10 @@
 import "dotenv/config";
 import { prisma } from "@/lib/db";
 import { allMnemonics } from "@/quiz/mnemonics";
+import { confirmWrite } from "./confirm-write";
 
 async function main() {
+  await confirmWrite("scripts/backfill-mnemonics.ts");
   const entries = Object.entries(allMnemonics);
   let updatedRows = 0;
   let touchedWords = 0;
