@@ -80,8 +80,8 @@ its own leaderboard family.
 A grid of boxes, one per word — enlarged character and pinyin only, no English in the box. A
 "Show/hide pinyin" toggle (on by default) and a Shuffle button sit above the grid. Clicking a box
 opens a lightbox popup (not a route change) showing that word's character, pinyin, English
-meaning, and mnemonic when one exists (`QuizWord.mnemonic`, currently unpopulated everywhere —
-see "Mnemonics" below). The popup stays open while moving between words: Prev/Next buttons, left/
+meaning, and mnemonic when one exists (`QuizWord.mnemonic` — see "Mnemonics" below for what
+"when one exists" means in practice today). The popup stays open while moving between words: Prev/Next buttons, left/
 right arrow keys, and touch swipe all advance within the same (possibly shuffled) grid order;
 Escape, the close button, or a backdrop click dismiss it. A "Start quiz" button in the toolbar
 moves from browsing into the quiz half below.

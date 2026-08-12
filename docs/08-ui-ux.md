@@ -62,14 +62,34 @@ spec, not against whatever a first draft happened to look like.
 
 ## Component inventory (shared across pages, built once)
 
-- `<AppHeader>` — logo/name, level switcher, nothing else (see [09-pages.md](09-pages.md))
+**Corrected per [43-audit-docs-consistency.md](43-audit-docs-consistency.md)** — this section
+originally described `<AppHeader>` as "logo/name, level switcher, nothing else," contradicting
+the Layout section above (which correctly says it also carries the user badge and nav links), and
+named three components that were never built under those names. This doc was explicitly written
+up front, before implementation, so some drift from the original aspirational names is expected —
+listed below is what actually exists today:
+
+- `<AppHeader>` — logo/name, level switcher, `Custom Quiz`/`Leaderboard`/`Friends` links,
+  `<UserBadge>`, and a logout action when logged in; `Log in`/`Register` CTAs when not (see
+  [09-pages.md](09-pages.md)). Collapses into `<MobileNav>`'s hamburger drawer below the `lg`
+  breakpoint.
 - `<QuizLinkCard>` — the "Play Next / Play Another" card pattern
 - `<VocabTable>` — the Chinese/Pinyin/English table, with a `reveal` prop per column so it
   serves both the learn view (all revealed) and the in-quiz view (pinyin hidden until answered)
-- `<ScoreTimerBar>` — the shared score/timer/pause/give-up row shown during a quiz
-- `<PillButton variant="primary" | "secondary">`
-- `<PercentBadge>` — the big results-screen score circle/number
+- Pill-shaped buttons are **not** a `<PillButton>` component — they're a `pillClasses(variant,
+  disabled?, size?)` class-string helper (`components/pill-classes.ts`) applied to a plain
+  `<button>`/`<a>` at each call site.
+- There is no standalone `<ScoreTimerBar>` or `<PercentBadge>` component — the shared score/timer/
+  pause/give-up toolbar and the results-screen percentage are built inline inside each quiz
+  runner (`QuizRunner`, `ChoiceQuizRunner`, `CharacterQuizRunner`, `MatchQuizRunner`), not
+  factored into their own components. (See
+  [42-audit-frontend-components.md](42-audit-frontend-components.md) for how much duplication
+  that inline-per-runner approach has produced across the four of them.)
 - `<LeaderboardTable>` — rank, avatar/initials, display name, score; used identically on the
   leaderboard page and the friends page's leaderboard tab
-- `<FriendRequestRow>` — a pending request with Accept/Ignore actions
+- `<FriendRequestRow>`, `<AddFriendForm>` — pending-request Accept/Ignore and the add-a-friend
+  form
 - `<UserBadge>` — small avatar-initials + display name, used in the header and leaderboard rows
+- `<LogoutButton>` — trigger + confirm dialog (portaled to `document.body`)
+- `<CharacterIsland>`, `<CharacterBrowse>`, `<CharacterQuizRunner>` — Character mode's
+  browse-then-quiz flow, see [38-character-mode-overhaul-plan.md](38-character-mode-overhaul-plan.md)

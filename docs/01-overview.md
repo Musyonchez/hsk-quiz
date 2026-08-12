@@ -30,11 +30,10 @@ HSK5A/5B/6A/6B are still pending their own transcriptions — see
 
 This is a real client/server app with its own database, not a pile of static JSON files:
 
-- **Dev/testing**: SQLite, file-based, zero setup.
-- **Prod**: an external managed database (Postgres). Swapping is a small, contained change
-  (the `schema.prisma` provider plus one driver-adapter import — see
-  [05-architecture.md](05-architecture.md)), not a query rewrite — the ORM keeps both targets
-  working off one schema either way.
+- **Both dev and prod**: a single external managed database (Neon Postgres), reached via one
+  `DATABASE_URL` — no SQLite, no separate dev/prod database split (see
+  [05-architecture.md](05-architecture.md) for what that tradeoff means in practice, and
+  [45-audit-infra-security.md](45-audit-infra-security.md) for the risk it carries).
 
 This also means quiz attempts and best scores can be genuinely persisted server-side (not just
 `localStorage`), so "your progress" survives clearing browser storage or switching devices —
@@ -47,8 +46,9 @@ reference screenshots' `AVG SCORE` / `AVG FRIEND SCORE` / leaderboard-style feat
 reproduced, not skipped:
 
 - **Login is account-based, with public self-service registration.** Anyone can create an
-  account from `/register` (username + password, no email/verification step) — see
-  [05-architecture.md](05-architecture.md) for how accounts get created and
+  account from `/register` (username + password + email — the email exists solely to support
+  password reset, see [36-better-auth-migration-plan.md](36-better-auth-migration-plan.md)) —
+  see [05-architecture.md](05-architecture.md) for how accounts get created and
   [09-pages.md](09-pages.md) for the login/register pages themselves.
 - **Friends** — a user can add another known user as a friend; friend status gates what shows
   up on the friends leaderboard.
@@ -58,9 +58,11 @@ reproduced, not skipped:
 ## Non-goals (for now)
 
 - No listening/audio component (separate from [hsk2-listening-plan](../../hsk2-listening-plan/plan.md)).
-- No email collection or "forgot password" flow — accounts are just a username + password (see
-  above), so there's no address to send a reset link to.
 - No mobile app — a responsive web page is enough.
+
+(Previously this section also listed "no email collection or forgot-password flow" as a
+non-goal — reversed by [36-better-auth-migration-plan.md](36-better-auth-migration-plan.md):
+registration collects an email specifically to support a real forgot-password flow now.)
 
 ## Why two data sources instead of one
 

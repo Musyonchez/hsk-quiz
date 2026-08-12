@@ -11,10 +11,24 @@ fine.
 
 ## Env vars
 
-Just `DATABASE_URL` — the same Neon connection string already used for local dev (a single
-database serves both right now, per [20](hold/20-postgres-vercel-migration-plan.md)'s "what actually
-happened," since there's no live production data yet to keep separate). No `NODE_ENV` needed —
-Vercel sets that automatically for production deployments (Render required it manually).
+**Corrected per [43-audit-docs-consistency.md](43-audit-docs-consistency.md)** — this section
+originally said "just `DATABASE_URL`," which predates
+[36-better-auth-migration-plan.md](36-better-auth-migration-plan.md) adding four more required
+vars. Five total need setting in both Production and Preview environments:
+
+- `DATABASE_URL` — the same Neon connection string already used for local dev (a single database
+  serves both right now, per [20](hold/20-postgres-vercel-migration-plan.md)'s "what actually
+  happened").
+- `BETTER_AUTH_SECRET` — session/token signing secret for the self-hosted better-auth instance.
+- `BETTER_AUTH_URL` — the app's own base URL, used for auth callback/redirect origin-checking.
+  Docs/36 gates this per `VERCEL_ENV`: a stable value on Production, `https://${VERCEL_URL}`
+  (the deployment-specific hash domain) on Preview, since every Preview deployment gets its own
+  unique URL and a mismatched `baseURL` actively breaks callback routes, not just warns.
+- `GMAIL_USER`, `GMAIL_APP_PASSWORD` — the Gmail SMTP account and app password
+  `src/lib/send-email.ts` uses to send password-reset emails.
+
+No `NODE_ENV` needed — Vercel sets that automatically for production deployments (Render
+required it manually).
 
 If the Neon database was created via **Vercel's own marketplace integration** (Storage tab →
 Neon), connecting that existing resource to this project auto-injects `DATABASE_URL` (and a
@@ -46,9 +60,10 @@ source data changes later.
 1. Sign up / log in at vercel.com, connect your GitHub account if not already connected.
 2. Add New → Project → import `Musyonchez/hsk-quiz`. Vercel auto-detects Next.js; no framework
    settings need changing.
-3. Before the first deploy, confirm `DATABASE_URL` is set in the project's Environment Variables
-   (Settings → Environment Variables) — either already there via the Neon integration, or add it
-   manually with the same Neon connection string used locally.
+3. Before the first deploy, confirm all five env vars from "Env vars" above are set in the
+   project's Environment Variables (Settings → Environment Variables) for both Production and
+   Preview — `DATABASE_URL` may already be there via the Neon integration; the rest need adding
+   manually.
 4. Deploy.
 
 ## Verifying a deploy worked
