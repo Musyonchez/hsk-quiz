@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { ChevronLeft, ChevronRight, Eye, EyeOff, Shuffle, X } from "lucide-react";
 import type { QuizWord } from "@/quiz/types";
 import { pillClasses } from "@/components/pill-classes";
+import { SpeakerButton } from "@/components/SpeakerButton";
 
 export type { QuizWord };
 
@@ -140,6 +141,11 @@ export function CharacterBrowse({
             }}
             className="relative flex w-full max-w-md flex-col items-center gap-5 rounded-xl border border-border bg-surface p-8 text-center shadow-lg shadow-background/50"
           >
+            <SpeakerButton
+              text={openWord.chinese}
+              kind="word"
+              className="absolute left-3 top-3"
+            />
             <button
               ref={closeButtonRef}
               type="button"
