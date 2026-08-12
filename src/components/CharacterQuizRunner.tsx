@@ -12,6 +12,7 @@ import type { QuizWord } from "@/quiz/types";
 import { pillClasses } from "@/components/pill-classes";
 import { ToolbarButton } from "@/components/ToolbarButton";
 import { QuizResultsScreen } from "@/components/QuizResultsScreen";
+import { SpeakerButton } from "@/components/SpeakerButton";
 
 export type { QuizWord };
 
@@ -371,7 +372,12 @@ function CharacterQuizRunnerInner({
       </div>
 
       {started && !finished && !paused && currentWord && answerFormat === "pinyin" && (
-        <div className="mx-auto flex w-full max-w-md flex-col gap-5 rounded-xl border border-border bg-surface p-8 shadow-lg shadow-background/50">
+        <div className="relative mx-auto flex w-full max-w-md flex-col gap-5 rounded-xl border border-border bg-surface p-8 shadow-lg shadow-background/50">
+          <SpeakerButton
+            text={currentWord.chinese}
+            kind="word"
+            className="absolute left-3 top-3"
+          />
           <div
             role="progressbar"
             aria-valuenow={answeredCount}
@@ -408,7 +414,12 @@ function CharacterQuizRunnerInner({
       )}
 
       {started && !finished && !paused && currentWord && answerFormat === "english" && (
-        <div className="mx-auto flex w-full max-w-md flex-col gap-5 rounded-xl border border-border bg-surface p-8 shadow-lg shadow-background/50">
+        <div className="relative mx-auto flex w-full max-w-md flex-col gap-5 rounded-xl border border-border bg-surface p-8 shadow-lg shadow-background/50">
+          <SpeakerButton
+            text={currentWord.chinese}
+            kind="word"
+            className="absolute left-3 top-3"
+          />
           <div
             role="progressbar"
             aria-valuenow={answeredCount}
