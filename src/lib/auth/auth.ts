@@ -20,7 +20,7 @@ import { username } from "better-auth/plugins";
 import { nextCookies } from "better-auth/next-js";
 import { headers } from "next/headers";
 import { prisma } from "@/lib/db";
-import { sendEmail } from "@/lib/send-email";
+import { sendEmail } from "@/lib/auth/send-email";
 import { rateLimitStorage } from "@/lib/rate-limit-storage";
 import { siteUrl } from "@/lib/site-url";
 

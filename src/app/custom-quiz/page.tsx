@@ -1,7 +1,7 @@
 import { Layers } from "lucide-react";
-import { requireSession } from "@/lib/require-session";
+import { requireSession } from "@/lib/auth/require-session";
 import { getLevelsOverviewWithChapters } from "@/lib/queries";
-import { CustomQuizPicker } from "@/components/CustomQuizPicker";
+import { CustomQuizPicker } from "@/components/quiz/CustomQuizPicker";
 
 export default async function CustomQuizPage() {
   await requireSession();

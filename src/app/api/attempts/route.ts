@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getSessionUser } from "@/lib/auth";
+import { getSessionUser } from "@/lib/auth/auth";
 import { prisma } from "@/lib/db";
 import { parseQuizKey } from "@/quiz/quiz-key";
 import { checkRateLimit } from "@/lib/api-rate-limit";

@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getSessionUser } from "@/lib/auth";
+import { getSessionUser } from "@/lib/auth/auth";
 import { prisma } from "@/lib/db";
 
 export async function POST(_request: Request, { params }: { params: Promise<{ id: string }> }) {

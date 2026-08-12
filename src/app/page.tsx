@@ -10,7 +10,7 @@ import {
   Trophy,
   Volume2,
 } from "lucide-react";
-import { getSessionUser } from "@/lib/auth";
+import { getSessionUser } from "@/lib/auth/auth";
 import {
   getLevelsOverview,
   getLevelsOverviewWithCombinedCount,
@@ -19,7 +19,7 @@ import {
 import { describeQuizKey } from "@/quiz/quiz-key";
 import { siteUrl } from "@/lib/site-url";
 import { pillClasses } from "@/components/pill-classes";
-import { VocabTableGroup } from "@/components/VocabTable";
+import { VocabTableGroup } from "@/components/vocab/VocabTable";
 
 // Rewritten (Aug 2026) — the previous copy only described the original
 // pinyin-typing + match-meanings pair of modes and a since-false "no email

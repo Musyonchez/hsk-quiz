@@ -1,10 +1,10 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Layers } from "lucide-react";
-import { requireSession } from "@/lib/require-session";
+import { requireSession } from "@/lib/auth/require-session";
 import { getCombinedWordCount, getLevelWithChapters } from "@/lib/queries";
 import { isLevelSlug } from "@/lib/hsk-level";
-import { QuizLinkCard } from "@/components/QuizLinkCard";
+import { QuizLinkCard } from "@/components/quiz/QuizLinkCard";
 
 export default async function LevelHubPage({
   params,

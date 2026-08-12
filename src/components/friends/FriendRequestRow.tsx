@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { UserBadge } from "./UserBadge";
-import { pillClasses } from "./pill-classes";
+import { pillClasses } from "@/components/pill-classes";
 
 export function FriendRequestRow({
   requestId,

@@ -1,10 +1,10 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
-import { requireSession } from "@/lib/require-session";
+import { requireSession } from "@/lib/auth/require-session";
 import { getChapterDialogWords, getChapterWithWords } from "@/lib/queries";
 import { isLevelSlug } from "@/lib/hsk-level";
-import { VocabTable } from "@/components/VocabTable";
-import { AllWordsTabs } from "@/components/AllWordsTabs";
+import { VocabTable } from "@/components/vocab/VocabTable";
+import { AllWordsTabs } from "@/components/vocab/AllWordsTabs";
 
 // docs/hold/25-chapter-all-words-plan.md's "All Words" tab (moved here from the
 // base /all route once that became the real dialog transcript — see the

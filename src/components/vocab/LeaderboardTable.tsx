@@ -1,4 +1,4 @@
-import { UserBadge } from "./UserBadge";
+import { UserBadge } from "@/components/friends/UserBadge";
 import type { LeaderboardRow } from "@/lib/queries";
 
 export function LeaderboardTable({

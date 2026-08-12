@@ -4,10 +4,10 @@ import { useState } from "react";
 import type { QuizNavTarget } from "@/quiz/quiz-navigation";
 import type { QuizWord } from "@/quiz/types";
 import { pillClasses } from "@/components/pill-classes";
-import { QuizRunner } from "@/components/QuizRunner";
-import { ChoiceQuizRunner } from "@/components/ChoiceQuizRunner";
-import { MatchQuizRunner } from "@/components/MatchQuizRunner";
-import { CharacterIsland } from "@/components/CharacterIsland";
+import { QuizRunner } from "@/components/quiz/QuizRunner";
+import { ChoiceQuizRunner } from "@/components/quiz/ChoiceQuizRunner";
+import { MatchQuizRunner } from "@/components/quiz/MatchQuizRunner";
+import { CharacterIsland } from "@/components/quiz/CharacterIsland";
 
 // Exactly 3 self-contained modes (docs/38) — Pinyin, Character, English
 // ("Match meaning", renamed for parity with the naming scheme) — picked

@@ -1,5 +1,5 @@
-import { requireSession } from "@/lib/require-session";
-import { ChangePasswordForm } from "@/components/ChangePasswordForm";
+import { requireSession } from "@/lib/auth/require-session";
+import { ChangePasswordForm } from "@/components/auth/ChangePasswordForm";
 
 export default async function AccountPage() {
   const user = await requireSession();

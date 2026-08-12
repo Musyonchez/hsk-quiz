@@ -2,8 +2,8 @@
 
 import { useState } from "react";
 import { pillClasses } from "@/components/pill-classes";
-import { PasswordField } from "@/components/PasswordField";
-import { authClient } from "@/lib/auth-client";
+import { PasswordField } from "@/components/auth/PasswordField";
+import { authClient } from "@/lib/auth/auth-client";
 
 export function ChangePasswordForm() {
   const [currentPassword, setCurrentPassword] = useState("");

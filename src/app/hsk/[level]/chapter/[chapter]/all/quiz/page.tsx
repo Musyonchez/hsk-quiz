@@ -1,11 +1,11 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
-import { requireSession } from "@/lib/require-session";
+import { requireSession } from "@/lib/auth/require-session";
 import { getChapterDialogWords, getChapterWithWords } from "@/lib/queries";
 import { isLevelSlug } from "@/lib/hsk-level";
 import { quizKeyFor } from "@/quiz/quiz-key";
-import { AllWordsTabs } from "@/components/AllWordsTabs";
-import { QuizModeGate } from "@/components/QuizModeGate";
+import { AllWordsTabs } from "@/components/vocab/AllWordsTabs";
+import { QuizModeGate } from "@/components/quiz/QuizModeGate";
 
 // docs/hold/25-chapter-all-words-plan.md's Type pinyin / Match meaning tabs, quizzing
 // on a chapter's full dialog vocabulary instead of its curated New Words —

@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/db";
-import { ResetPasswordForm } from "@/components/ResetPasswordForm";
+import { ResetPasswordForm } from "@/components/auth/ResetPasswordForm";
 
 // better-auth stores a reset token's owner as Verification.value (the
 // user's id) under identifier `reset-password:${token}` — confirmed against

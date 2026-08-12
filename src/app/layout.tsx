@@ -1,7 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
-import { AppHeader } from "@/components/AppHeader";
-import { HeaderHeightVar } from "@/components/HeaderHeightVar";
+import { AppHeader } from "@/components/layout/AppHeader";
+import { HeaderHeightVar } from "@/components/layout/HeaderHeightVar";
 import { siteUrl } from "@/lib/site-url";
 import "./globals.css";
 

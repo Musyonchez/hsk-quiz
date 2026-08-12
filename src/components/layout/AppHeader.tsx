@@ -1,10 +1,10 @@
 import Link from "next/link";
 import { Layers, Trophy, Users } from "lucide-react";
-import { getSessionUser } from "@/lib/auth";
+import { getSessionUser } from "@/lib/auth/auth";
 import { getLevelsOverview } from "@/lib/queries";
-import { pillClasses } from "./pill-classes";
-import { LogoutButton } from "./LogoutButton";
-import { UserBadge } from "./UserBadge";
+import { pillClasses } from "@/components/pill-classes";
+import { LogoutButton } from "@/components/auth/LogoutButton";
+import { UserBadge } from "@/components/friends/UserBadge";
 import { MobileNav } from "./MobileNav";
 
 export async function AppHeader() {

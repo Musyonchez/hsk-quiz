@@ -3,8 +3,8 @@
 import { useState } from "react";
 import type { QuizNavTarget } from "@/quiz/quiz-navigation";
 import type { QuizWord } from "@/quiz/types";
-import { CharacterBrowse } from "@/components/CharacterBrowse";
-import { CharacterQuizRunner } from "@/components/CharacterQuizRunner";
+import { CharacterBrowse } from "@/components/quiz/CharacterBrowse";
+import { CharacterQuizRunner } from "@/components/quiz/CharacterQuizRunner";
 
 // The Character island (docs/38) — one self-contained flow, not two modes
 // reached separately. Opens on the browse grid/popup (part 1); "Start quiz"

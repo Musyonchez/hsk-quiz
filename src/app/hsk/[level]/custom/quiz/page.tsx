@@ -1,9 +1,9 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { requireSession } from "@/lib/require-session";
+import { requireSession } from "@/lib/auth/require-session";
 import { getLevelName, getWordsForChapters } from "@/lib/queries";
 import { isLevelSlug } from "@/lib/hsk-level";
-import { QuizModeGate } from "@/components/QuizModeGate";
+import { QuizModeGate } from "@/components/quiz/QuizModeGate";
 
 function parseChapterNumbers(raw: string | undefined): number[] {
   if (!raw) return [];

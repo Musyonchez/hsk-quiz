@@ -1,11 +1,11 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { requireSession } from "@/lib/require-session";
+import { requireSession } from "@/lib/auth/require-session";
 import { getCombinedWords, getLevelName, getLevelsOverview } from "@/lib/queries";
 import { isLevelSlug } from "@/lib/hsk-level";
 import { quizKeyFor } from "@/quiz/quiz-key";
 import { getQuizNavigation } from "@/quiz/quiz-navigation";
-import { QuizModeGate } from "@/components/QuizModeGate";
+import { QuizModeGate } from "@/components/quiz/QuizModeGate";
 
 export default async function CombinedQuizPage({
   params,

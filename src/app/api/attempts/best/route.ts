@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getSessionUser } from "@/lib/auth";
+import { getSessionUser } from "@/lib/auth/auth";
 import { getBestAttempt } from "@/lib/queries";
 import { parseQuizKey } from "@/quiz/quiz-key";
 

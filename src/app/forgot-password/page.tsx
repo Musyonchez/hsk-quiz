@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { pillClasses } from "@/components/pill-classes";
-import { authClient } from "@/lib/auth-client";
+import { authClient } from "@/lib/auth/auth-client";
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState("");
