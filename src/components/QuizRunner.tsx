@@ -1,36 +1,19 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import {
-  ArrowRight,
-  ChevronLeft,
-  ChevronRight,
-  EyeOff,
-  Flag,
-  Pause,
-  Play,
-  Shuffle,
-} from "lucide-react";
+import { ChevronLeft, ChevronRight, EyeOff, Flag, Pause, Play, Shuffle } from "lucide-react";
 import { matchesPinyin } from "@/quiz/pinyin-match";
 import { formatDuration } from "@/quiz/format-time";
 import { withHardSuffix } from "@/quiz/quiz-key";
 import { submitAttempt } from "@/quiz/submit-attempt";
+import { shuffle } from "@/quiz/shuffle";
 import type { QuizNavTarget } from "@/quiz/quiz-navigation";
 import type { QuizWord } from "@/quiz/types";
 import { pillClasses } from "@/components/pill-classes";
-import { QuizLinkCard } from "@/components/QuizLinkCard";
-import { VocabTableGroup } from "@/components/VocabTable";
+import { ToolbarButton } from "@/components/ToolbarButton";
+import { QuizResultsScreen } from "@/components/QuizResultsScreen";
 
 export type { QuizWord };
-
-function shuffle<T>(items: T[]): T[] {
-  const copy = [...items];
-  for (let i = copy.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [copy[i], copy[j]] = [copy[j], copy[i]];
-  }
-  return copy;
-}
 
 export function QuizRunner({
   words,
@@ -259,107 +242,27 @@ function QuizRunnerInner({
     const missedWords = order.filter((word) => !correctIds.has(word.id));
 
     return (
-      <div className="flex flex-col gap-6">
-        {(nextQuiz || anotherQuiz) && (
-          <div className="grid gap-4 sm:grid-cols-2">
-            {nextQuiz && (
-              <QuizLinkCard
-                href={nextQuiz.href}
-                eyebrow={nextQuiz.eyebrow}
-                title={nextQuiz.title}
-                icon={ArrowRight}
-              />
-            )}
-            {anotherQuiz && (
-              <QuizLinkCard
-                href={anotherQuiz.href}
-                eyebrow={anotherQuiz.eyebrow}
-                title={anotherQuiz.title}
-                icon={Shuffle}
-              />
-            )}
-          </div>
-        )}
-
-        <div className="flex flex-col items-center gap-5 rounded-xl border border-border bg-surface p-6 text-center">
-          <div className="flex flex-col items-center gap-1">
-            <h2 className="text-lg font-bold">{heading}</h2>
-            <p className="text-4xl font-bold tabular-nums text-accent">
-              {percent}%
-            </p>
-            <p className="text-sm text-muted-foreground">
-              {score} / {total} correct
-              {bestPercent !== null && <> · your best: {bestPercent}%</>}
-            </p>
-            {(avgGlobalPercent !== null || avgFriendPercent !== null) && (
-              <p className="text-sm text-muted-foreground">
-                {avgGlobalPercent !== null && (
-                  <>avg score: {avgGlobalPercent}% </>
-                )}
-                {avgFriendPercent !== null && (
-                  <>· avg friend score: {avgFriendPercent}%</>
-                )}
-              </p>
-            )}
-            {saveFailed && trackAttempt && effectiveQuizKey && (
-              <p className="text-sm text-danger">
-                Your score couldn&rsquo;t be saved — check your connection and try Replay.
-              </p>
-            )}
-          </div>
-          <div className="flex flex-wrap justify-center gap-3">
-            <button
-              type="button"
-              onClick={onReplay}
-              className={pillClasses("primary")}
-            >
-              Replay
-            </button>
-            {allowDrillMissed && missedWords.length > 0 && (
-              <button
-                type="button"
-                onClick={() => onDrillMissed(missedWords)}
-                className={pillClasses("secondary")}
-              >
-                Drill missed words
-              </button>
-            )}
-            <button
-              type="button"
-              onClick={() => setShowStats((v) => !v)}
-              className={pillClasses("secondary")}
-            >
-              {showStats ? "Hide stats" : "Stats"}
-            </button>
-            <a href={backHref} className={pillClasses("secondary")}>
-              Back
-            </a>
-          </div>
-          {trackAttempt && effectiveQuizKey && (
-            <a
-              href={`/leaderboard/${encodeURIComponent(effectiveQuizKey)}`}
-              className="text-sm text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
-            >
-              View leaderboard
-            </a>
-          )}
-
-          {showStats && (
-            <div className="w-full text-left">
-              <h3 className="mb-2 text-sm font-semibold text-danger">
-                Missed ({missedWords.length})
-              </h3>
-              {missedWords.length === 0 ? (
-                <p className="text-sm text-muted-foreground">
-                  None — you got every word.
-                </p>
-              ) : (
-                <VocabTableGroup words={missedWords} />
-              )}
-            </div>
-          )}
-        </div>
-      </div>
+      <QuizResultsScreen
+        heading={heading}
+        percent={percent}
+        score={score}
+        total={total}
+        bestPercent={bestPercent}
+        avgGlobalPercent={avgGlobalPercent}
+        avgFriendPercent={avgFriendPercent}
+        saveFailed={saveFailed}
+        trackAttempt={trackAttempt}
+        quizKey={effectiveQuizKey}
+        backHref={backHref}
+        allowDrillMissed={allowDrillMissed}
+        missedWords={missedWords}
+        onReplay={onReplay}
+        onDrillMissed={onDrillMissed}
+        showStats={showStats}
+        onToggleStats={() => setShowStats((v) => !v)}
+        nextQuiz={nextQuiz}
+        anotherQuiz={anotherQuiz}
+      />
     );
   }
 
@@ -521,40 +424,5 @@ function QuizRunnerInner({
         </table>
       </div>
     </div>
-  );
-}
-
-function ToolbarButton({
-  onClick,
-  disabled,
-  label,
-  variant = "default",
-  children,
-}: {
-  onClick: () => void;
-  disabled: boolean;
-  label: string;
-  // "active" — a selected/toggled-on state (e.g. Hard mode once enabled),
-  // bronze per docs/hold/30-color-palette-expansion-plan.md's accent-secondary,
-  // same "selected but not a primary action" role tabs already use it for.
-  variant?: "default" | "danger" | "active";
-  children: React.ReactNode;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      disabled={disabled}
-      aria-label={label}
-      className={`flex items-center gap-1.5 rounded-full border px-3 py-2.5 text-sm font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-40 ${
-        variant === "danger"
-          ? "border-border-strong text-danger hover:bg-danger/10"
-          : variant === "active"
-            ? "border-accent-secondary bg-accent-secondary text-accent-secondary-foreground hover:bg-accent-secondary-hover"
-            : "border-border-strong text-foreground hover:bg-surface-raised"
-      }`}
-    >
-      {children}
-    </button>
   );
 }

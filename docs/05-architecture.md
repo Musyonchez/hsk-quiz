@@ -169,6 +169,9 @@ website/
                                # ResetPasswordForm, PasswordField — see 08-ui-ux.md. Note:
                                # pill-shaped buttons are a `pillClasses()` class-string helper
                                # (`components/pill-classes.ts`), not a `<PillButton>` component.
+                               # ToolbarButton.tsx / QuizResultsScreen.tsx: shared by all four quiz
+                               # runners above (docs/46), extracted out of each runner's own
+                               # near-identical copy.
     lib/
       extract/                # extract-combined.ts, extract-chapters.ts (dispatch by level
                                # slug to the right in-repo data file — no PDF/markdown I/O);
