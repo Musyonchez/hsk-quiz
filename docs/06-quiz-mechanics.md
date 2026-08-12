@@ -105,11 +105,17 @@ borrowed from the `word-drill` reference project docs/38 cites. Everything else 
 Prev/Next/Pause/Give up, timed mode, end-of-quiz stats, drill-missed, leaderboard) is the same
 pattern every other runner in this app uses.
 
-### Mnemonics
+### Mnemonics (per docs/39-memory-aid-mnemonics-plan.md)
 
-`QuizWord.mnemonic` is an optional field, ready for docs/34's mnemonic dictionary once it lands
-(currently a paused, unmerged branch — HSK1 written, HSK2/HSK3 not). No query populates it today,
-so the popup's mnemonic line simply doesn't render — not a placeholder, not an empty line.
+Every distinct Chinese word across all 3 HSK levels (774 total) has a hand-written mnemonic,
+backfilled onto `Word.mnemonic`. Source dictionaries live in `src/quiz/mnemonics/` — one file per
+level (`hsk1.ts`/`hsk2.ts`/`hsk3.ts`), each holding only the words new to that level (not
+repeated every time a higher level's cumulative "combined" list includes them again) —
+`scripts/backfill-mnemonics.ts` applies a dictionary's entries to every `Word` row sharing that
+`chinese` text, across every level/chapter/source it appears under. `QuizWord.mnemonic` still
+reads straight off the DB row, no runtime lookup into these files. A word without an entry (there
+shouldn't be any at this point, but the popup doesn't assume otherwise) still just skips the
+mnemonic line rather than rendering a placeholder.
 
 ## Hard mode (optional, per docs/hold/28-progressive-difficulty-plan.md)
 

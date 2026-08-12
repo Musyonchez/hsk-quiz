@@ -45,6 +45,13 @@ model Word {
   meaning   String?
   category  String? // PDF word-class, e.g. "Personal Pron." (combined source only)
   source    String // "chapter" | "combined" | "dialog"
+  // Character mode's popup mnemonic (docs/38, docs/39) — null until written.
+  // Keyed conceptually by `chinese` text, not by row: the same word can span
+  // several rows (chapter/combined/dialog, across levels once "combined" is
+  // cumulative), and they all share one mnemonic rather than each needing
+  // its own — the backfill script in docs/39 sets every row with matching
+  // `chinese` in one pass, not just the row it was authored against.
+  mnemonic  String?
 
   // `source` is part of the key (not just [chapterId, chinese]) because a
   // word can legitimately have two rows for the same chapterId: a "chapter"
