@@ -273,7 +273,6 @@ three shippable sub-phases:
 
 ## Explicitly deferred (not in any phase above)
 
-- HSK 3 support (data doesn't exist yet — [[one-chapter-at-a-time]]).
 - ~~Listening or audio-based quiz modes.~~ ✅ Word/sentence pronunciation audio shipped
   ([47-word-sentence-audio-plan.md](47-word-sentence-audio-plan.md)) — every word and dialog
   sentence has a speaker-icon playback button. A dedicated *listening-quiz* mode (answer from

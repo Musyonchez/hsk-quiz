@@ -49,7 +49,10 @@ the doc itself hasn't been touched since.
   [43-audit-docs-consistency.md](43-audit-docs-consistency.md), [44-audit-quiz-ux-gaps.md](44-audit-quiz-ux-gaps.md),
   [45-audit-infra-security.md](45-audit-infra-security.md) — the five detailed companion audits
 - [50-full-sweep-audit-2026-08.md](50-full-sweep-audit-2026-08.md) — second full-sweep round
-  (best practices, duplication, file structure); start here for the most recent state
+  (best practices, duplication, file structure)
+- [52-audit-2026-08-14.md](52-audit-2026-08-14.md) — third round, first real run of the
+  [51-multi-agent-audit-playbook.md](51-multi-agent-audit-playbook.md) process; start here for the
+  most recent state
 
 ## Archive
 

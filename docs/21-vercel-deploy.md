@@ -26,7 +26,7 @@ sixth. Six total, though only `CRON_SECRET` is Production-only (see below):
   (the deployment-specific hash domain) on Preview, since every Preview deployment gets its own
   unique URL and a mismatched `baseURL` actively breaks callback routes, not just warns.
 - `GMAIL_USER`, `GMAIL_APP_PASSWORD` — the Gmail SMTP account and app password
-  `src/lib/send-email.ts` uses to send password-reset emails.
+  `src/lib/auth/send-email.ts` uses to send password-reset emails.
 - `CRON_SECRET` — authenticates Vercel Cron's daily call to
   `/api/cron/purge-rate-limits` (`vercel.json`); Vercel injects it as an
   `Authorization: Bearer` header automatically once set. Vercel Cron only ever triggers against the
