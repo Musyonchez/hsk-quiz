@@ -14,6 +14,8 @@ drifts, that's a bug, not expected staleness.
 - [08-ui-ux.md](08-ui-ux.md) — layout, component inventory, visual language
 - [09-pages.md](09-pages.md) — every route, what it does
 - [10-color-palette.md](10-color-palette.md) — the color system
+- [51-multi-agent-audit-playbook.md](51-multi-agent-audit-playbook.md) — reusable process for the
+  next full/targeted audit; not a finding-set itself, a "how to run one" reference
 
 ## 2. Historical / point-in-time (accurate about *when they were written*, not necessarily today)
 
