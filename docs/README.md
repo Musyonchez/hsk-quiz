@@ -16,6 +16,10 @@ drifts, that's a bug, not expected staleness.
 - [10-color-palette.md](10-color-palette.md) — the color system
 - [51-multi-agent-audit-playbook.md](51-multi-agent-audit-playbook.md) — reusable process for the
   next full/targeted audit; not a finding-set itself, a "how to run one" reference
+- [54-claude-skills-for-ui-ux.md](54-claude-skills-for-ui-ux.md) — project-neutral reference on
+  Claude Skills/Design for UI/UX work, imported from [toolbox](https://github.com/Musyonchez/toolbox);
+  not a description of hsk-quiz itself, kept here as forward-looking reference for future UI/UX
+  passes on this site
 
 ## 2. Historical / point-in-time (accurate about *when they were written*, not necessarily today)
 
