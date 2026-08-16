@@ -8,7 +8,10 @@ that map. Three tiers, in order of how likely a doc is to still be accurate toda
 Describe the app's *current* shape. Kept up to date as things change — if one of these ever
 drifts, that's a bug, not expected staleness.
 
-- [01-overview.md](01-overview.md) — what this is, non-goals, why two data sources
+- [01-overview.md](01-overview.md) — what this is, non-goals, why two data sources. **Known
+  stale** (docs/56 finding 56-6): its "Scope"/"Why two data sources" sections still describe a
+  retired `characters/`/`raw/`-based pipeline and link to directories that no longer exist —
+  trust [04-data-pipeline.md](04-data-pipeline.md) over this doc until it's rewritten
 - [05-architecture.md](05-architecture.md) — tech stack, schema, folder layout, API surface
 - [06-quiz-mechanics.md](06-quiz-mechanics.md) — how each quiz mode actually works
 - [08-ui-ux.md](08-ui-ux.md) — layout, component inventory, visual language
@@ -64,8 +67,11 @@ the doc itself hasn't been touched since.
 - [50-full-sweep-audit-2026-08.md](50-full-sweep-audit-2026-08.md) — second full-sweep round
   (best practices, duplication, file structure)
 - [52-audit-2026-08-14.md](52-audit-2026-08-14.md) — third round, first real run of the
-  [51-multi-agent-audit-playbook.md](51-multi-agent-audit-playbook.md) process; start here for the
-  most recent state
+  [51-multi-agent-audit-playbook.md](51-multi-agent-audit-playbook.md) process
+- [56-audit-2026-08-16.md](56-audit-2026-08-16.md) — fourth round, run against the generic
+  [53-comprehensive-audit-prompt-playbook.md](53-comprehensive-audit-prompt-playbook.md) instead;
+  a different category split surfaced real WCAG contrast-math findings the prior splits hadn't —
+  start here for the most recent state
 
 ## Archive
 
