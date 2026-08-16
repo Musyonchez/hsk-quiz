@@ -11,7 +11,7 @@ plain TypeScript data (`src/lib/extract/hsk{N}-chapters-data.ts` and
 path outside the repo is ever read — it's self-contained. (✅ docs/50 full-sweep audit §20: this
 used to say "website/" — that was the app's folder name back when it lived nested inside a larger
 monorepo; it's the repo root now, so the `website/` prefix below is dropped.) See
-[02-data-sources.md](02-data-sources.md) for where each level's data originally came from
+[02-data-sources.md](hold/02-data-sources.md) for where each level's data originally came from
 before being baked into these files.
 
 ## Where extraction logic lives vs. where it's used

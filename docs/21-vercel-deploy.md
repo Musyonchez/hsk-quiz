@@ -1,6 +1,6 @@
 # Deploying hsk-quiz (Vercel)
 
-The live deploy target, per [20-postgres-vercel-migration-plan.md](hold/20-postgres-vercel-migration-plan.md) — the database moved from SQLite to Postgres (Neon) specifically to make this possible. See [16-deploy.md](16-deploy.md) for the superseded Render setup.
+The live deploy target, per [20-postgres-vercel-migration-plan.md](hold/20-postgres-vercel-migration-plan.md) — the database moved from SQLite to Postgres (Neon) specifically to make this possible. See [16-deploy.md](hold/16-deploy.md) for the superseded Render setup.
 
 ## Why this works now
 

@@ -1,19 +1,18 @@
 > Imported from [toolbox](https://github.com/Musyonchez/toolbox)'s
 > `playbooks/03-repo-setup-and-deploy-playbook.md` — a generalized checklist for "take a working
 > local project to hardened GitHub repo + deployed + CI/CD + safe-to-expose-publicly," written up
-> from a different project (a FastAPI app on Fly.io). Filed straight into `hold/`: every item this
-> checklist covers has already been done for hsk-quiz, via its own repo-specific docs, generally
-> with a more mature solution than what this generic version describes —
-> [16-deploy.md](../16-deploy.md)/[21-vercel-deploy.md](../21-vercel-deploy.md) (deploy, on Vercel
-> not Fly.io), [35-ci-cd-plan.md](../35-ci-cd-plan.md) (CI/CD), and
-> [36-better-auth-migration-plan.md](../36-better-auth-migration-plan.md)/
-> [37-auth-hardening-and-ux-plan.md](../37-auth-hardening-and-ux-plan.md) (real accounts via
-> self-hosted better-auth, not this doc's §4 stopgap-then-hand-rolled-session approach). The
-> README's own contributing section already documents the branch-protected PR workflow this
-> checklist's §1 argues for. Kept here for reference only — e.g. the §3 (platform-specific
-> gotchas) and §5 (third-party PR bot behavior) sections have generalizable value beyond what
-> hsk-quiz's own docs happened to need to write down, in case a *future* infra change here runs
-> into the same class of problem.
+> from a different project (a FastAPI app on Fly.io). Every item it covers has already been done
+> for hsk-quiz, via its own repo-specific docs, generally with a more mature solution than what
+> this generic version describes — [hold/16-deploy.md](hold/16-deploy.md)/
+> [21-vercel-deploy.md](21-vercel-deploy.md) (deploy, on Vercel not Fly.io),
+> [35-ci-cd-plan.md](35-ci-cd-plan.md) (CI/CD), and
+> [36-better-auth-migration-plan.md](36-better-auth-migration-plan.md)/
+> [37-auth-hardening-and-ux-plan.md](37-auth-hardening-and-ux-plan.md) (real accounts via
+> self-hosted better-auth, not this doc's §4 stopgap-then-hand-rolled-session approach). Kept live
+> rather than archived because §3 (platform-specific deploy gotchas) and §5 (third-party PR bot
+> behavior) still have generalizable value beyond what hsk-quiz's own docs happened to need to
+> write down — reference material for a *future* infra change here, not a record of hsk-quiz's own
+> history the way 16/21/35/36/37 are.
 
 # Repo Hardening + Deploy + CI/CD + Auth — Playbook
 

@@ -4,7 +4,7 @@
 
 A Sporcle-style typing quiz site for HSK vocabulary — HSK1/HSK2 sourced from
 [characters/words/](../../characters/words/), HSK3 and up sourced from an in-repo data file per
-level (see [02-data-sources.md](02-data-sources.md) for why), and the raw HSK vocabulary lists
+level (see [02-data-sources.md](hold/02-data-sources.md) for why), and the raw HSK vocabulary lists
 in [raw/](../../raw/) for the combined-level word lists. Modeled directly on the screenshots
 supplied for this feature:
 a results screen, a browsable answer-key table, and a timed typing quiz where you type the
@@ -16,11 +16,11 @@ Two granularities per level:
 
 1. **Individual chapter quizzes** — one quiz per chapter, built from that chapter's
    `vocabulary.md` for HSK1/HSK2, or an in-repo data file for HSK3 and up (see
-   [02-data-sources.md](02-data-sources.md)).
+   [02-data-sources.md](hold/02-data-sources.md)).
 2. **Combined level quizzes** — one quiz per HSK level, built from the official all-levels PDF
    for HSK1-3, or that book's own transcribed textbook appendix for HSK4 and up (each of
    HSK4-6 is published as two separate volumes, so the cumulative PDF doesn't apply past HSK3 —
-   see [02-data-sources.md](02-data-sources.md)).
+   see [02-data-sources.md](hold/02-data-sources.md)).
 
 Currently live on the site: HSK1-3. HSK4A/4B are fully transcribed but not yet wired in, and
 HSK5A/5B/6A/6B are still pending their own transcriptions — see
@@ -80,17 +80,17 @@ PDFs — the chapter files alone don't necessarily add up to the full HSK list. 
 
 - HSK1/HSK2 chapter quizzes read from `characters/words/hsk{1,2}/chapter*/vocabulary.md`.
 - HSK3+ chapter quizzes read from an in-repo TypeScript data file instead (no `vocabulary.md`
-  involved at all — see [02-data-sources.md](02-data-sources.md)).
+  involved at all — see [02-data-sources.md](hold/02-data-sources.md)).
 - HSK1-3 combined quizzes read from `raw/HSK-All-Levels-Vocabulary/.../HSK {N} Vocabulary
   list.pdf`; HSK4+ read from an in-repo data file the same way their chapters do, since each
   book is published as its own volume the cumulative PDF doesn't cover.
 
-See [02-data-sources.md](02-data-sources.md) for the extraction rules for each.
+See [02-data-sources.md](hold/02-data-sources.md) for the extraction rules for each.
 
 ## Document index
 
-- [02-data-sources.md](02-data-sources.md) — where every piece of quiz data comes from
-- [03-content-extraction-rules.md](03-content-extraction-rules.md) — exact rules for what
+- [02-data-sources.md](hold/02-data-sources.md) — where every piece of quiz data comes from
+- [03-content-extraction-rules.md](hold/03-content-extraction-rules.md) — exact rules for what
   counts as quizzable vocabulary from a `vocabulary.md` file
 - [04-data-pipeline.md](04-data-pipeline.md) — the seed step that loads source files into the
   database

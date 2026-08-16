@@ -1,15 +1,13 @@
 > Imported from [toolbox](https://github.com/Musyonchez/toolbox)'s
-> `playbooks/01-comprehensive-audit-prompt.md` — a project-neutral, fill-in-the-blanks version of
-> the audit prompt this repo's own [51-multi-agent-audit-playbook.md](../51-multi-agent-audit-playbook.md)
-> was adapted from. Filed straight into `hold/` rather than live in `docs/`: this repo already has
-> a better-fit adapted version at docs/51, generalized specifically for this stack and scale
-> (High/Medium/Low severity matching docs/41-45/50, lenses mapped onto `src/lib`/`src/app/api`/
-> `src/components`/`src/quiz`, and the explicit "don't run 17 agents when this app has no test
-> suite / file uploads / CSRF surface to audit" guidance). Keeping this generic ancestor live
-> alongside docs/51 would risk someone reaching for the oversized version by mistake — kept here
-> for reference only, e.g. if the project-neutral phrasing is useful raw material for adapting a
-> *different* project's audit later. If docs/51 is ever revised, update the toolbox original too
-> so the two don't drift apart silently.
+> `playbooks/01-comprehensive-audit-prompt.md` — the project-neutral, fill-in-the-blanks ancestor
+> [51-multi-agent-audit-playbook.md](51-multi-agent-audit-playbook.md) was adapted from for this
+> repo specifically (this repo's actual scale, its High/Medium/Low severity scale, lenses mapped
+> onto its real folders). Kept here as the generic, portable version — useful raw material if
+> adapting a *different* project's audit later, or as a sanity check for what docs/51 deliberately
+> chose to drop (the 17-agent roster, the P0-P4 scale) and why. For actually auditing *this* repo,
+> reach for docs/51 first — it's the one shaped for hsk-quiz. If docs/51 is ever revised in a way
+> worth carrying back upstream, update the toolbox original too so the two don't drift apart
+> silently.
 
 # Comprehensive Multi-Agent Project Audit — Playbook
 

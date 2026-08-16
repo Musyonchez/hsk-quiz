@@ -39,7 +39,7 @@ see "Fixed" under each item.
   (`src/quiz/quiz-navigation.ts`) builds its `href`s with no `?mode=`, so finishing a meaning-mode
   quiz and clicking Play Next/Play Another always lands back on the "pick a quiz mode" picker
   screen instead of continuing in meaning mode — a minor UX inconsistency the mode-picker feature
-  ([16](../16-deploy.md)'s follow-up work, [22]'s own predecessor session) introduced without
+  ([16](16-deploy.md)'s follow-up work, [22]'s own predecessor session) introduced without
   updating this file to match.
   **Fixed**: rather than teaching `getQuizNavigation` about modes (it's a server-side call with no
   knowledge of the client-side mode choice), `QuizModeGate` appends `?mode=` to both targets'
