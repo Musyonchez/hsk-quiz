@@ -68,7 +68,8 @@ doesn't accept repeated `-f names[]=` for array fields, use `--input` with
 a JSON file). Set homepage once there's a live URL to point at.
 
 **CONTRIBUTING.md + a PR template** document the workflow branch
-protection now requires, and cost nothing to add.
+protection now requires, and cost nothing to add. (✅ done for hsk-quiz — `CONTRIBUTING.md` and
+`.github/pull_request_template.md`, cross-linked from the README's own Contributing section.)
 
 ---
 

@@ -66,3 +66,5 @@ gh pr create
 gh pr merge --merge --delete-branch
 git checkout main && git pull
 ```
+
+See [`CONTRIBUTING.md`](CONTRIBUTING.md) for what to check before opening a PR.
