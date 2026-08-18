@@ -66,7 +66,18 @@ RateLimit    { id, key, value, expiresAt }               -- durable rate-limit c
 Friendship   { id, userId, friendId, status ("pending" | "accepted" | "ignored"), createdAt }
 Attempt      { id, userId, quizKey ("hsk1-chapter5" | "hsk1-combined" | ...),
                score, total, durationSeconds, createdAt }
+
+SavedWordList { id, userId, name, isDefault, createdAt } -- unique on [userId, name]; v1 (57-saved-
+                words-plan.md) only ever creates one per user (isDefault: true), schema already
+                supports up to 3, player-named
+SavedWord     { id, listId, chinese, pinyin, meaning?, createdAt } -- unique on [listId, chinese];
+                identity is `chinese` text, not a Word.id FK (a word can span several Word rows,
+                see Word's own [chapterId, chinese, source] uniqueness above) -- pinyin/meaning
+                snapshotted at save time, mnemonic deliberately not (always looked up live)
 ```
+
+`User` also carries `savedWordsEnabled Boolean @default(false)` — the per-account opt-in the
+Saved Words tab gates on (off never deletes `SavedWord`/`SavedWordList` rows, only hides them).
 
 `quizKey` is the stable identifier used everywhere (routes, API, `Attempt.quizKey`) so a quiz
 is addressable without joining through Level/Chapter every time.
@@ -240,6 +251,9 @@ package.json
 | `POST /api/friends/requests` | session | send a friend request `{ username }` |
 | `POST /api/friends/requests/:id/accept` | session | accept a pending request |
 | `POST /api/friends/requests/:id/ignore` | session | mark a pending request `ignored` |
+| `POST /api/saved-words` | session, `savedWordsEnabled` | save a word `{ chinese, pinyin, meaning }` into the caller's list — upserts, reports `alreadySaved` instead of erroring on a duplicate |
+| `DELETE /api/saved-words/:id` | session | remove one saved word (the tab's remove control, or a save's Undo) |
+| `POST /api/account/saved-words-toggle` | session | flip `{ enabled }`; turning on auto-creates the default `SavedWordList` if missing, turning off never deletes rows |
 | `GET /api/cron/purge-rate-limits` | `CRON_SECRET` bearer token | deletes expired `RateLimit` rows; triggered by Vercel Cron only, see [45-audit-infra-security.md](45-audit-infra-security.md) §2 |
 
 There is no vocab REST API (an earlier draft of this doc planned `GET /api/levels` and similar

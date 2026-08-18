@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Layers, Trophy, Users } from "lucide-react";
+import { Bookmark, Layers, Trophy, Users } from "lucide-react";
 import { getSessionUser } from "@/lib/auth/auth";
 import { getLevelsOverview } from "@/lib/queries";
 import { pillClasses } from "@/components/pill-classes";
@@ -64,6 +64,13 @@ export async function AppHeader() {
               <Users size={16} />
               Friends
             </Link>
+            <Link
+              href="/saved-words"
+              className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"
+            >
+              <Bookmark size={16} />
+              Saved Words
+            </Link>
             <Link href="/account" className="hover:opacity-80">
               <UserBadge displayName={user.displayName} />
             </Link>
@@ -106,6 +113,10 @@ export async function AppHeader() {
                 <Link href="/friends" className="flex items-center gap-1.5 text-foreground">
                   <Users size={16} />
                   Friends
+                </Link>
+                <Link href="/saved-words" className="flex items-center gap-1.5 text-foreground">
+                  <Bookmark size={16} />
+                  Saved Words
                 </Link>
                 <div className="my-1 h-px w-full bg-border" />
                 <LogoutButton />

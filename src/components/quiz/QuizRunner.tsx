@@ -16,6 +16,7 @@ import { pillClasses } from "@/components/pill-classes";
 import { ToolbarButton } from "@/components/ToolbarButton";
 import { QuizResultsScreen } from "@/components/quiz/QuizResultsScreen";
 import { SpeakerButton } from "@/components/SpeakerButton";
+import { SaveWordButton } from "@/components/SaveWordButton";
 import { RevealMoreButton } from "@/components/RevealMoreButton";
 
 export type { QuizWord };
@@ -400,6 +401,12 @@ function QuizRunnerInner({
                   <td className="px-3 py-2 font-medium">
                     <span className="inline-flex items-center gap-1.5">
                       {word.chinese}
+                      {/* Pre-start only (docs/57 §1) — this row is also
+                          reused as the in-quiz nav strip once `started`,
+                          where Hard mode may be hiding pinyin/meaning below. */}
+                      {!started && (
+                        <SaveWordButton chinese={word.chinese} pinyin={word.pinyin} meaning={word.meaning} />
+                      )}
                       <SpeakerButton text={word.chinese} kind="word" />
                     </span>
                   </td>

@@ -1,8 +1,21 @@
 # Saved Words — plan
 
-**Status: plan only, nothing built yet.** Written up front per this repo's usual practice
-(docs/17, docs/38, docs/47 before them) — read for the shape, then implement and correct as
-reality demands, same as every prior plan doc here.
+**Status: v1 (everything above the `---`) built.** Implemented essentially as planned, with two
+corrections made during the build, left as amendments here rather than silently editing the plan
+text above them (same practice docs/52/docs/56 use for audit findings):
+
+- **§9's `GET /api/saved-words` was dropped.** Nothing needed it as a real HTTP endpoint — the
+  `/saved-words` page reads the list straight from Prisma server-side (`getSavedWordsForList` in
+  `src/lib/queries.ts`), and the plus icon's "already saved" state is seeded into a client
+  `SavedWordsProvider` context by `src/app/layout.tsx` (via `getSavedWordsInitialState`) rather
+  than fetched per-button. Shipping an unused route would've been the kind of dead code past
+  audits (docs/45 §3) have flagged.
+- **The plus icon's "saved" state is seeded from the DB at layout load**, not purely
+  session-local — a small refinement past what §6 specified, made possible by the same
+  `SavedWordsProvider` seed above; costs one extra (layout-cached) query per session, not per
+  page.
+
+Everything in the **Later** section below is still just plan — not built.
 
 **Trimmed to a lean v1** (the original full-scope version tried to ship 3-list categorization,
 a full onboarding flow, and a 2-week auto-hide cron all in one pass — reasonable as a final

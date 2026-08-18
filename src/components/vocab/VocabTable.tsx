@@ -1,4 +1,5 @@
 import { SpeakerButton } from "@/components/SpeakerButton";
+import { SaveWordButton } from "@/components/SaveWordButton";
 
 export type VocabWord = {
   id: number;
@@ -77,6 +78,7 @@ export function VocabTableGroup({
               <td className="px-3 py-2 font-medium">
                 <span className="inline-flex items-center gap-1.5">
                   {word.chinese}
+                  <SaveWordButton chinese={word.chinese} pinyin={word.pinyin} meaning={word.meaning} />
                   <SpeakerButton text={word.chinese} kind="word" />
                 </span>
               </td>

@@ -119,6 +119,11 @@ model User {
   attempts        Attempt[]
   sentRequests    Friendship[] @relation("FriendshipSender")
   recvRequests    Friendship[] @relation("FriendshipReceiver")
+  savedWordLists  SavedWordList[]
+  // docs/57-saved-words-plan.md §4 — off by default; the plus icon and the
+  // /saved-words tab's content both gate on this. Flipping it off never
+  // touches SavedWordList/SavedWord rows, only hides them again.
+  savedWordsEnabled Boolean    @default(false)
 }
 
 model Session {
@@ -213,4 +218,40 @@ model Attempt {
   createdAt       DateTime @default(now())
 
   @@index([userId, quizKey])
+}
+
+// docs/57-saved-words-plan.md — a per-word bookmark, drillable via the
+// existing quiz runners. v1 only ever creates one row per user
+// (isDefault: true, name "My Words", auto-created on first opt-in), but the
+// shape already supports up to 3 player-named lists (§Later) without a
+// second migration.
+model SavedWordList {
+  id        Int         @id @default(autoincrement())
+  userId    Int
+  user      User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name      String
+  isDefault Boolean     @default(false)
+  createdAt DateTime    @default(now())
+  words     SavedWord[]
+
+  @@unique([userId, name])
+}
+
+// `chinese` (not a Word.id foreign key) is the saved word's identity — the
+// same Chinese word can exist as several different Word rows
+// ([chapterId, chinese, source] uniqueness, see Word's own comment), so
+// there's no single row to point at. `pinyin`/`meaning` are snapshotted at
+// save time for the same "don't let a later content edit silently rewrite
+// history" reasoning Attempt already follows; `mnemonic` is deliberately
+// NOT snapshotted here — always looked up live by `chinese` at render time.
+model SavedWord {
+  id        Int           @id @default(autoincrement())
+  listId    Int
+  list      SavedWordList @relation(fields: [listId], references: [id], onDelete: Cascade)
+  chinese   String
+  pinyin    String
+  meaning   String?
+  createdAt DateTime      @default(now())
+
+  @@unique([listId, chinese])
 }
