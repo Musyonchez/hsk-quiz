@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Check, ChevronDown, ChevronUp } from "lucide-react";
 import { pillClasses } from "@/components/pill-classes";
@@ -95,6 +95,16 @@ export function CustomQuizPicker({ levels }: { levels: LevelWithChapters[] }) {
   const router = useRouter();
   const [openSlug, setOpenSlug] = useState<string | null>(null);
   const [selections, setSelections] = useState<Record<string, Selection>>({});
+  // Guards the persist effect below until the load effect has actually run
+  // (docs/56 finding 56-10) — without it, the persist effect's first pass
+  // reads the pre-hydrate `{}` from the initial render (setSelections in the
+  // load effect doesn't synchronously update this closure in the same
+  // pass), briefly clobbering localStorage with an empty object before the
+  // real value is written back on the next pass. Self-corrects within the
+  // same tick either way, so this was never a real data-loss risk — the
+  // guard just makes the persist effect's own "harmless, same data written
+  // back" comment actually true instead of "empty, then corrected."
+  const hydratedRef = useRef(false);
 
   // Loaded post-mount (not in the useState initializer) so the first render
   // matches the server's empty output — reading localStorage during the
@@ -106,11 +116,11 @@ export function CustomQuizPicker({ levels }: { levels: LevelWithChapters[] }) {
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setSelections(fromStored(localStorage.getItem(STORAGE_KEY)));
+    hydratedRef.current = true;
   }, []);
 
-  // Re-saves right after the load effect above too (same data written back)
-  // — harmless, not worth a guard to skip.
   useEffect(() => {
+    if (!hydratedRef.current) return;
     localStorage.setItem(STORAGE_KEY, JSON.stringify(toStored(selections)));
   }, [selections]);
 
@@ -317,7 +327,7 @@ function Checkbox({
           aria-hidden
           className={`flex h-4.5 w-4.5 items-center justify-center rounded border transition-colors ${
             checked ? "border-success bg-success" : "border-border-strong bg-transparent"
-          } peer-focus-visible:ring-2 peer-focus-visible:ring-border-strong peer-focus-visible:ring-offset-2 peer-focus-visible:ring-offset-surface`}
+          } peer-focus-visible:ring-2 peer-focus-visible:ring-focus-ring peer-focus-visible:ring-offset-2 peer-focus-visible:ring-offset-surface`}
         >
           {checked && <Check size={12} strokeWidth={3} className="text-foreground" />}
         </span>

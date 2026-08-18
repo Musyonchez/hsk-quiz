@@ -8,6 +8,16 @@
   --muted-foreground: #9d9a97;
   --border: rgba(239, 231, 218, 0.1);
   --border-strong: rgba(239, 231, 218, 0.22);
+  /* Focus-visible indicator only (docs/56 finding 56-3) — a brighter alpha
+     than --border-strong specifically for the state that replaces the
+     browser's native outline. --border-strong itself composites to only
+     ~1.9:1 against --surface, well under the ~3:1 WCAG non-text contrast
+     target a focus indicator needs; this token computes to ~3.3:1. Kept
+     separate from --border-strong rather than brightening that token
+     directly, since --border-strong's other role (hover border) doesn't
+     need the same bar and changing it would be a wider blast radius than
+     this finding calls for. */
+  --focus-ring: rgba(239, 231, 218, 0.4);
 
   --accent: #c1442d;
   --accent-hover: #a8391f;
@@ -16,16 +26,25 @@
   /* Second accent, "bronze" — docs/hold/30-color-palette-expansion-plan.md.
      Active-tab/selection fill, distinct from --accent so a screen can show
      both a primary action (seal red) and an active tab (bronze) without
-     reading as two competing calls-to-action. */
-  --accent-secondary: #8a6c3f;
-  --accent-secondary-hover: #75592f;
+     reading as two competing calls-to-action. Brightened from the original
+     #8a6c3f (docs/56 finding 56-2 — failed WCAG AA as text at 3.63:1) to
+     clear 4.5:1 against both --background and --surface. */
+  --accent-secondary: #aa834c;
+  --accent-secondary-hover: #8f6c3a;
   --accent-secondary-foreground: #fbf1e8;
 
-  --success: #5c8a54;
+  /* Brightened from the original #5c8a54 (docs/56 finding 56-2 — failed
+     WCAG AA as text on --success-surface at 3.65:1) to clear 4.5:1 against
+     its own badge background. */
+  --success: #7aa870;
   --success-surface: rgba(92, 138, 84, 0.16);
   --current-row: #c99a3a;
   --current-row-surface: rgba(201, 154, 58, 0.16);
-  --danger: #b3453a;
+  /* Brightened from the original #b3453a (docs/56 finding 56-2 — failed
+     WCAG AA as text at 2.93-3.23:1, the color used for every form's
+     validation-error text) to clear 4.5:1 against both --background and
+     --surface. */
+  --danger: #e06757;
 
   /* AppHeader's actual rendered height, kept in sync at runtime by
      HeaderHeightVar (docs/hold/24-responsive-design-plan.md) — the sticky quiz
@@ -45,6 +64,7 @@
   --color-muted-foreground: var(--muted-foreground);
   --color-border: var(--border);
   --color-border-strong: var(--border-strong);
+  --color-focus-ring: var(--focus-ring);
 
   --color-accent: var(--accent);
   --color-accent-hover: var(--accent-hover);

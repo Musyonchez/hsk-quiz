@@ -73,7 +73,7 @@ export default function ForgotPasswordPage() {
               autoFocus
               required
               autoComplete="email"
-              className="rounded border border-border bg-transparent px-3 py-2 outline-none focus:border-border-strong"
+              className="rounded border border-border bg-transparent px-3 py-2 outline-none focus:border-focus-ring"
             />
           </label>
           {error && <p className="text-sm text-danger">{error}</p>}

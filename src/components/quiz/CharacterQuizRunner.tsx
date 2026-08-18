@@ -390,7 +390,7 @@ function CharacterQuizRunnerInner({
               autoFocus
               placeholder="type the pinyin"
               aria-label={`Type the pinyin for ${currentWord.chinese}`}
-              className="mx-auto mt-4 w-full max-w-xs rounded border border-border bg-transparent px-3 py-2 text-center outline-none focus:border-border-strong"
+              className="mx-auto mt-4 w-full max-w-xs rounded border border-border bg-transparent px-3 py-2 text-center outline-none focus:border-focus-ring"
             />
           </div>
           <button

@@ -32,10 +32,25 @@ export function useQuizCountdown({
   useEffect(() => {
     if (!timed || !started || finishedState !== null || secondsLeft === 0 || paused) return;
     const timer = setInterval(() => {
-      setSecondsLeft((s) => Math.max(0, s - 1));
+      setSecondsLeft((s) => {
+        // Clear from inside our own tick once exhausted, rather than
+        // depending on secondsLeft above (docs/56 finding 56-11) — that
+        // dependency made this effect tear down and recreate a fresh
+        // setInterval every single tick for the whole run instead of one
+        // stable interval.
+        if (s <= 1) {
+          clearInterval(timer);
+          return 0;
+        }
+        return s - 1;
+      });
     }, 1000);
     return () => clearInterval(timer);
-  }, [timed, started, paused, finishedState, secondsLeft]);
+    // secondsLeft deliberately excluded — only read once per run to decide
+    // whether to start an already-exhausted timer; see the tick logic above
+    // for how it stops itself instead of relying on this effect re-running.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [timed, started, paused, finishedState]);
 
   // Same "timeup" derivation every runner needs alongside secondsLeft —
   // React's own guidance is to compute derivable state at render time

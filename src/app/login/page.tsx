@@ -68,7 +68,7 @@ export default function LoginPage() {
             autoFocus
             required
             autoComplete="username"
-            className="rounded border border-border bg-transparent px-3 py-2 outline-none focus:border-border-strong"
+            className="rounded border border-border bg-transparent px-3 py-2 outline-none focus:border-focus-ring"
           />
         </label>
         <PasswordField

@@ -54,7 +54,7 @@ export function AddFriendForm() {
           onChange={(e) => setUsername(e.target.value)}
           placeholder="Username"
           required
-          className="flex-1 rounded border border-border bg-transparent px-3 py-2 outline-none focus:border-border-strong"
+          className="flex-1 rounded border border-border bg-transparent px-3 py-2 outline-none focus:border-focus-ring"
         />
         <button type="submit" disabled={submitting} className={pillClasses("primary", submitting)}>
           {submitting ? "Sending…" : "Send request"}

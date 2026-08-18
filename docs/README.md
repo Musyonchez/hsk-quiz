@@ -8,10 +8,8 @@ that map. Three tiers, in order of how likely a doc is to still be accurate toda
 Describe the app's *current* shape. Kept up to date as things change — if one of these ever
 drifts, that's a bug, not expected staleness.
 
-- [01-overview.md](01-overview.md) — what this is, non-goals, why two data sources. **Known
-  stale** (docs/56 finding 56-6): its "Scope"/"Why two data sources" sections still describe a
-  retired `characters/`/`raw/`-based pipeline and link to directories that no longer exist —
-  trust [04-data-pipeline.md](04-data-pipeline.md) over this doc until it's rewritten
+- [01-overview.md](01-overview.md) — what this is, non-goals, why the data pipeline works the way
+  it does
 - [05-architecture.md](05-architecture.md) — tech stack, schema, folder layout, API surface
 - [06-quiz-mechanics.md](06-quiz-mechanics.md) — how each quiz mode actually works
 - [08-ui-ux.md](08-ui-ux.md) — layout, component inventory, visual language

@@ -249,19 +249,30 @@ async function seedTranscripts(levelIds: Record<LevelSlug, number>) {
       continue;
     }
 
-    await prisma.dialogLine.deleteMany({ where: { chapterId: chapterRow.id } });
-    await prisma.dialogLine.createMany({
-      data: transcriptData.lines.map((line) => ({
-        chapterId: chapterRow.id,
-        order: line.order,
-        dialogNumber: line.dialogNumber,
-        dialogLabel: line.dialogLabel,
-        speaker: line.speaker,
-        chinese: line.chinese,
-        pinyin: line.pinyin,
-        english: line.english,
-      })),
-    });
+    // Wrapped in a transaction (docs/56 finding 56-4) — unlike the other
+    // seed functions in this file, which upsert current data first and only
+    // delete what's no longer current, this is a real delete-then-recreate.
+    // Without a transaction, an interruption between the two calls (a
+    // dropped connection, a bad payload, a killed process) leaves this
+    // chapter with zero DialogLine rows, and its transcript page 404s —
+    // indistinguishable from "never had a transcript." The transaction makes
+    // the pair atomic: either both commit, or neither does and the previous
+    // run's rows are left intact.
+    await prisma.$transaction([
+      prisma.dialogLine.deleteMany({ where: { chapterId: chapterRow.id } }),
+      prisma.dialogLine.createMany({
+        data: transcriptData.lines.map((line) => ({
+          chapterId: chapterRow.id,
+          order: line.order,
+          dialogNumber: line.dialogNumber,
+          dialogLabel: line.dialogLabel,
+          speaker: line.speaker,
+          chinese: line.chinese,
+          pinyin: line.pinyin,
+          english: line.english,
+        })),
+      }),
+    ]);
 
     console.log(
       `Seeded HSK${transcriptData.level} chapter ${transcriptData.chapterNumber} transcript: ${transcriptData.lines.length} lines`

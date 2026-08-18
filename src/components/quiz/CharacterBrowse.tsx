@@ -5,6 +5,7 @@ import { ChevronLeft, ChevronRight, Eye, EyeOff, Shuffle, X } from "lucide-react
 import type { QuizWord } from "@/quiz/types";
 import { shuffle } from "@/quiz/shuffle";
 import { useProgressiveReveal } from "@/lib/use-progressive-reveal";
+import { useFocusTrap } from "@/lib/use-focus-trap";
 import { pillClasses } from "@/components/pill-classes";
 import { SpeakerButton } from "@/components/SpeakerButton";
 import { RevealMoreButton } from "@/components/RevealMoreButton";
@@ -41,6 +42,8 @@ export function CharacterBrowse({
   // can return focus there; `closeButtonRef` is what receives focus on open.
   const triggerRef = useRef<HTMLElement | null>(null);
   const closeButtonRef = useRef<HTMLButtonElement>(null);
+  const dialogRef = useRef<HTMLDivElement>(null);
+  useFocusTrap(dialogRef, openIndex !== null);
 
   const openWord = openIndex !== null ? order[openIndex] : null;
 
@@ -131,6 +134,7 @@ export function CharacterBrowse({
           className="fixed inset-0 z-20 flex items-center justify-center bg-background/80 p-4"
         >
           <div
+            ref={dialogRef}
             onClick={(e) => e.stopPropagation()}
             onTouchStart={(e) => {
               touchStartX.current = e.touches[0].clientX;

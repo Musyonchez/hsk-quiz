@@ -75,7 +75,7 @@ export default function RegisterPage() {
             autoFocus
             required
             autoComplete="username"
-            className="rounded border border-border bg-transparent px-3 py-2 outline-none focus:border-border-strong"
+            className="rounded border border-border bg-transparent px-3 py-2 outline-none focus:border-focus-ring"
           />
         </label>
         <label className="flex flex-col gap-1">
@@ -86,7 +86,7 @@ export default function RegisterPage() {
             onChange={(e) => setEmail(e.target.value)}
             required
             autoComplete="email"
-            className="rounded border border-border bg-transparent px-3 py-2 outline-none focus:border-border-strong"
+            className="rounded border border-border bg-transparent px-3 py-2 outline-none focus:border-focus-ring"
           />
           <span className="text-xs text-muted-foreground">Only used for password resets.</span>
         </label>
