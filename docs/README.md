@@ -50,8 +50,9 @@ number, the more recent (and usually the more currently-accurate) the doc.
 - [47-word-sentence-audio-plan.md](47-word-sentence-audio-plan.md) — pronunciation audio
 - [48-quiz-pre-start-progressive-reveal-plan.md](48-quiz-pre-start-progressive-reveal-plan.md) — progressive reveal
 - [49-migration-advisory-lock-fix.md](49-migration-advisory-lock-fix.md) — a specific incident + fix
-- [57-saved-words-plan.md](57-saved-words-plan.md) — bookmarking individual words into
-  player-named lists, drillable via the existing quiz runners (plan only, not built yet)
+- [57-saved-words-plan.md](57-saved-words-plan.md) — bookmarking individual words, drillable via
+  the existing quiz runners (v1 built; multi-list/onboarding/auto-hide still plan-only, see its
+  **Later** section)
 
 ## 3. Audits (findings-at-a-point-in-time; check for "✅ Fixed" annotations before trusting a claim)
 

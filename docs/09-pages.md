@@ -154,3 +154,7 @@ mean effectively rewriting this whole doc — the actual specs already live in t
 - **Character mode** — a third quiz mode/answer format alongside "type pinyin" and "match
   meaning," reachable from the same quiz pages as §4 (`?mode=character`), with its own
   browse-then-quiz flow ([38-character-mode-overhaul-plan.md](38-character-mode-overhaul-plan.md)).
+- **`/saved-words`** — bookmark individual words (a plus icon next to the speaker icon,
+  anywhere one shows) into a per-account list, then drill them with the same quiz modes as
+  everywhere else. Off by default; opt in from this tab
+  ([57-saved-words-plan.md](57-saved-words-plan.md)).

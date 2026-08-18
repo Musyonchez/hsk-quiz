@@ -15,6 +15,7 @@ import { pillClasses } from "@/components/pill-classes";
 import { ToolbarButton } from "@/components/ToolbarButton";
 import { QuizResultsScreen } from "@/components/quiz/QuizResultsScreen";
 import { SpeakerButton } from "@/components/SpeakerButton";
+import { SaveWordButton } from "@/components/SaveWordButton";
 import { RevealMoreButton } from "@/components/RevealMoreButton";
 
 export type { QuizWord };
@@ -325,6 +326,11 @@ function MatchQuizRunnerInner({
                   <td className="px-3 py-2 font-medium">
                     <span className="inline-flex items-center gap-1.5">
                       {word.chinese}
+                      {/* This whole table only renders pre-start (docs/57
+                          §1) — no `started` guard needed, unlike
+                          QuizRunner/ChoiceQuizRunner which reuse their table
+                          as the in-quiz nav strip too. */}
+                      <SaveWordButton chinese={word.chinese} pinyin={word.pinyin} meaning={word.meaning} />
                       <SpeakerButton text={word.chinese} kind="word" />
                     </span>
                   </td>

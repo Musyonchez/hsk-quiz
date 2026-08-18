@@ -3,6 +3,10 @@ import { Geist, Geist_Mono } from "next/font/google";
 import { AppHeader } from "@/components/layout/AppHeader";
 import { HeaderHeightVar } from "@/components/layout/HeaderHeightVar";
 import { siteUrl } from "@/lib/site-url";
+import { getSessionUser } from "@/lib/auth/auth";
+import { getSavedWordsInitialState } from "@/lib/queries";
+import { ToastProvider } from "@/components/toast/ToastProvider";
+import { SavedWordsProvider } from "@/lib/saved-words/context";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -63,21 +67,35 @@ export const viewport: Viewport = {
   themeColor: "#18181a",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  // Fetched once here (not per-page) so every route under this layout gets
+  // the same SavedWordsProvider seed — docs/57-saved-words-plan.md §4. A
+  // logged-out visitor gets `enabled: false, saved: []`, same as a
+  // logged-in one who's never opted in; SaveWordButton renders nothing
+  // either way.
+  const user = await getSessionUser();
+  const savedWordsInitial = user
+    ? await getSavedWordsInitialState(user.id)
+    : { enabled: false, saved: [] };
+
   return (
     <html
       lang="en"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="flex min-h-full flex-col">
-        <HeaderHeightVar>
-          <AppHeader />
-        </HeaderHeightVar>
-        {children}
+        <ToastProvider>
+          <SavedWordsProvider initial={savedWordsInitial}>
+            <HeaderHeightVar>
+              <AppHeader />
+            </HeaderHeightVar>
+            {children}
+          </SavedWordsProvider>
+        </ToastProvider>
       </body>
     </html>
   );

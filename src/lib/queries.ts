@@ -260,3 +260,61 @@ export async function getLeaderboard(
   }
   return ranked;
 }
+
+// docs/57-saved-words-plan.md §4 — one cheap query per (layout-cached) page
+// load, feeding the client SavedWordsProvider its initial `enabled` flag and
+// the `{id, chinese}` set it needs to know what's already saved without a
+// second round trip. `id` (not just chinese) is included so the client can
+// call DELETE /api/saved-words/:id straight away for Undo.
+export type SavedWordsInitialState = {
+  enabled: boolean;
+  saved: { id: number; chinese: string }[];
+};
+
+export async function getSavedWordsInitialState(userId: number): Promise<SavedWordsInitialState> {
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: {
+      savedWordsEnabled: true,
+      savedWordLists: { select: { words: { select: { id: true, chinese: true } } } },
+    },
+  });
+  return {
+    enabled: user?.savedWordsEnabled ?? false,
+    saved: user?.savedWordLists.flatMap((list) => list.words) ?? [],
+  };
+}
+
+// SessionUser (better-auth's session shape) doesn't carry this app's custom
+// User columns, so every Saved Words call site that needs the flag reads it
+// fresh from the DB via this — kept as one function so the "read
+// savedWordsEnabled" query isn't duplicated across the API routes and page.
+export async function getSavedWordsEnabled(userId: number): Promise<boolean> {
+  const user = await prisma.user.findUnique({ where: { id: userId }, select: { savedWordsEnabled: true } });
+  return user?.savedWordsEnabled ?? false;
+}
+
+// v1's one-list-per-user shape (docs/57 §3) — `isDefault: true` always
+// exists once `savedWordsEnabled` is true (created on first opt-in, §4), so
+// this is the caller's single save/list target throughout v1.
+export function getDefaultSavedWordList(userId: number) {
+  return prisma.savedWordList.findFirst({ where: { userId, isDefault: true } });
+}
+
+// For the /saved-words tab itself — the list's words plus each one's live
+// mnemonic (looked up by `chinese`, not snapshotted — see SavedWord's schema
+// comment on why). Mnemonics live on Word and the same `chinese` text can
+// span several Word rows (§2's duplicate-detection problem); any one
+// matching row's mnemonic is fine since docs/39's backfill keeps them in
+// sync across every row sharing a `chinese`.
+export async function getSavedWordsForList(listId: number) {
+  const words = await prisma.savedWord.findMany({ where: { listId }, orderBy: { createdAt: "asc" } });
+  if (words.length === 0) return [];
+
+  const mnemonicRows = await prisma.word.findMany({
+    where: { chinese: { in: words.map((w) => w.chinese) }, mnemonic: { not: null } },
+    select: { chinese: true, mnemonic: true },
+  });
+  const mnemonicByChinese = new Map(mnemonicRows.map((w) => [w.chinese, w.mnemonic]));
+  return words.map((word) => ({ ...word, mnemonic: mnemonicByChinese.get(word.chinese) ?? null }));
+}

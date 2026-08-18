@@ -8,6 +8,7 @@ import { useProgressiveReveal } from "@/lib/use-progressive-reveal";
 import { useFocusTrap } from "@/lib/use-focus-trap";
 import { pillClasses } from "@/components/pill-classes";
 import { SpeakerButton } from "@/components/SpeakerButton";
+import { SaveWordButton } from "@/components/SaveWordButton";
 import { RevealMoreButton } from "@/components/RevealMoreButton";
 
 export type { QuizWord };
@@ -150,11 +151,14 @@ export function CharacterBrowse({
             }}
             className="relative flex w-full max-w-md flex-col items-center gap-5 rounded-xl border border-border bg-surface p-8 text-center shadow-lg shadow-background/50"
           >
-            <SpeakerButton
-              text={openWord.chinese}
-              kind="word"
-              className="absolute left-3 top-3"
-            />
+            <div className="absolute left-3 top-3 flex items-center gap-1">
+              <SaveWordButton
+                chinese={openWord.chinese}
+                pinyin={openWord.pinyin}
+                meaning={openWord.meaning}
+              />
+              <SpeakerButton text={openWord.chinese} kind="word" />
+            </div>
             <button
               ref={closeButtonRef}
               type="button"
