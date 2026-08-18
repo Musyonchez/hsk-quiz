@@ -1,6 +1,6 @@
 # Deploying hsk-quiz (Vercel)
 
-The live deploy target, per [20-postgres-vercel-migration-plan.md](hold/20-postgres-vercel-migration-plan.md) — the database moved from SQLite to Postgres (Neon) specifically to make this possible. See [16-deploy.md](16-deploy.md) for the superseded Render setup.
+The live deploy target, per [20-postgres-vercel-migration-plan.md](hold/20-postgres-vercel-migration-plan.md) — the database moved from SQLite to Postgres (Neon) specifically to make this possible. See [16-deploy.md](hold/16-deploy.md) for the superseded Render setup.
 
 ## Why this works now
 
@@ -26,7 +26,7 @@ sixth. Six total, though only `CRON_SECRET` is Production-only (see below):
   (the deployment-specific hash domain) on Preview, since every Preview deployment gets its own
   unique URL and a mismatched `baseURL` actively breaks callback routes, not just warns.
 - `GMAIL_USER`, `GMAIL_APP_PASSWORD` — the Gmail SMTP account and app password
-  `src/lib/send-email.ts` uses to send password-reset emails.
+  `src/lib/auth/send-email.ts` uses to send password-reset emails.
 - `CRON_SECRET` — authenticates Vercel Cron's daily call to
   `/api/cron/purge-rate-limits` (`vercel.json`); Vercel injects it as an
   `Authorization: Bearer` header automatically once set. Vercel Cron only ever triggers against the

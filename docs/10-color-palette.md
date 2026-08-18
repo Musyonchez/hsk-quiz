@@ -51,7 +51,7 @@ them is wrong.
 ## Second accent: bronze (tab/selection state)
 
 [30-color-palette-expansion-plan.md](hold/30-color-palette-expansion-plan.md) added a second accent
-once tab groups (leaderboard scope tabs, [AllWordsTabs](../src/components/AllWordsTabs.tsx))
+once tab groups (leaderboard scope tabs, [AllWordsTabs](../src/components/vocab/AllWordsTabs.tsx))
 grew common enough that reusing `--accent` for "this tab is active" started reading as a second
 competing call-to-action on the same screen as a real `PLAY QUIZ` button.
 
@@ -79,9 +79,9 @@ decoration, same restraint as the primary accent.
 - **Never pure black or pure white.** `#000000` and `#ffffff` don't appear anywhere in the
   system — every "black" is `--background` and every "white" is `--foreground`.
 - **One accent per screen.** Enforced by the component inventory in
-  [08-ui-ux.md](08-ui-ux.md): only `<PillButton variant="primary">` and `<PercentBadge>` are
-  allowed to use `--accent`. `variant="secondary"` is an outline pill using `--border-strong` +
-  `--foreground`, never a second color.
+  [08-ui-ux.md](08-ui-ux.md): only the `pillClasses("primary")` pill styling and the inline
+  results-screen percentage are allowed to use `--accent`. The `"secondary"` variant is an
+  outline pill using `--border-strong` + `--foreground`, never a second color.
 - **Color is never the only signal.** Current-row (`--current-row`) and correct-row (`--success`)
   states pair their background tint with a left-border in the same hue, per the accessibility
   baseline in [08-ui-ux.md](08-ui-ux.md) — a colorblind user can still tell rows apart by border

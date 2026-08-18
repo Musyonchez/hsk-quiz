@@ -13,8 +13,8 @@ actually spec each one.
 
 Every page shares the `<AppHeader>` component from [08-ui-ux.md](08-ui-ux.md): site name/logo
 and a level switcher (one link per live `Level` row — currently `HSK 1` / `HSK 2` / `HSK 3`) on
-the left, `Leaderboard` / `Friends` links and the logged-in `<UserBadge>` (with a logout action)
-on the right. Any page requiring auth redirects
+the left, `Custom Quiz` / `Leaderboard` / `Friends` links and the logged-in `<UserBadge>` (with a
+logout action) on the right. Any page requiring auth redirects
 to `/login` if there's no valid session (checked server-side in a layout/page, not client-side
 only).
 

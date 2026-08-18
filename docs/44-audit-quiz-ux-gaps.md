@@ -91,12 +91,12 @@ any of them is wrong in isolation.
 11. **`CharacterBrowse`'s popup swipe threshold (40px) and stopPropagation handling are sound** —
     no off-screen or overlap issues found at any tested width; the dialog is centered with `p-4`
     padding and `max-w-md`, can't escape the viewport.
-12. **Sticky bars are consistently offset below the app header** (`sticky top-[var(--header-height)]`)
+12. ✅ **Fixed** (commit `91cd9c9`, #38). **Sticky bars are consistently offset below the app header** (`sticky top-[var(--header-height)]`)
     across all four runners. `ChoiceQuizRunner` additionally has a second sticky bar pinned to
     `bottom-0` for its answer options — worth confirming on a real short-viewport device (e.g.
     landscape phone) that the scrollable table between the two sticky bars doesn't get squeezed to
-    near-zero height, since the space calc could go negative there. **Flagged as suspicious but
-    unconfirmed** — couldn't verify visually without rendering it live.
+    near-zero height, since the space calc could go negative there. `ChoiceQuizRunner.tsx` now caps
+    the bottom bar at `max-h-[45dvh] overflow-y-auto`, confirmed in code (docs/52).
 13. **Toolbar button touch targets** (`px-3 py-2.5`) are close to but not clearly meeting the
     44×44px guideline on the smallest breakpoint. Not confirmed as an actual complaint, just on the
     small side for Prev/Next/Give-up/Pause on mobile. **Nitpick**.
@@ -108,11 +108,12 @@ any of them is wrong in isolation.
   deliberately held (unreachable, defense-in-depth only).
 - **Low/nitpick**: the three mode inconsistencies (#5-7), the All Words tab-default mismatch (#4) —
   still open, each re-confirmed intentional per its own code comment.
-- **Unconfirmed, worth a look**: `ChoiceQuizRunner`'s dual-sticky-bar layout on short viewports
-  (#12) — re-examined on re-audit with a sharper verdict: the CSS mechanics (two independent
+- ✅ **Fixed** (#12): `ChoiceQuizRunner`'s dual-sticky-bar layout on short viewports. Re-examined on
+  a second re-audit with a sharper verdict before the fix landed: the CSS mechanics (two independent
   `position: sticky` elements pinned to opposite viewport edges, same `z-5`, no shared height
-  budget) combined with realistic element heights make an actual visual overlap on short/landscape
-  viewports likely, not just suspicious — still not visually confirmed live, still not fixed.
+  budget) combined with realistic element heights made an actual visual overlap on short/landscape
+  viewports likely, not just suspicious — fixed in commit `91cd9c9` (#38) with a `max-h-[45dvh]
+  overflow-y-auto` cap on the bottom bar.
 
 ## Re-audit notes (second pass)
 
@@ -124,7 +125,10 @@ any of them is wrong in isolation.
 - `MatchQuizRunner`'s empty-board landmine (#2 above) was re-confirmed still present and unreachable
   — flagged again only because it's the sharper version of the `NaN` bug class (an effect firing a
   real `submitAttempt` POST with zero user interaction), not because it's changed.
-- A few additional low-severity a11y gaps surfaced on this pass, not previously called out: the
-  "Missed: N" counter (`CharacterQuizRunner`) has no `aria-live`, `MatchQuizRunner`'s selected tile
-  has no `aria-pressed`, and table-row navigation in three runners is mouse/touch-only (no
-  `tabIndex`/`onKeyDown` on the `<tr>`). All low/nitpick, none blocking, none regressions.
+- ✅ **Fixed** (commit `91cd9c9`, #38). A few additional low-severity a11y gaps surfaced on this
+  pass, not previously called out: the "Missed: N" counter (`CharacterQuizRunner`) has no
+  `aria-live`, `MatchQuizRunner`'s selected tile has no `aria-pressed`, and table-row navigation in
+  three runners is mouse/touch-only (no `tabIndex`/`onKeyDown` on the `<tr>`). All low/nitpick,
+  none blocking, none regressions. All four confirmed present in code as of docs/52: `aria-live="polite"`
+  in `CharacterQuizRunner.tsx`, `aria-pressed` in `MatchQuizRunner.tsx`, `tabIndex`+`onKeyDown` in
+  `QuizRunner.tsx`/`ChoiceQuizRunner.tsx`.

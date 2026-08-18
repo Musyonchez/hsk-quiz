@@ -8,7 +8,10 @@ that map. Three tiers, in order of how likely a doc is to still be accurate toda
 Describe the app's *current* shape. Kept up to date as things change — if one of these ever
 drifts, that's a bug, not expected staleness.
 
-- [01-overview.md](01-overview.md) — what this is, non-goals, why two data sources
+- [01-overview.md](01-overview.md) — what this is, non-goals, why two data sources. **Known
+  stale** (docs/56 finding 56-6): its "Scope"/"Why two data sources" sections still describe a
+  retired `characters/`/`raw/`-based pipeline and link to directories that no longer exist —
+  trust [04-data-pipeline.md](04-data-pipeline.md) over this doc until it's rewritten
 - [05-architecture.md](05-architecture.md) — tech stack, schema, folder layout, API surface
 - [06-quiz-mechanics.md](06-quiz-mechanics.md) — how each quiz mode actually works
 - [08-ui-ux.md](08-ui-ux.md) — layout, component inventory, visual language
@@ -16,6 +19,18 @@ drifts, that's a bug, not expected staleness.
 - [10-color-palette.md](10-color-palette.md) — the color system
 - [51-multi-agent-audit-playbook.md](51-multi-agent-audit-playbook.md) — reusable process for the
   next full/targeted audit; not a finding-set itself, a "how to run one" reference
+- [54-claude-skills-for-ui-ux.md](54-claude-skills-for-ui-ux.md) — project-neutral reference on
+  Claude Skills/Design for UI/UX work, imported from [toolbox](https://github.com/Musyonchez/toolbox);
+  not a description of hsk-quiz itself, kept here as forward-looking reference for future UI/UX
+  passes on this site
+- [53-comprehensive-audit-prompt-playbook.md](53-comprehensive-audit-prompt-playbook.md) — the
+  generic, project-neutral ancestor docs/51 was adapted from, also imported from toolbox; kept for
+  reference (e.g. adapting a *different* project's audit) — reach for docs/51 first when auditing
+  this repo specifically
+- [55-repo-setup-and-deploy-playbook.md](55-repo-setup-and-deploy-playbook.md) — generic repo
+  hardening/CI-CD/deploy/auth checklist, also imported from toolbox; every item it covers is
+  already done here via 16/21/35/36/37, kept live for its still-generalizable platform-gotcha and
+  PR-bot sections
 
 ## 2. Historical / point-in-time (accurate about *when they were written*, not necessarily today)
 
@@ -23,10 +38,11 @@ Dated plan docs and incremental logs — each one is the record of a specific pi
 promise that nothing since has changed it. Numbered roughly chronologically; the higher the
 number, the more recent (and usually the more currently-accurate) the doc.
 
-- [02-data-sources.md](02-data-sources.md) — self-flagged historical (extraction pipeline retired)
-- [03-content-extraction-rules.md](03-content-extraction-rules.md), [04-data-pipeline.md](04-data-pipeline.md) — data pipeline
+- [04-data-pipeline.md](04-data-pipeline.md) — data pipeline (its two source-format docs,
+  02/03, moved to `hold/` — see Archive below, extraction pipeline they described is fully retired)
 - [07-roadmap.md](07-roadmap.md) — phase-by-phase build log
-- [16-deploy.md](16-deploy.md), [21-vercel-deploy.md](21-vercel-deploy.md) — deploy setup
+- [21-vercel-deploy.md](21-vercel-deploy.md) — deploy setup (its predecessor, 16, moved to
+  `hold/` — see Archive below, self-superseded once the app left Render for Vercel)
 - [35-ci-cd-plan.md](35-ci-cd-plan.md) — CI setup
 - [36-better-auth-migration-plan.md](36-better-auth-migration-plan.md),
   [37-auth-hardening-and-ux-plan.md](37-auth-hardening-and-ux-plan.md) — the auth rewrite
@@ -49,7 +65,13 @@ the doc itself hasn't been touched since.
   [43-audit-docs-consistency.md](43-audit-docs-consistency.md), [44-audit-quiz-ux-gaps.md](44-audit-quiz-ux-gaps.md),
   [45-audit-infra-security.md](45-audit-infra-security.md) — the five detailed companion audits
 - [50-full-sweep-audit-2026-08.md](50-full-sweep-audit-2026-08.md) — second full-sweep round
-  (best practices, duplication, file structure); start here for the most recent state
+  (best practices, duplication, file structure)
+- [52-audit-2026-08-14.md](52-audit-2026-08-14.md) — third round, first real run of the
+  [51-multi-agent-audit-playbook.md](51-multi-agent-audit-playbook.md) process
+- [56-audit-2026-08-16.md](56-audit-2026-08-16.md) — fourth round, run against the generic
+  [53-comprehensive-audit-prompt-playbook.md](53-comprehensive-audit-prompt-playbook.md) instead;
+  a different category split surfaced real WCAG contrast-math findings the prior splits hadn't —
+  start here for the most recent state
 
 ## Archive
 

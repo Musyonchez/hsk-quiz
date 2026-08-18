@@ -31,7 +31,7 @@ Phased so each phase produces something runnable/checkable before moving on.
   vocabulary matches the textbook exactly, except that the official lesson lists include a
   proper noun in 4 chapters that the curated markdown never captured (王方/谢朋 ch.10, 北京
   ch.11, 大卫 ch.13, 张 ch.14) — deliberately not added; see
-  [03-content-extraction-rules.md](03-content-extraction-rules.md)'s proper-noun exclusion rule.
+  [03-content-extraction-rules.md](hold/03-content-extraction-rules.md)'s proper-noun exclusion rule.
 - **HSK2 chapters checked too** (per-lesson transcription of all 15 lessons): every chapter
   matches the textbook exactly with one exception — `hsk2/chapter1` still had a `花花` (a cat's
   name) row left over from *before* the proper-noun-exclusion rule existed. This surfaced a
@@ -140,7 +140,7 @@ Phased so each phase produces something runnable/checkable before moving on.
 
 - `lib/extract/extract-chapters.ts` walks all 30 chapters (HSK 1 + HSK 2), extracts the title
   (first line verbatim), the 词汇 table, and any Proper Nouns table per Rule 1 of
-  [03-content-extraction-rules.md](03-content-extraction-rules.md). Verified against real files:
+  [03-content-extraction-rules.md](hold/03-content-extraction-rules.md). Verified against real files:
   335 chapter words total, deduped (Rule 3), zero missing-pinyin rows (Rule 4 never triggered
   in practice — the pinyin guide's claim that 词汇 tables are pinyin-complete held up).
 - Real-data edge cases the parser had to handle, found by grepping all 30 files before writing
@@ -273,7 +273,6 @@ three shippable sub-phases:
 
 ## Explicitly deferred (not in any phase above)
 
-- HSK 3 support (data doesn't exist yet — [[one-chapter-at-a-time]]).
 - ~~Listening or audio-based quiz modes.~~ ✅ Word/sentence pronunciation audio shipped
   ([47-word-sentence-audio-plan.md](47-word-sentence-audio-plan.md)) — every word and dialog
   sentence has a speaker-icon playback button. A dedicated *listening-quiz* mode (answer from

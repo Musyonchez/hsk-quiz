@@ -11,7 +11,7 @@ plain TypeScript data (`src/lib/extract/hsk{N}-chapters-data.ts` and
 path outside the repo is ever read — it's self-contained. (✅ docs/50 full-sweep audit §20: this
 used to say "website/" — that was the app's folder name back when it lived nested inside a larger
 monorepo; it's the repo root now, so the `website/` prefix below is dropped.) See
-[02-data-sources.md](02-data-sources.md) for where each level's data originally came from
+[02-data-sources.md](hold/02-data-sources.md) for where each level's data originally came from
 before being baked into these files.
 
 ## Where extraction logic lives vs. where it's used
@@ -58,7 +58,9 @@ call that was never made consistently enough across levels to automate. See
 Orchestrates both extractors and upserts into the database in this order (respecting foreign
 keys): `Level` → `Word` (combined-sourced, `chapterId` null) → `Chapter` → `Word`
 (chapter-sourced). `Chapter` is upserted on `(levelId, number)`; chapter-sourced `Word` on
-`(chapterId, chinese)`. Combined-sourced words have no such compound unique key available (every
+`(chapterId, chinese, source)` — `source` distinguishes a chapter's curated "New Words" row from
+its "dialog" row for the same Chinese text, per the schema's own comment on that field.
+Combined-sourced words have no such compound unique key available (every
 combined word shares `chapterId: null`, so a naive `(levelId, chinese, pinyin)` key can't be
 declared as a real DB constraint) — `seedCombinedLevels` works around this with an explicit
 find-then-create/update per word instead of a single `upsert` call. Either way, re-running the
