@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { authClient } from "@/lib/auth/auth-client";
+import { useFocusTrap } from "@/lib/use-focus-trap";
 
 export function LogoutButton() {
   const [confirming, setConfirming] = useState(false);
@@ -29,6 +30,8 @@ export function LogoutButton() {
   // close) and no Escape handling — only click-outside and Cancel closed it.
   const triggerButtonRef = useRef<HTMLButtonElement>(null);
   const cancelButtonRef = useRef<HTMLButtonElement>(null);
+  const dialogRef = useRef<HTMLDivElement>(null);
+  useFocusTrap(dialogRef, confirming);
 
   useEffect(() => {
     if (confirming) cancelButtonRef.current?.focus();
@@ -91,6 +94,7 @@ export function LogoutButton() {
             }}
           >
             <div
+              ref={dialogRef}
               role="dialog"
               aria-modal="true"
               aria-labelledby="logout-confirm-heading"

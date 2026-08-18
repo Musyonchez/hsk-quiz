@@ -34,9 +34,3 @@ export const ALL_LEVELS: readonly LevelDefinition[] = [
 export function isLevelSlug(value: string): value is LevelSlug {
   return ALL_LEVELS.some((level) => level.slug === value);
 }
-
-export function getLevelDefinition(slug: LevelSlug): LevelDefinition {
-  const def = ALL_LEVELS.find((level) => level.slug === slug);
-  if (!def) throw new Error(`Unknown level slug: ${slug}`);
-  return def;
-}

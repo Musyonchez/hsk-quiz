@@ -110,9 +110,12 @@ handlers.
 
 ## 8. Friends — `/friends`
 
-- **Your friends** list (accepted `Friendship` rows) — each a `<UserBadge>` with a link into
-  "compare" (just the friends-scope leaderboard filtered to that one person, reusing
-  `<LeaderboardTable>`).
+- **Your friends** list (accepted `Friendship` rows) — each rendered as a plain `<UserBadge>`.
+  **Corrected per [56-audit-2026-08-16.md](56-audit-2026-08-16.md) finding 56-7**: this used to
+  describe a per-friend "compare" link into a filtered leaderboard — that was never actually
+  built (no `href` on the row, and the leaderboard route has no per-friend filter to link to).
+  "Where do I stand vs. friends" today is answered by the Friends tab on a specific quiz's
+  leaderboard (§7), which shows every friend together, not one at a time.
 - **Pending requests** — incoming (`Accept` / `Ignore` via `<FriendRequestRow>`, hitting
   `POST /api/friends/requests/:id/accept` or `.../ignore` — see
   [05-architecture.md](05-architecture.md)) and outgoing (shown as "waiting," no cancel action

@@ -34,7 +34,12 @@ This gives every color on the site a reason to be there beyond "dark mode needs 
 | `--foreground` | `#efe7da` | Primary text ("rice paper") |
 | `--muted-foreground` | `#9d9a97` | Secondary text — labels, chapter counts, timestamps |
 | `--border` | `rgba(239, 231, 218, 0.10)` | Default hairline borders on cards/inputs |
-| `--border-strong` | `rgba(239, 231, 218, 0.22)` | Hover border, focus ring base |
+| `--border-strong` | `rgba(239, 231, 218, 0.22)` | Hover border only (docs/56 finding 56-3 split
+  the focus-indicator role out into `--focus-ring` below — this token alone composited to only
+  ~1.9:1 against `--surface`, under the ~3:1 a focus indicator needs) |
+| `--focus-ring` | `rgba(239, 231, 218, 0.40)` | Focus-visible indicator on the elements that
+  replace the browser's native outline (text inputs, the Custom Quiz Picker checkbox) — computes
+  to ~3.3:1 against `--surface`, clearing WCAG's non-text contrast target |
 
 ## Accent (seal)
 
@@ -57,8 +62,8 @@ competing call-to-action on the same screen as a real `PLAY QUIZ` button.
 
 | Token | Hex | Role |
 |---|---|---|
-| `--accent-secondary` | `#8a6c3f` | Bronze — active-tab fill, secondary selection state. Never a primary call to action. |
-| `--accent-secondary-hover` | `#75592f` | Hover/active state, darker not lighter, same ink-darkens rule as `--accent-hover` |
+| `--accent-secondary` | `#aa834c` | Bronze — active-tab fill, secondary selection state. Never a primary call to action. Brightened from the original `#8a6c3f` (docs/56 finding 56-2 — failed WCAG AA as text at 3.63:1) to clear 4.5:1. |
+| `--accent-secondary-hover` | `#8f6c3a` | Hover/active state, darker not lighter, same ink-darkens rule as `--accent-hover` |
 | `--accent-secondary-foreground` | `#fbf1e8` | Text/icon on top of `--accent-secondary` (reuses `--accent-foreground`'s value) |
 
 Usage stays scoped to tabs/mode-pickers/filter chips — not a general-purpose second color for
@@ -68,11 +73,11 @@ decoration, same restraint as the primary accent.
 
 | Token | Hex | Role |
 |---|---|---|
-| `--success` | `#5c8a54` | Jade — correctly-answered quiz rows, success toasts |
+| `--success` | `#7aa870` | Jade — correctly-answered quiz rows, success toasts. Brightened from the original `#5c8a54` (docs/56 finding 56-2 — failed WCAG AA as text on `--success-surface` at 3.65:1) to clear 4.5:1. |
 | `--success-surface` | `rgba(92, 138, 84, 0.16)` | Background tint for a correct row (paired with `--success` as a left-border, not a full fill — see [08-ui-ux.md](08-ui-ux.md)'s accessibility baseline) |
 | `--current-row` | `#c99a3a` | Muted gold — current-row highlight during a quiz, replacing the reference screenshots' literal bright yellow so it fits the ink/paper/seal palette instead of clashing with it. Named `current-row`, not `current` — Tailwind already reserves `current` for `currentColor` |
 | `--current-row-surface` | `rgba(201, 154, 58, 0.16)` | Background tint for the current row |
-| `--danger` | `#b3453a` | Form/validation errors only (e.g. login failure, taken username) — deliberately a different hex from `--accent` even though both read as "red," so an error never gets mistaken for a call-to-action button |
+| `--danger` | `#e06757` | Form/validation errors only (e.g. login failure, taken username) — deliberately a different hex from `--accent` even though both read as "red," so an error never gets mistaken for a call-to-action button. Brightened from the original `#b3453a` (docs/56 finding 56-2 — failed WCAG AA as text at 2.93-3.23:1) to clear 4.5:1. |
 
 ## Usage rules
 
@@ -104,15 +109,26 @@ pattern already used for spacing/typography — no `tailwind.config.js`, CSS var
   --muted-foreground: #9d9a97;
   --border: rgba(239, 231, 218, 0.10);
   --border-strong: rgba(239, 231, 218, 0.22);
+  --focus-ring: rgba(239, 231, 218, 0.40);
 
   --accent: #c1442d;
   --accent-hover: #a8391f;
   --accent-foreground: #fbf1e8;
 
-  --success: #5c8a54;
+  --accent-secondary: #aa834c;
+  --accent-secondary-hover: #8f6c3a;
+  --accent-secondary-foreground: #fbf1e8;
+
+  --success: #7aa870;
   --success-surface: rgba(92, 138, 84, 0.16);
   --current-row: #c99a3a;
   --current-row-surface: rgba(201, 154, 58, 0.16);
-  --danger: #b3453a;
+  --danger: #e06757;
 }
 ```
+
+All four brightened tokens (`--focus-ring` new, `--accent-secondary`/`--success`/`--danger`
+retuned) per [56-audit-2026-08-16.md](56-audit-2026-08-16.md) findings 56-2 and 56-3 — the
+original values were chosen for how they read visually against the "ink, paper, seal" concept,
+without checking actual WCAG contrast math against the surfaces they're really used on. The hues
+and roles are unchanged; only luminance moved.
