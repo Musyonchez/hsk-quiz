@@ -37,4 +37,18 @@ jobs:
 
       - run: npx eslint .
 
-      - run: npm audit --audit-level=high
+      # scripts/check-audit.mjs, not a bare `npm audit` (added 2026-08-18): a
+      # real GHSA-ggr8-5vv4-36mx advisory hit deepmerge-ts (a transitive dep
+      # of @prisma/config), with no fixed prisma release available yet
+      # (7.9.1 is still latest stable; npm's only offered "fix" is a forced
+      # downgrade to prisma@6.12.0, a real breaking change). It's reachable
+      # in npm's dependency graph only via @better-auth/prisma-adapter's
+      # *optional peerDependency* on the `prisma` CLI package — confirmed by
+      # reading that package's compiled output, it never actually imports
+      # `prisma`/@prisma/config, so this can't execute in the deployed app.
+      # `--omit=dev` doesn't filter it out (npm still counts it reachable via
+      # that peer-dependency slot), hence the small allowlist script instead
+      # — it still fails on any *other* high/critical advisory, new or
+      # existing, same as before. See the script's own comments for the
+      # allowlist entry's reasoning and when to remove it.
+      - run: node scripts/check-audit.mjs

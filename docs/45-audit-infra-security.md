@@ -70,7 +70,11 @@ on a new migration. Documented and intentional, relies on developer memory. **Lo
 
 - **✅ Fixed** — `npm audit --audit-level=high` added as a CI step; confirmed currently passing
   (0 vulnerabilities) on re-audit. **No dependency vulnerability scanning** — no `npm audit` step in CI, no Dependabot/Renovate
-  config anywhere in `.github/`. **Medium.**
+  config anywhere in `.github/`. **Medium.** Since routed through `scripts/check-audit.mjs`
+  instead of the bare command (2026-08-18) — a real advisory
+  (`GHSA-ggr8-5vv4-36mx`, deepmerge-ts) surfaced with no fixed `prisma` release available and no
+  actual runtime reachability (see the script's own comments), so the check now allowlists that
+  one specific advisory by ID while still failing on anything else high/critical, new or existing.
 - CI doesn't run `next build` (by explicit design — Vercel's own preview deploy covers that,
   documented tradeoff). Reasonable, just means a build-only failure surfaces on Vercel's preview
   rather than in the PR's CI status — slightly slower feedback. **Nitpick.**
