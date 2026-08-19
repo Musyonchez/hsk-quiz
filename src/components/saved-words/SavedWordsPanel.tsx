@@ -54,52 +54,57 @@ export function SavedWordsPanel({ words }: { words: SavedWord[] }) {
 
   return (
     <div className="flex flex-col gap-8">
-      <div className="overflow-x-auto rounded-lg border border-border">
-        <table className="w-full min-w-lg text-sm">
-          <thead className="bg-surface-raised text-left text-xs uppercase tracking-wide text-muted-foreground">
-            <tr>
-              <th className="px-3 py-2">Chinese</th>
-              <th className="px-3 py-2">Pinyin</th>
-              <th className="px-3 py-2">English</th>
-              <th className="px-3 py-2" />
-            </tr>
-          </thead>
-          <tbody>
-            {list.map((word) => (
-              <tr key={word.id} className="border-t border-border">
-                <td className="px-3 py-2 font-medium">{word.chinese}</td>
-                <td className="px-3 py-2 text-muted-foreground">{word.pinyin}</td>
-                <td className="px-3 py-2">{word.meaning ?? "—"}</td>
-                <td className="px-3 py-2 text-right">
-                  <button
-                    type="button"
-                    onClick={() => remove(word.id)}
-                    disabled={removingId === word.id}
-                    aria-label={`Remove ${word.chinese}`}
-                    className="inline-flex items-center justify-center rounded-full p-1 text-muted-foreground transition-colors hover:bg-surface-raised hover:text-danger disabled:opacity-50"
-                  >
-                    <Trash2 size={16} />
-                  </button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+      {/* Mode picker leads, same position it takes on every chapter/combined/
+          custom-quiz page (docs/09) — Saved Words is meant to behave like
+          any other quiz source, just with a different word selection, not
+          like a secondary feature bolted below a management screen. */}
+      {/* Not tracked on the leaderboard (docs/57's Open Questions #1) — a
+          personal, freely-edited word list doesn't rank the same way a
+          fixed chapter does. */}
+      <QuizModeGate
+        key={quizKey}
+        words={quizWords}
+        backHref="/saved-words"
+        trackAttempt={false}
+        meaningVariant="choice"
+        characterMode
+        allowDrillMissed
+      />
 
       <div>
-        <h2 className="mb-3 text-lg font-bold">Drill these words</h2>
-        {/* Not tracked on the leaderboard (docs/57's Open Questions #1) — a
-            personal, freely-edited word list doesn't rank the same way a
-            fixed chapter does. */}
-        <QuizModeGate
-          key={quizKey}
-          words={quizWords}
-          backHref="/saved-words"
-          trackAttempt={false}
-          meaningVariant="choice"
-          characterMode
-        />
+        <h2 className="mb-3 text-lg font-bold">Your Saved Words</h2>
+        <div className="overflow-x-auto rounded-lg border border-border">
+          <table className="w-full min-w-lg text-sm">
+            <thead className="bg-surface-raised text-left text-xs uppercase tracking-wide text-muted-foreground">
+              <tr>
+                <th className="px-3 py-2">Chinese</th>
+                <th className="px-3 py-2">Pinyin</th>
+                <th className="px-3 py-2">English</th>
+                <th className="px-3 py-2" />
+              </tr>
+            </thead>
+            <tbody>
+              {list.map((word) => (
+                <tr key={word.id} className="border-t border-border">
+                  <td className="px-3 py-2 font-medium">{word.chinese}</td>
+                  <td className="px-3 py-2 text-muted-foreground">{word.pinyin}</td>
+                  <td className="px-3 py-2">{word.meaning ?? "—"}</td>
+                  <td className="px-3 py-2 text-right">
+                    <button
+                      type="button"
+                      onClick={() => remove(word.id)}
+                      disabled={removingId === word.id}
+                      aria-label={`Remove ${word.chinese}`}
+                      className="inline-flex items-center justify-center rounded-full p-1 text-muted-foreground transition-colors hover:bg-surface-raised hover:text-danger disabled:opacity-50"
+                    >
+                      <Trash2 size={16} />
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   );

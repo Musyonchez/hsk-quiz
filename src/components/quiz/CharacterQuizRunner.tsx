@@ -15,6 +15,7 @@ import { pillClasses } from "@/components/pill-classes";
 import { ToolbarButton } from "@/components/ToolbarButton";
 import { QuizResultsScreen } from "@/components/quiz/QuizResultsScreen";
 import { SpeakerButton } from "@/components/SpeakerButton";
+import { SaveWordButton } from "@/components/SaveWordButton";
 
 export type { QuizWord };
 
@@ -363,11 +364,18 @@ function CharacterQuizRunnerInner({
 
       {started && !finished && !paused && currentWord && answerFormat === "pinyin" && (
         <div className="relative mx-auto flex w-full max-w-md flex-col gap-5 rounded-xl border border-border bg-surface p-8 shadow-lg shadow-background/50">
-          <SpeakerButton
-            text={currentWord.chinese}
-            kind="word"
-            className="absolute left-3 top-3"
-          />
+          <div className="absolute left-3 top-3 flex items-center gap-1">
+            {/* docs/57 §1's revised placement rule — safe here too: the
+                character is already shown unmasked, and this mode has no
+                Hard-mode toggle at all to leak anything from (see this
+                component's own comment on why, above). */}
+            <SaveWordButton
+              chinese={currentWord.chinese}
+              pinyin={currentWord.pinyin}
+              meaning={currentWord.meaning}
+            />
+            <SpeakerButton text={currentWord.chinese} kind="word" />
+          </div>
           <div
             role="progressbar"
             aria-valuenow={answeredCount}
@@ -406,11 +414,18 @@ function CharacterQuizRunnerInner({
 
       {started && !finished && !paused && currentWord && answerFormat === "english" && (
         <div className="relative mx-auto flex w-full max-w-md flex-col gap-5 rounded-xl border border-border bg-surface p-8 shadow-lg shadow-background/50">
-          <SpeakerButton
-            text={currentWord.chinese}
-            kind="word"
-            className="absolute left-3 top-3"
-          />
+          <div className="absolute left-3 top-3 flex items-center gap-1">
+            {/* docs/57 §1's revised placement rule — safe here too: the
+                character is already shown unmasked, and this mode has no
+                Hard-mode toggle at all to leak anything from (see this
+                component's own comment on why, above). */}
+            <SaveWordButton
+              chinese={currentWord.chinese}
+              pinyin={currentWord.pinyin}
+              meaning={currentWord.meaning}
+            />
+            <SpeakerButton text={currentWord.chinese} kind="word" />
+          </div>
           <div
             role="progressbar"
             aria-valuenow={answeredCount}
