@@ -68,6 +68,7 @@ export function SavedWordsPanel({ words }: { words: SavedWord[] }) {
         trackAttempt={false}
         meaningVariant="choice"
         characterMode
+        allowDrillMissed
       />
 
       <div>
