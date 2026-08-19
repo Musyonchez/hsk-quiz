@@ -14,6 +14,20 @@ text above them (same practice docs/52/docs/56 use for audit findings):
   session-local — a small refinement past what §6 specified, made possible by the same
   `SavedWordsProvider` seed above; costs one extra (layout-cached) query per session, not per
   page.
+- **§1's placement rule was revised after shipping**, based on real usage: a player running a
+  quiz (custom quiz included) had no way to save a word once it started, since v1 originally
+  restricted the plus icon to pre-start tables only. Re-examining the actual leak risk: the
+  worry was the icon's saved-state or its toast surfacing a Hard-mode-hidden pinyin/meaning, but
+  the built toast only ever shows the Chinese character (`Saved 你.`, never pinyin/meaning — see
+  `SavedWordsProvider`), and the character itself is already unmasked in every one of these
+  views regardless of Hard mode. So neither actually leaks anything. **Revised rule: the plus
+  icon is safe (and now shown) wherever the Chinese character is visible on screen** — pre-start
+  tables, in-quiz nav rows/cards (`QuizRunner`, `ChoiceQuizRunner`), and `CharacterQuizRunner`'s
+  in-quiz card, which previously had no plus icon anywhere. Still excluded: `MatchQuizRunner`'s
+  in-play matching board — its tiles are themselves the primary click target (picking a match),
+  and nesting a second interactive element inside would mean invalid markup (`<button>` inside
+  `<button>`) or restructuring the tile, not just removing a guard; left as a real gap, not a
+  deliberate safety restriction.
 
 Everything in the **Later** section below is still just plan — not built.
 
@@ -57,16 +71,17 @@ categories:
 - `src/app/hsk/[level]/chapter/[chapter]/all/page.tsx` — the chapter dialog transcript. A
   `DialogLine` (a full sentence) isn't a `Word` and has no vocabulary-word identity to save.
 
-**V1 further restricts placement within the per-word list, to sidestep a real spoiler risk
-cheaply instead of solving it (see §Later's "hard-mode-aware toast" for the full version):**
-`QuizRunner`'s Hard mode (`hideSecondColumn`, docs/hold/28) hides either the pinyin or the meaning
-column *during* a quiz, specifically so the player has to recall it. A plus icon rendered next to
-an in-quiz answer display would let the save-confirmation toast (or the icon's own saved-state)
-leak what's supposed to be hidden. **V1 decision: the plus icon only renders in
-pre-quiz/no-answer-to-hide contexts** — `VocabTable`, `CharacterBrowse`, and every quiz runner's
-*pre-start* word-preview table (before Start is clicked, nothing is hidden yet) — not on any
-in-quiz answer display. This isn't a permanent limitation, just the cheapest way to avoid the
-spoiler problem until the full hard-mode-aware toast (§Later) exists.
+**Revised after shipping (see the amendment at the top of this doc for the full reasoning):**
+originally v1 restricted the plus icon to pre-start/no-answer-to-hide contexts only, worried a
+plus icon next to an in-quiz answer display would let the save-confirmation toast (or the icon's
+own saved-state) leak what Hard mode (`hideSecondColumn`, docs/hold/28) is hiding. In practice the
+built toast only ever shows the Chinese character, never pinyin/meaning, and the character itself
+is always unmasked regardless of Hard mode — so there was nothing to leak. **Current rule: the
+plus icon renders wherever the Chinese character is visible** — `VocabTable`, `CharacterBrowse`,
+every quiz runner's pre-start table, `QuizRunner`/`ChoiceQuizRunner`'s in-quiz nav row, and
+`CharacterQuizRunner`'s in-quiz card. Still excluded: `MatchQuizRunner`'s in-play matching
+board — its tiles are the primary click target themselves, so adding a second interactive element
+needs restructuring the tile, not just a placement change; a real gap, not a safety choice.
 
 ## 2. What "the same word" means — the duplicate-detection problem
 
@@ -198,8 +213,9 @@ Checked: there's no toast/notification component anywhere in this codebase today
   `[listId, chinese]` key), fast enough to correct a misclick.
 - Dismissible via an **X** in the top-right corner, and auto-dismisses after a few seconds
   (~4-5s) if untouched.
-- **No hard-mode-content-awareness needed in v1** — §1 already keeps the plus icon out of every
-  context where an answer could be hidden, so there's nothing for the toast to accidentally leak.
+- **No hard-mode-content-awareness needed** — the toast only ever names the Chinese character
+  (`Saved 你.`), never pinyin/meaning, so it has nothing to leak regardless of where the plus icon
+  renders (see §1's revised placement rule).
 - **No swipe-to-dismiss in v1** — the X plus auto-dismiss covers dismissal; swipe is a gesture
   refinement, §Later.
 
@@ -309,14 +325,14 @@ Touch-drag-to-dismiss, matching the swipe gesture `CharacterBrowse`'s popup alre
 (same 40px-threshold pattern, reused rather than reinvented) — additive to v1's X/auto-dismiss,
 not a replacement.
 
-### Full hard-mode-aware toast content
+### Full hard-mode-aware toast content — superseded, already satisfied
 
-If the plus icon's placement ever expands beyond §1 v1's conservative "pre-quiz/no-hidden-answer
-contexts only" restriction — e.g. onto an in-quiz answer display where Hard mode is actively
-hiding a column — the toast needs to actively respect that instead of relying on placement to
-avoid the problem: **in any context where hard mode (or an equivalent hide-part-of-the-answer
-state) is active, the toast shows only the Chinese character**, never pinyin or meaning,
-regardless of what got saved underneath. Not needed as long as v1's placement restriction holds.
+Originally: if the plus icon's placement ever expanded beyond v1's pre-quiz-only restriction, the
+toast would need to actively avoid pinyin/meaning in a hard-mode context instead of relying on
+placement to dodge the problem. That expansion happened (§1's revised placement rule) — but it
+turned out unconditionally true already: the built toast only ever shows the Chinese character
+(`Saved 你.`), regardless of mode, so this was never a separate thing to build. Left here for the
+historical reasoning, not as an open item.
 
 ## Suggested implementation phases
 
