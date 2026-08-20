@@ -409,7 +409,13 @@ function QuizRunnerInner({
                           Hard mode is hiding below, so there's nothing here
                           for the icon to leak. */}
                       <SaveWordButton chinese={word.chinese} pinyin={word.pinyin} meaning={word.meaning} />
-                      <SpeakerButton text={word.chinese} kind="word" />
+                      {/* Speaker stays pre-start only (docs/58 finding
+                          58-1's fix) — playing this word's pronunciation
+                          mid-quiz would say its pinyin out loud, handing the
+                          player the exact answer this mode asks them to
+                          type. The plus icon carries no such risk (see
+                          comment above), so it keeps working in-quiz. */}
+                      {!started && <SpeakerButton text={word.chinese} kind="word" />}
                     </span>
                   </td>
                   <td className="px-3 py-2 text-muted-foreground">

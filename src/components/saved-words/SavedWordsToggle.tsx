@@ -7,23 +7,33 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { pillClasses } from "@/components/pill-classes";
+import { useSavedWords } from "@/lib/saved-words/context";
 
 export function SavedWordsToggle({ enabled }: { enabled: boolean }) {
   const router = useRouter();
+  const { setEnabled } = useSavedWords();
   const [pending, setPending] = useState(false);
 
   async function toggle() {
     setPending(true);
-    await fetch("/api/account/saved-words-toggle", {
+    const res = await fetch("/api/account/saved-words-toggle", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ enabled: !enabled }),
     });
-    // Real page refresh, not just a local state flip — the plus icon lives
-    // in a bunch of other server components (VocabTable etc.) fed by
-    // RootLayout's SavedWordsProvider seed, which only re-reads the DB on a
-    // real navigation/refresh, same pattern AddFriendForm/FriendRequestRow
-    // already use for their own mutations.
+    if (res.ok) {
+      const data: { enabled: boolean } = await res.json();
+      // docs/58-audit-2026-08-20.md finding 58-2 — push the confirmed value
+      // straight into SavedWordsContext. `router.refresh()` below is still
+      // needed too (this page's own server-rendered content — whether it
+      // shows this off-screen or the word list — depends on the same flag
+      // read server-side in saved-words/page.tsx), but a refresh alone
+      // never reaches SavedWordsProvider's already-mounted client state
+      // (see the context's own comment on `setEnabled` for why), so every
+      // other SaveWordButton on the site stayed stuck on the old value
+      // without this.
+      setEnabled(data.enabled);
+    }
     router.refresh();
     setPending(false);
   }

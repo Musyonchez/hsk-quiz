@@ -382,7 +382,9 @@ function ChoiceQuizRunnerInner({
                       {/* Available in-quiz too — see QuizRunner's identical
                           comment for why this is safe. */}
                       <SaveWordButton chinese={word.chinese} pinyin={word.pinyin} meaning={word.meaning} />
-                      <SpeakerButton text={word.chinese} kind="word" />
+                      {/* Speaker stays pre-start only — see QuizRunner's
+                          identical comment (docs/58 finding 58-1's fix). */}
+                      {!started && <SpeakerButton text={word.chinese} kind="word" />}
                     </span>
                   </td>
                   <td className="px-3 py-2 text-muted-foreground">

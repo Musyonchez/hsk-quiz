@@ -14,6 +14,14 @@ type SavedWordInput = { chinese: string; pinyin: string; meaning: string | null 
 
 type SavedWordsContextValue = {
   enabled: boolean;
+  // docs/58-audit-2026-08-20.md finding 58-2 — exposed so a caller that just
+  // confirmed a server-side change (SavedWordsToggle's POST) can push it
+  // into this context directly, instead of relying on `router.refresh()`
+  // alone: RootLayout's `initial` prop only feeds this provider's `useState`
+  // initializer, which (correctly, per React/Next's own docs — a soft
+  // refresh preserves existing Client Component state) never re-runs on a
+  // later render, so a bare refresh doesn't actually reach here.
+  setEnabled: (enabled: boolean) => void;
   isSaved: (chinese: string) => boolean;
   save: (word: SavedWordInput) => Promise<void>;
 };
@@ -28,7 +36,7 @@ export function SavedWordsProvider({
   children: React.ReactNode;
 }) {
   const { show } = useToast();
-  const [enabled] = useState(initial.enabled);
+  const [enabled, setEnabled] = useState(initial.enabled);
   // chinese -> SavedWord id, so Undo can DELETE /api/saved-words/:id right
   // away without a lookup round trip.
   const [saved, setSaved] = useState<Map<string, number>>(
@@ -62,6 +70,11 @@ export function SavedWordsProvider({
         return;
       }
 
+      // Deliberately only ever the Chinese character, never `word.pinyin`/
+      // `word.meaning` — this is what keeps the plus icon safe to use
+      // in-quiz (docs/58 finding 58-1's fix, docs/57 §1): whichever field a
+      // quiz mode is testing (pinyin recall, meaning recall), this toast
+      // never names it, regardless of mode.
       show({
         message: `Saved ${word.chinese}.`,
         action: {
@@ -80,7 +93,10 @@ export function SavedWordsProvider({
     [saved, show]
   );
 
-  const value = useMemo(() => ({ enabled, isSaved, save }), [enabled, isSaved, save]);
+  const value = useMemo(
+    () => ({ enabled, setEnabled, isSaved, save }),
+    [enabled, isSaved, save]
+  );
 
   return <SavedWordsContext.Provider value={value}>{children}</SavedWordsContext.Provider>;
 }
