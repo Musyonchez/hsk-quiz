@@ -8,6 +8,8 @@ import { useState } from "react";
 import { Trash2 } from "lucide-react";
 import type { QuizWord } from "@/quiz/types";
 import { QuizModeGate } from "@/components/quiz/QuizModeGate";
+import { SpeakerButton } from "@/components/SpeakerButton";
+import { SaveWordButton } from "@/components/SaveWordButton";
 
 export type SavedWord = {
   id: number;
@@ -86,7 +88,19 @@ export function SavedWordsPanel({ words }: { words: SavedWord[] }) {
             <tbody>
               {list.map((word) => (
                 <tr key={word.id} className="border-t border-border">
-                  <td className="px-3 py-2 font-medium">{word.chinese}</td>
+                  <td className="px-3 py-2 font-medium">
+                    {/* Same speaker + plus-icon treatment every other word
+                        table gets (VocabTable, quiz pre-start rows) — this
+                        table is itself a word list, no reason it should be
+                        the one place missing them. The plus icon here just
+                        shows its already-saved state, same as anywhere else
+                        a saved word is displayed. */}
+                    <span className="inline-flex items-center gap-1.5">
+                      {word.chinese}
+                      <SaveWordButton chinese={word.chinese} pinyin={word.pinyin} meaning={word.meaning} />
+                      <SpeakerButton text={word.chinese} kind="word" />
+                    </span>
+                  </td>
                   <td className="px-3 py-2 text-muted-foreground">{word.pinyin}</td>
                   <td className="px-3 py-2">{word.meaning ?? "—"}</td>
                   <td className="px-3 py-2 text-right">
