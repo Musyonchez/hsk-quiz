@@ -71,8 +71,10 @@ the doc itself hasn't been touched since.
   [51-multi-agent-audit-playbook.md](51-multi-agent-audit-playbook.md) process
 - [56-audit-2026-08-16.md](56-audit-2026-08-16.md) — fourth round, run against the generic
   [53-comprehensive-audit-prompt-playbook.md](53-comprehensive-audit-prompt-playbook.md) instead;
-  a different category split surfaced real WCAG contrast-math findings the prior splits hadn't —
-  start here for the most recent state
+  a different category split surfaced real WCAG contrast-math findings the prior splits hadn't
+- [58-audit-2026-08-20.md](58-audit-2026-08-20.md) — fifth round, docs/53 again, focused on the
+  newly-shipped Saved Words feature (docs/57); 2 P1s found, **not yet fixed** — start here for the
+  most recent state
 
 ## Archive
 
