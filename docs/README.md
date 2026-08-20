@@ -73,8 +73,8 @@ the doc itself hasn't been touched since.
   [53-comprehensive-audit-prompt-playbook.md](53-comprehensive-audit-prompt-playbook.md) instead;
   a different category split surfaced real WCAG contrast-math findings the prior splits hadn't
 - [58-audit-2026-08-20.md](58-audit-2026-08-20.md) — fifth round, docs/53 again, focused on the
-  newly-shipped Saved Words feature (docs/57); 2 P1s found, **not yet fixed** — start here for the
-  most recent state
+  newly-shipped Saved Words feature (docs/57); 2 P1s found and fixed same-day, 19 P2-P4 still open
+  — start here for the most recent state
 
 ## Archive
 
